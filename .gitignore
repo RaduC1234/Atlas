@@ -1,0 +1,62 @@
+# Ignore build directories
+/build/
+/bin/
+/obj/
+/out/
+
+.vs/
+
+# Ignore CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Ignore Visual Studio files
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+
+# Ignore CLion files
+.idea/
+*.iml
+
+# But keep the CMake configuration
+!.idea/cmake.xml
+
+# Ignore compiled object files
+*.o
+*.obj
+*.lo
+*.la
+*.al
+*.libs
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+
+# Ignore executable files
+*.exe
+*.out
+*.app
+
+# Ignore logs and databases
+*.log
+*.sql
+*.sqlite
+
+# Ignore Python bytecode
+__pycache__/
+*.py[cod]
+
+# Ignore JavaScript dependencies
+node_modules/
+
+# Ignore other system files
+.DS_Store
+Thumbs.db
+
+
