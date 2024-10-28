@@ -1,8 +1,10 @@
 #include "Atlas.hpp"
+#include "core/ClientApplication.hpp"
 
 int main(int argc, char** argv) {
 
-    Log::init();
-    AT_INFO("Client");
+    auto* application = new ClientApplication();
+    application->run();
+    delete application;
     return 0;
 }
