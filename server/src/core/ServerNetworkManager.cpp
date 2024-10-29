@@ -1,6 +1,6 @@
 #include "ServerNetworkManager.hpp"
 
- //TODO:a log file #include "log.hpp" or something
+
 static constexpr size_t BUFFER_SIZE = 8192;
 static constexpr size_t MAX_DLL_SIZE = 10 * 1024 * 1024;  // 10MB limit
 static constexpr auto CLIENT_TIMEOUT = std::chrono::seconds(30);
