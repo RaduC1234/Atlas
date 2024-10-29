@@ -1,6 +1,6 @@
 #include "Sprite.hpp"
 
-Sprite::Sprite(const Ref<Texture> &texture) { // image flipped on x to be displayed correctly
+Sprite::Sprite(const Ref<SFMLTexture> &texture) { // image flipped on x to be displayed correctly
     this->texture = texture;
     this->texCoords = {
             glm::vec2(1, 0),
@@ -10,7 +10,7 @@ Sprite::Sprite(const Ref<Texture> &texture) { // image flipped on x to be displa
     };
 }
 
-Sprite::Sprite(const Ref<Texture> &texture, TextureCoords texCoors) {
+Sprite::Sprite(const Ref<SFMLTexture> &texture, TextureCoords texCoors) {
     this->texture = texture;
     this->texCoords = texCoors;
 }

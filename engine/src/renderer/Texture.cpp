@@ -1,13 +1,13 @@
 #include "Texture.hpp"
 
-#ifdef ATLAS_BACKEND_SDL
-#include "backend/SDLTexture.hpp"
+#ifdef ATLAS_BACKEND_SFML
+#include "backend/SFMLTexture.hpp"
 #endif
 
-Scope<Texture> Texture::create(const std::string &filesystem, void* renderer) {
-#ifdef ATLAS_BACKEND_SDL
-    return CreateScope<SDLTexture>(filesystem, static_cast<SDL_Renderer*>(renderer));
-#endif
+Scope<Texture> Texture::create(const std::string &filepath) {
+#ifdef ATLAS_BACKEND_SFML
+    return CreateScope<SFMLTexture>(filepath);
+#else
     AT_ASSERT(false, "No texture backend")
-    return nullptr;
+#endif
 }

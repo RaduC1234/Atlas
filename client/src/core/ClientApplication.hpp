@@ -7,6 +7,7 @@
 class ClientApplication {
 public:
     void run();
+    void changeScene(const std::string& name);
 private:
     Scope<Window> window;
     Scope<Scene> currentScene;

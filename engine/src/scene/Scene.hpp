@@ -10,7 +10,7 @@ public:
 
     virtual ~Scene() = default;
 
-    virtual void onCreate(void *window) =0;
+    virtual void onCreate(const Window& window) =0;
 
     virtual void onStart() = 0;
 
@@ -28,6 +28,19 @@ protected:
 
     friend class ImGuiLayer;
     friend class SceneInitializer;
+};
+
+class SceneManager {
+    void addScene(const std::string& name, Scope<Scene> scene) {
+        this->scenes[name] = std::move(scene);
+    }
+
+    void changeScene(const std::string& scene) {
+
+    }
+private:
+    std::string activeScene;
+    std::unordered_map<std::string, Scope<Scene>> scenes;
 };
 
 

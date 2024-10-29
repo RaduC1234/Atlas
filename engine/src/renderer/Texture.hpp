@@ -12,7 +12,7 @@ public:
     virtual void *getNativeTexture() = 0;
 
 private:
-    static Scope<Texture> create(const std::string& filesystem, void* renderer);
+    static Scope<Texture> create(const std::string &filepath);
 
     friend class ResourceBundle;
 };

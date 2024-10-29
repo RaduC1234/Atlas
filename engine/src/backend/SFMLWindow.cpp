@@ -1,3 +1,4 @@
+#include <any>
 #include "SFMLWindow.hpp"
 
 SFMLWindow::SFMLWindow(const WindowProps &windowProps): m_props(windowProps), m_vsyncEnabled(windowProps.vSync) {
@@ -19,9 +20,6 @@ void SFMLWindow::update() {
             m_window.close();
         }*/
     }
-    this->m_window.display();
-    this->m_window.clear();
-
 }
 
 uint32_t SFMLWindow::getWidth() const {
@@ -45,6 +43,10 @@ bool SFMLWindow::isVSync() const {
     return m_vsyncEnabled;
 }
 
-void* SFMLWindow::getNativeWindow() const {
-    return m_window.getSystemHandle();
+/**
+ * Returns a reference to the SFML window
+ * @return
+ */
+std::any SFMLWindow::getNativeWindow() const {
+    return std::ref(this->m_window);
 }

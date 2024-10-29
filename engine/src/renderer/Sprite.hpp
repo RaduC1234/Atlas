@@ -5,17 +5,18 @@
 #include "core/Core.hpp"
 
 #include "Texture.hpp"
+#include "backend/SFMLTexture.hpp"
 #include <glm/glm.hpp>
 
 using TextureCoords = std::array<glm::vec2, 4>;
 
 struct Sprite {
 public:
-    Sprite(const Ref<Texture>& texture);
+    Sprite(const Ref<SFMLTexture>& texture);
 
-    Sprite(const Ref<Texture>& texture, TextureCoords texCoors);
+    Sprite(const Ref<SFMLTexture>& texture, TextureCoords texCoors);
 
-    Ref<Texture> texture;
+    Ref<SFMLTexture> texture;
     TextureCoords texCoords;
 };
 

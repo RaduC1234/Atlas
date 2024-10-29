@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility>
+#include <any>
 
 #include "core/Core.hpp"
 #include "event/Event.hpp"
@@ -34,7 +35,7 @@ public:
 
     virtual bool isVSync() const = 0;
 
-    virtual void *getNativeWindow() const = 0;
+    virtual std::any getNativeWindow() const = 0;
 
     static Scope<Window> create(const WindowProps &props = WindowProps());
 };

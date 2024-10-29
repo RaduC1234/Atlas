@@ -4,7 +4,7 @@
 
 class LevelScene : public Scene {
 public:
-    void onCreate(void* window) override {
+    void onCreate(const Window& window) override {
 
     }
 

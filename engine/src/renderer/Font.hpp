@@ -3,8 +3,10 @@
 #include "core/Core.hpp"
 
 class Font {
-    virtual ~Font();
+public:
+    virtual ~Font() = default;
+    virtual void* getNativeResource() = 0;
 
-    virtual std::string getTTFPath();
+    static Scope<Font> create(const std::string& filePath);
 };
 

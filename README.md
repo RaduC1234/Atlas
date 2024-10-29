@@ -2,16 +2,22 @@
 
 ## Building
 
-Requirements: vcpkg, cmake
+Requirements: vcpkg, cmake \
+\
+Dependencies:
+1. [GLM](https://github.com/g-truc/glm)
+2. [SFML](https://www.sfml-dev.org/index.php)
+3. [ENTT](https://github.com/skypjack/entt)
+4. [SQLiteCpp](https://github.com/SRombauts/SQLiteCpp)
 
 ### Tasks
 
 - Pentru task-uri săptămânale [aici](https://github.com/users/RaduC1234/projects/6/views/1).
-- Exista 2 branchuri: unul main pe caruia o sa ii dam update in fiecare saptamana si unul de test in care o sa incarcam 
+- Exista 2 branchuri: unul main pe care sa **NU faceti push direct si nici pull request**, si unul de test
 
 ## Battle city
 
-Jocul Battle city se desfășoară într-un spațiu bidimensional în care mai mulți jucători se luptă pentru a distruge tancurile inamice și să câștige teritoriul tabelei de joc. Pornind de ideea acestui joc să se implementeze o aplicație care respectă următoarele reguli:
+Jocul [Battle city](https://docs.google.com/document/d/1ZUAht8qgf-_eWXlgzBdUDsHmSIjltmKt4VtcDRZftMs/edit?tab=t.0#heading=h.7qep3k3doi7) se desfășoară într-un spațiu bidimensional în care mai mulți jucători se luptă pentru a distruge tancurile inamice și să câștige teritoriul tabelei de joc. Pornind de ideea acestui joc să se implementeze o aplicație care respectă următoarele reguli:
 - Într-un spațiu minat sunt plasate cel mult 4 personaje (câte unul pentru fiecare jucător) în unul din colțurile tabelei de joc. Fiecare personaj se va putea deplasa cu câte o unitate în una din cele 4 direcții (sus, jos, stânga sau dreapta) dacă este liberă, cu scopul de a-i împușca pe inamici.
 - Spațiul de joc este reprezentat sub formă dreptunghiulară (n\*m metri, valori alese random la începutul fiecărui joc), iar distanța dintre oricare două căsuțe vecine este de 1 metru. Un personaj poate ocupa o singură căsuță la un moment dat.
 - Tabela de joc conține 3 tipuri:

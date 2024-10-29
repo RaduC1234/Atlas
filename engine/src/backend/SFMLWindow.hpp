@@ -22,7 +22,7 @@ public:
 
     bool isVSync() const override;
 
-    void *getNativeWindow() const override;
+    std::any getNativeWindow() const override;
 
 private:
     sf::RenderWindow m_window;

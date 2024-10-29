@@ -8,8 +8,8 @@ class ResourceBundle {
 public:
 
 private:
-    Renderer *renderer;
-    std::unordered_map<int, Texture> textures;
-    std::unordered_map<int, Font> font;
+    // index by filepath
+    std::unordered_map<std::string, Texture> textures;
+    std::unordered_map<std::string, Font> font;
 };
 
