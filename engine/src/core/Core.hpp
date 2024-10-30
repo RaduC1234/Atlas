@@ -6,6 +6,7 @@
 #include <set>
 #include <sstream>
 #include <vector>
+#include <unordered_map>
 #include <unordered_set>
 #include <queue>
 #include <fstream>
@@ -18,6 +19,8 @@
 #include <array>
 #include <any>
 #include <mutex>
+#include "KeyCodes.hpp"
+#include "MouseCodes.hpp"
 
 #include "Log.hpp"
 
