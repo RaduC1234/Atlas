@@ -1,16 +1,12 @@
 #include "Atlas.hpp"
-#include "ServerNetworkManager.hpp"
+#include "core/ServerNetworkManager.hpp"
 #include <SFML/Network.hpp>
 
 
-//TODO:Integrate PlayerService  in the server
-//TODO:Implement the DatabaseManager for the player only
-//TODO:Make the connection between the log and ServerNetwork , log for the server only ,
-//TODO:#optional make it connect to a discord server and send the massages of the
-//TODO:server status ticks etc on the chat so that its easy to see and even on help commands
-std::atomic<bool> serverRunning{true};
 
-void commandListener(ServerNetworkingManager& manager) {
+std::atomic<bool> serverRunning{true}; // TODO: Fa un thread petnru fiecare lobby.
+
+void commandListener(ServerNetworkingManager& manager) { //TODO: Command module with command design patten
     std::string command;
     while (serverRunning) {
         std::getline(std::cin, command);
@@ -18,7 +14,7 @@ void commandListener(ServerNetworkingManager& manager) {
     }
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) { // This is bad code. Refractor Andre
     Log::init();
     AT_INFO("Server started");
 
@@ -52,6 +48,17 @@ int main(int argc, char** argv) {
 
     commandThread.join();
     AT_INFO("Server has shut down.");
+
+
+//    CommandHandler handler; // pe clasa
+//    handle.run(); // pe thread separat
+//
+//    while(true) {
+//        for (lobby: lobies) {
+//            lobbymanager; // https://github.com/RaduC1234/nio-Server/blob/master/src/main/java/team/JavaTeens/ServerCommand/CommandHandler.java
+//        }
+//    }
+
 
     return 0;
 }

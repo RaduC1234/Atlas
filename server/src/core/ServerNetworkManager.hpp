@@ -22,16 +22,15 @@ private:
     int nextLobbyId = 1;
     std::atomic<bool>& serverRunning;
 
-    static bool verifyDLL(const std::vector<char>& buffer);
+    static bool verifyDLL(const std::vector<char>& buffer); // nup
     void removeClient(sf::TcpSocket* client);
     void handleLobbyRequests(sf::TcpSocket* client);
     void createLobby(sf::TcpSocket* client);
     void joinLobby(sf::TcpSocket* client, sf::Packet& packet);
-    void showHelp();
-
+    void showHelp(); // move in command
 public:
     ServerNetworkingManager(std::atomic<bool>& running);
     void handleClient(sf::TcpSocket* client);
-    void handleCommand(const std::string& command);
+    void handleCommand(const std::string& command); // in command
     bool addClient(sf::TcpSocket* client);
 };
