@@ -1,5 +1,4 @@
 #pragma once
-#include "GLFW/glfw3.h"
 #include "event/Event.hpp"
 
 // Use a more descriptive name for KeyCode
