@@ -1,10 +1,12 @@
 #pragma once
 
+#include "core/Core.hpp"
 #include "scene/Scene.hpp"
 
 class LevelScene : public Scene {
+
 public:
-    void onCreate(const Window& window) override {
+    void onCreate() override {
 
     }
 
