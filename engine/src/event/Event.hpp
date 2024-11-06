@@ -64,8 +64,3 @@ private:
     Event& m_Event;
 };
 
-class DefaultEvent : public Event {
-public:
-
-};
-

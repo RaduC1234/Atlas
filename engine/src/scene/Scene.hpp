@@ -1,16 +1,12 @@
 #pragma once
 
-#include "Entity.hpp"
-
-#include "renderer/Renderer.hpp"
-#include "resource/ResourceBundle.hpp"
 
 class Scene {
 public:
 
     virtual ~Scene() = default;
 
-    virtual void onCreate(const Window& window) =0;
+    virtual void onCreate() = 0;
 
     virtual void onStart() = 0;
 
@@ -20,27 +16,4 @@ public:
 
     virtual void onDestroy() = 0;
 
-protected:
-
-    Scope<Renderer> renderer;
-    Registry registry;
-    Scope<ResourceBundle> resourceBundle;
-
-    friend class ImGuiLayer;
-    friend class SceneInitializer;
 };
-
-class SceneManager {
-    void addScene(const std::string& name, Scope<Scene> scene) {
-        this->scenes[name] = std::move(scene);
-    }
-
-    void changeScene(const std::string& scene) {
-
-    }
-private:
-    std::string activeScene;
-    std::unordered_map<std::string, Scope<Scene>> scenes;
-};
-
-

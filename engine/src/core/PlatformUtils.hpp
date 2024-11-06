@@ -1,13 +1,21 @@
 #pragma once
 
+#include "core/Core.hpp"
+#include "core/Window.hpp"
+
 class Time {
 public:
+
     static double getTime();
 };
 
-/*class FileDialogs {
+class FileDialogs {
+private:
+    static Window *m_window;
 public:
+
+    static void init(const Window &window);
+
     static std::string openFile(const char *filter);
     static std::string saveFile(const char* filter);
-};*/
-
+};

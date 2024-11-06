@@ -1,41 +1,44 @@
 #pragma once
 
-#include <utility>
-#include <any>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include <stb_image.h>
 
 #include "core/Core.hpp"
-#include "event/Event.hpp"
-
-#include "glm/glm.hpp"
-
-struct WindowProps {
-    std::string title;
-    uint32_t width, height;
-    bool vSync;
-
-    WindowProps(std::string title = "Atlas Window", uint32_t width = 1080, uint32_t height = 720, bool vSync = true) : title(std::move(title)), width(width), height(height), vSync(vSync) {}
-};
 
 class Window {
 public:
 
-    using EventCallbackFn = std::function<void(Event &)>;
+    Window(std::string title = "Avalon Window", int width = 1920, int height = 1080, bool vSync = GLFW_TRUE);
 
-    virtual ~Window() = default;
+    ~Window();
 
-    virtual void update() = 0;
+    void onUpdate();
 
-    virtual uint32_t getWidth() const = 0;
+    int getWidth() const {
+        return width;
+    }
 
-    virtual uint32_t getHeight() const = 0;
+    int getHeight() const {
+        return height;
+    }
 
-    virtual void setEventCallback(const EventCallbackFn &callbackFn) = 0;
+    GLFWwindow *getNativeWindow() const {
+        return glfwWindow;
+    }
 
-    virtual void setVSync(bool enabled) = 0;
+    friend class Application;
 
-    virtual bool isVSync() const = 0;
+private:
 
-    virtual std::any getNativeWindow() const = 0;
+    static void setWindowIcon(GLFWwindow *window, const char *iconPath);
 
-    static Scope<Window> create(const WindowProps &props = WindowProps());
+    std::string title = "Avalon C++";
+    int width;
+    int height;
+    bool vSync;
+
+    GLFWwindow *glfwWindow = nullptr;
+
+    inline static int glfw_windowCount = 0;
 };
