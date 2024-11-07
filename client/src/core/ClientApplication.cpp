@@ -26,7 +26,7 @@ void ClientApplication::run() {
     while (isRunning) {
 
         this->window->onUpdate();
-        EventManager::pollEvents();
+        //EventManager::pollEvents();
 
         if(deltaTime >= 0 && this->currentScene != nullptr) {
             this->currentScene->onUpdate(deltaTime);
