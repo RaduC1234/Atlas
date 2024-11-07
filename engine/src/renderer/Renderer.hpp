@@ -92,7 +92,7 @@ public:
 
 
 
-    void flush(int screenWidth, int screenHeight, Camera &camera) {
+    void flush(uint32_t screenWidth, uint32_t screenHeight, Camera &camera) {
 
         std::sort(batches.begin(), batches.end(),
                   [](const RenderBatch &a, const RenderBatch &b) {

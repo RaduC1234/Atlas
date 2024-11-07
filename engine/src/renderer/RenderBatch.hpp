@@ -155,7 +155,7 @@ public:
     }
 
     bool hasTextureRoom() {
-        return textures.size() < 8;
+        return textures.size() < 16;
     }
 
     bool hasTexture(const Ref<Texture> &texture) {

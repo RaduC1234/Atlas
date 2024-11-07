@@ -1,13 +1,20 @@
 #pragma once
-#include "event/Event.hpp"
 
-// Use a more descriptive name for KeyCode
+#include <vector>
+#include <cstdint>
+
 using KeyCode = uint16_t;
 
-namespace Key
-{
-    enum : KeyCode
-    {
+class Keyboard {
+public:
+    /**
+     * @brief Returns whether a key is currently pressed.
+     * @param code The KeyCode representing the key.
+     * @return true if the key is pressed, false otherwise.
+     */
+    static bool isKeyPressed(KeyCode code);
+
+    enum : KeyCode {
         // From glfw3.h
         Space               = 32,
         Apostrophe          = 39, /* ' */
@@ -140,4 +147,10 @@ namespace Key
         RightSuper          = 347,
         Menu                = 348
     };
-}
+
+private:
+    static std::vector<bool> keyPressed;
+
+    friend class Window;
+};
+

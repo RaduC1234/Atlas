@@ -17,7 +17,7 @@ Window::Window(std::string title, int width, int height, bool vSync) : title(std
         AT_FATAL("Error creating glfw window");
     }
 
-    setWindowIcon(this->glfwWindow, "resources/textures/default.png");
+    setWindowIcon(this->glfwWindow, "assets/textures/default.png");
 
     glfwMakeContextCurrent(this->glfwWindow);
 
@@ -25,7 +25,9 @@ Window::Window(std::string title, int width, int height, bool vSync) : title(std
 
     //https://www.glfw.org/docs/3.3/input_guide.html#input_key
 
-    // Window Callbacks
+    /**
+    *  ===================================Window Callbacks=====================================
+    */
     glfwSetWindowSizeCallback(glfwWindow, [](GLFWwindow *window, int width, int height) {
         Window &data = *static_cast<Window *>(glfwGetWindowUserPointer(window));
 
@@ -40,40 +42,42 @@ Window::Window(std::string title, int width, int height, bool vSync) : title(std
         exit(0);
     });
 
-    // Keyboard Callbacks
+
+
+    /**
+     *  ===================================Keyboard Callbacks=====================================
+     */
     glfwSetKeyCallback(glfwWindow, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
-        Window &data = *static_cast<Window *>(glfwGetWindowUserPointer(window));
+
+        if (key > Keyboard::keyPressed.size()) {
+            AT_ERROR("Key out of bounds");
+            return;
+        }
 
         if (action == GLFW_PRESS) {
-            //data.listener.keyPressed[key] = true;
+            Keyboard::keyPressed[key] = true;
         } else if (action == GLFW_RELEASE) {
-            //data.listener.keyPressed[key] = false;
+            Keyboard::keyPressed[key] = false;
         }
     });
-/*
-            glfwSetCharCallback(glfwWindow, [](GLFWwindow *window, unsigned int keycode) {
-                Window &data = *static_cast<Window *>(glfwGetWindowUserPointer(window));
 
-                //KeyTypedEvent event(keycode);
-                //data.getEventManager().publish(event);
-            });*/
-
-    // Mouse Callbacks
+    /**
+     *  ===================================Mouse Callbacks=====================================
+     */
     glfwSetMouseButtonCallback(glfwWindow, [](GLFWwindow *window, int button, int action, int mods) {
-        Window &data = *static_cast<Window *>(glfwGetWindowUserPointer(window));
 
         switch (action) {
             case GLFW_PRESS: {
-                /* if (button < data.listener.mouseButtonPressed.size()) {
-                     data.listener.mouseButtonPressed[button] = true;
-                 }
-                 break;*/
+                if (button < Mouse::buttonPressed.size()) {
+                    Mouse::buttonPressed[button] = true;
+                }
+                break;
             }
             case GLFW_RELEASE: {
-                /* if (button < data.listener.mouseButtonPressed.size()) {
-                     data.listener.mouseButtonPressed[button] = false;
-                 }
-                 break;*/
+                if (button < Mouse::buttonPressed.size()) {
+                    Mouse::buttonPressed[button] = false;
+                }
+                break;
             }
         }
     });
@@ -81,26 +85,15 @@ Window::Window(std::string title, int width, int height, bool vSync) : title(std
     glfwSetScrollCallback(glfwWindow, [](GLFWwindow *window, double xOffset, double yOffset) {
         Window &data = *static_cast<Window *>(glfwGetWindowUserPointer(window));
 
-        /* data.listener.scrollX = xOffset;
-         data.listener.scrollY = yOffset;*/
+        Mouse::scrollXOffset = xOffset;
+        Mouse::scrollYOffset = yOffset;
     });
 
     glfwSetCursorPosCallback(glfwWindow, [](GLFWwindow *window, double xPos, double yPos) {
-        /*Window &data = *static_cast<Window *>(glfwGetWindowUserPointer(window));
-
-        data.listener.lastX = data.listener.xPos;
-        data.listener.lastY = data.listener.yPos;
-        data.listener.xPos = xPos;
-        data.listener.yPos = yPos;
-        data.listener.dragging = data.listener.mouseButtonPressed[0] || data.listener.mouseButtonPressed[1] ||
-                                 data.listener.mouseButtonPressed[2];*/
+        Mouse::xPos = xPos;
+        Mouse::yPos = yPos;
+        Mouse::dragging = Mouse::buttonPressed[0] || Mouse::buttonPressed[1] || Mouse::buttonPressed[2];
     });
-
-
-/*        glfwSetFramebufferSizeCallback(glfwWindow, [](GLFWwindow *window, int l_width, int l_height) {
-            glViewport(0, 0, l_width, l_height);
-        });*/
-
 
     // enable v-sync
     glfwSwapInterval(1);

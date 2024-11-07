@@ -22,8 +22,8 @@
 #include <vector>
 
 
-#include "KeyCodes.hpp"
-#include "MouseCodes.hpp"
+#include "Keyboard.hpp"
+#include "Mouse.hpp"
 
 #include "Log.hpp"
 

@@ -1,7 +1,7 @@
 #include "RenderManager.hpp"
 
 void RenderManager::init(uint32_t maxBatchSize) {
-    renderer = Renderer(maxBatchSize, {1.0f, 1.0f, 1.0f, 1.0f});
+    renderer = Renderer(maxBatchSize);
 }
 
 void RenderManager::shutdown() {

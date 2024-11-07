@@ -4,6 +4,7 @@
 #include "renderer/RenderManager.hpp"
 #include "levels/MenuScene.hpp"
 #include "levels/LoadingScene.hpp"
+#include "event/EventManager.hpp"
 
 
 void ClientApplication::run() {
@@ -13,6 +14,7 @@ void ClientApplication::run() {
 
     this->window = CreateScope<Window>();
 
+    EventManager::init();
     RenderManager::init();
 
     this->changeScene(CreateScope<MenuScene>());
@@ -24,6 +26,7 @@ void ClientApplication::run() {
     while (isRunning) {
 
         this->window->onUpdate();
+        EventManager::pollEvents();
 
         if(deltaTime >= 0 && this->currentScene != nullptr) {
             this->currentScene->onUpdate(deltaTime);
