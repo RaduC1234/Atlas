@@ -1,5 +1,6 @@
 #include "Window.hpp"
 
+#include <stb_image.h>
 
 Window::Window(std::string title, int width, int height, bool vSync) : title(std::move(title)), width(width), height(height), vSync(vSync) {
 

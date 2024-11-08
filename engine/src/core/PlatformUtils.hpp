@@ -9,6 +9,11 @@ public:
     static double getTime();
 };
 
+class FileSystem {
+public:
+    static void setWorkingDirectory(std::string programWorkingDirectory);
+};
+
 class FileDialogs {
 private:
     static Window *m_window;

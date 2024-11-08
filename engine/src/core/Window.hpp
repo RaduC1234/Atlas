@@ -2,14 +2,14 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <stb_image.h>
+
 
 #include "core/Core.hpp"
 
 class Window {
 public:
 
-    Window(std::string title = "Avalon Window", int width = 1920, int height = 1080, bool vSync = GLFW_TRUE);
+    Window(std::string title = "Atlas Window", int width = 1920, int height = 1080, bool vSync = true);
 
     ~Window();
 

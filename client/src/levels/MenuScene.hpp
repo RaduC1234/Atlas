@@ -8,6 +8,7 @@ class MenuScene : public Scene {
 public:
     void onCreate() override {
         this->camera = Camera({0, 0}, 2.0f);
+
         this->font = CreateRef<Font>("assets/fonts/Roboto-Light.ttf");
         this->texture = CreateRef<Texture>("assets/textures/default.png");
         this->characterW = CreateRef<Texture>("assets/textures/blueMageSprite/B.png");
@@ -69,7 +70,7 @@ public:
             moved = true;
         }
 
-        RenderManager::drawQuad({playerPosition.x, playerPosition.y, 0.0f}, {100.0f, 100.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(currentSprite));
+        RenderManager::drawQuad({playerPosition.x, playerPosition.y, 0.0f}, {75.0f, 75.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(currentSprite));
         RenderManager::drawText({-65.0f, 0.0f, 1.0f}, "Atlas OpenGL", font, 2.0f, Color(1.0f, 1.0f, 1.0f, 1.0f));
     }
 
@@ -86,6 +87,7 @@ protected:
 
     Camera camera;
     Registry registry;
+
     Ref<Font> font;
     Ref<Texture> texture;
     Ref<Texture> currentSprite;

@@ -1,8 +1,10 @@
 #pragma once
 
-#include <freetype/freetype.h>
-
 #include "core/Core.hpp"
+
+#include <glad/glad.h>
+#include <freetype/freetype.h>
+#include <glm/glm.hpp>
 
 // https://learnopengl.com/In-Practice/Text-Rendering
 
@@ -18,15 +20,7 @@ class Font {
 public:
     Font() = default;
 
-    Font(const std::string &filePath) : filePath(filePath) {
-
-        if(!isLoaded) {
-            loadLibs();
-            isLoaded = true;
-        }
-
-        load();
-    }
+    Font(const std::string &filePath);
 
 /*    ~Font() {
 

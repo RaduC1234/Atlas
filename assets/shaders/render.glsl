@@ -43,30 +43,19 @@ out vec4 color;
 
 void main() {
 
-    if (fShapeType == 2.0) { // if rendering text
+    if (fShapeType == 2.0) { // text
 
         int id = int(fTexId);
         color = fColor * texture(uTextures[id], fTexCoords).r;
     }
-    else if (fShapeType == 1.0) { // If we are rendering a circle
-        // Calculate the distance from the center of the circle
-        float dist = length(fTexCoords - vec2(0.5, 0.5));// Assuming the circle is centered in the quad
-
-        // Check if the distance exceeds the circle radius
-        if (dist > fCircleRadius) {
-            discard;// Discard the fragment if it's outside the circle
-        }
-
-        // If we're inside the circle, we still apply color (can also apply texture here)
-        color = fColor;// Apply color or texture as desired
-
+    else if (fShapeType == 1.0) { // circles
+        color = vec4(1.0f, 1.0f, 1.0f, 1.0f); // implement circles
     } else {
-        // Normal texture handling for other shapes (like quads)
-        if (fTexId > 0.0) {
+        if (fTexId > 0.0) { // quads
             int id = int(fTexId);
             color = fColor * texture(uTextures[id], fTexCoords);
         } else {
-            color = fColor;// Just use the color if no texture is used
+            color = fColor;
         }
     }
 }

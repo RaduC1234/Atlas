@@ -9,10 +9,23 @@
 #include <commdlg.h>
 #endif
 
+//================Time=============
 double Time::getTime() {
     return glfwGetTime();
 }
 
+
+//==============FileSystem===========
+void FileSystem::setWorkingDirectory(std::string programWorkingDirectory) {
+    try {
+        std::filesystem::current_path(programWorkingDirectory);
+    } catch (const std::filesystem::filesystem_error& e) {
+        AT_FATAL("Error changing directory: {0}", e.what());
+    }
+}
+
+
+//=============FileDialogs=============
 Window *FileDialogs::m_window = nullptr;
 
 void FileDialogs::init(const Window &window) {

@@ -12,12 +12,18 @@ void ClientApplication::run() {
     Log::init();
     AT_INFO("Starting Atlas Client");
 
+    FileSystem::setWorkingDirectory(ATLAS_WORKING_DIRECTORY);
+    AT_INFO("Working directory is: {0}", ATLAS_WORKING_DIRECTORY);
+
     this->window = CreateScope<Window>();
 
     EventManager::init();
     RenderManager::init();
 
-    this->changeScene(CreateScope<MenuScene>());
+    AT_INFO("Client finished loading");
+
+
+;    this->changeScene(CreateScope<MenuScene>());
 
     float beginTime = Time::getTime();
     float endTime;

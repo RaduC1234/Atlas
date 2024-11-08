@@ -8,11 +8,11 @@ void RenderManager::shutdown() {
     renderer = Renderer(); // default constructor creates nothing
 }
 
-void RenderManager::drawRotatedQuad(const glm::vec3 &position, const glm::vec2 &size, float rotation, const glm::vec4 &color, Sprite sprite) {
+void RenderManager::drawRotatedQuad(const glm::vec3 &position, const glm::vec2 &size, float rotation, const glm::vec4 &color, const Sprite& sprite) {
     renderer.drawRotatedQuad(position, size, rotation, color, sprite);
 }
 
-void RenderManager::drawQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, Sprite sprite) {
+void RenderManager::drawQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, const Sprite& sprite) {
     renderer.drawQuad(position, size, color, sprite);
 }
 

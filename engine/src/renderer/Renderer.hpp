@@ -23,8 +23,25 @@ public:
         }
     }
 
-
-    void drawPrimitive(const glm::vec3 &position, const glm::vec2 &scale, float rotation, Shape shape, const glm::vec4 color, const Ref<Texture> &texture, const TextureCoords &texCoords) {
+    /**
+     * Adds a primitive shape to the draw queue. This method attempts to locate an existing batch
+     * in the batch slot that uses the same texture, allowing the shape to be added efficiently.
+     *
+     * <p>Supported shapes include:
+     * <ul>
+     *   <li>Quads</li>
+     *   <li>Circles</li>
+     *   <li>Text</li>
+     * </ul>
+     *
+     * @note <p>All shapes are sent to the GPU as quads, with their unique appearance handled in the
+     * fragment shader at render time.
+     *
+     * @position postition to draw to.
+     * @param shape the shape to add to the draw queue
+     * @param texture the texture associated with the shape, used for batch matching
+     */
+    void drawPrimitive(const glm::vec3 &position, const glm::vec2 &scale, float rotation, Shape shape, const glm::vec4 &color, const Ref<Texture> &texture, const TextureCoords &texCoords, bool centered = true) {
 
         float zIndex = position.z;
 
@@ -48,6 +65,13 @@ public:
 
     }
 
+    /**
+     *
+     * @param position
+     * @param size
+     * @param color
+     * @param sprite
+     */
     void drawQuad(const glm::vec3 position, const glm::vec2 size, const glm::vec4 color, const Sprite &sprite = Sprite(nullptr)) {
         drawPrimitive(position, size, 0.0f, Shape::QUAD, color, sprite.texture, sprite.texCoords);
     }
@@ -57,39 +81,34 @@ public:
     }
 
     void drawText(glm::vec3 position, float scale, const glm::vec4 color, const Font &font, const std::string &text) {
-        // Iterate through each character in the string
-        for (char c : text) {
-            // Retrieve the character information from the font
+
+        for (char c: text) {
+
             const Character &character = font.getCharacter(c);
 
-            // Calculate the position of each character
             float xpos = position.x + character.bearing.x * scale;
             float ypos = position.y - (character.size.y - character.bearing.y) * scale;
 
-            // Size of each character quad (scaled by the font size)
+
             float width = character.size.x * scale;
             float height = character.size.y * scale;
 
-            // Create the sprite for the character (assuming character.textureID is already set correctly)
             auto sprite = Sprite(CreateRef<Texture>(character.textureID));
 
-            // Draw the character using sprite texture coordinates
             drawPrimitive(
-                    glm::vec3(xpos, ypos, position.z), // Position of the character
-                    glm::vec2(width, height),           // Size of the character (scaled)
-                    0.0f,                               // Rotation (none in this case)
-                    Shape::TEXT,                        // Shape type (text shape)
-                    color,                              // Color of the text
-                    sprite.texture,                     // Character texture
-                    sprite.texCoords                   // Texture coordinates for the character
+                    glm::vec3(xpos, ypos, position.z),
+                    glm::vec2(width, height),
+                    0.0f,
+                    Shape::TEXT,
+                    color,
+                    sprite.texture,
+                    sprite.texCoords
             );
 
             // Advance the position for the next character (considering the scale)
             position.x += (character.advance / 64.0f) * scale;  // Correctly scale the advance (1/64th of a pixel)
         }
     }
-
-
 
 
     void flush(uint32_t screenWidth, uint32_t screenHeight, Camera &camera) {

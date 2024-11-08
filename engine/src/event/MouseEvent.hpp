@@ -9,14 +9,11 @@ public:
 
 class MouseButtonPressEvent : public MouseEvent {
 public:
-    explicit MouseButtonPressEvent(MouseCode button)
-        : m_Button(button) {}
+    explicit MouseButtonPressEvent(MouseCode button) : m_Button(button) {}
 
     MouseCode getButton() const override { return m_Button; }
 
-    static EventType getStaticType() { return EventType::MOUSE_BUTTON_PRESSED; }
-    EventType getType() const override { return getStaticType(); }
-
+    EVENT_CLASS_TYPE(MOUSE_BUTTON_PRESSED);
 private:
     MouseCode m_Button;
 };
@@ -28,9 +25,7 @@ public:
 
     MouseCode getButton() const override { return m_Button; }
 
-    static EventType getStaticType() { return EventType::MOUSE_BUTTON_RELEASED; }
-    EventType getType() const override { return getStaticType(); }
-
+    EVENT_CLASS_TYPE(MOUSE_BUTTON_RELEASED)
 private:
     MouseCode m_Button;
 };
@@ -44,9 +39,7 @@ public:
     int getX() const { return m_X; }
     int getY() const { return m_Y; }
 
-    static EventType getStaticType() { return EventType::MOUSE_MOVED; }
-    EventType getType() const override { return getStaticType(); }
-
+    EVENT_CLASS_TYPE(MOUSE_MOVED)
 private:
     int m_X, m_Y;
 };
