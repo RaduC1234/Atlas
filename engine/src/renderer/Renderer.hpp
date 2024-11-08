@@ -1,54 +1,174 @@
 #pragma once
 
-#include "core/Core.hpp"
-
-#include <glm/glm.hpp>
-
-#include "Font.hpp"
+#include "RenderBatch.hpp"
 #include "Sprite.hpp"
-#include "Camera.hpp"
-#include "core/Window.hpp"
 
+//#include "avalon/utils/AssetPool.hpp"
+//#include "FrameBuffer.hpp"
+
+enum Shape : uint32_t {
+    QUAD,
+    CIRCLE,
+    TEXT
+};
 
 class Renderer {
 public:
-    virtual ~Renderer() = default;
+    Renderer() = default;
+
+    Renderer(uint32_t maxBatchSize, const glm::vec4 clearColor = {0.0863f, 0.0863f, 0.0863f, 1.0f}) : maxBatchSize(maxBatchSize), clearColor(clearColor) {
+        if (!initialized) {
+            Renderer::init();
+            initialized = true;
+        }
+    }
 
     /**
-     * Draws a quad on the screen.
-     * @param position x and y represent the position of the quad on the screen, z is the z-index of the quad
-     * @param size size of the quad
-     * @param rotation rotation of the quad in degrees
-     * @param color color of the quad
-     * @param sprite leave null for opaque quad
-    * @param normalized indicates if the quad is drawn in screen space (1) or world space (0). The screen coords start from top left to bottom right and map from 0 to 100.
-    */
-    virtual void drawQuad(const glm::vec3 &position, const glm::vec2 &size, float rotation, const glm::vec4 &color, const Sprite &sprite, bool normalized) = 0;
-
-    /**
-     * Draws a text on the screen.
-     * @param position x and y represent the position of the text on the screen, z is the z-index of the text
-     * @param text text to draw
-     * @param font font to use
-     * @param size size of the glyphs
-     * @param spacing spacing between the glyphs
-     * @param color color of the text
-     * @param normalized indicates if the text is drawn in screen space (1) or world space (0). The screen coords start from top left to bottom right and map from 0 to 100.
+     * Adds a primitive shape to the draw queue. This method attempts to locate an existing batch
+     * in the batch slot that uses the same texture, allowing the shape to be added efficiently.
+     *
+     * <p>Supported shapes include:
+     * <ul>
+     *   <li>Quads</li>
+     *   <li>Circles</li>
+     *   <li>Text</li>
+     * </ul>
+     *
+     * @note <p>All shapes are sent to the GPU as quads, with their unique appearance handled in the
+     * fragment shader at render time.
+     *
+     * @position postition to draw to.
+     * @param shape the shape to add to the draw queue
+     * @param texture the texture associated with the shape, used for batch matching
      */
-    virtual void drawText(const glm::vec3 &position, const std::string &text, const Ref<Font> &font, float size, float spacing, const glm::vec4 &color, bool normalized) = 0;
+    void drawPrimitive(const glm::vec3 &position, const glm::vec2 &scale, float rotation, Shape shape, const glm::vec4 &color, const Ref<Texture> &texture, const TextureCoords &texCoords, bool centered = true) {
+
+        float zIndex = position.z;
+
+        bool added = false;
+        for (auto &x: batches) {
+            if (!x.isFull() && x.getZIndex() == zIndex) {
+
+                // if quad has no texture
+                if (texture == nullptr || (x.hasTexture(texture) || x.hasTextureRoom())) {
+                    x.addShape(position, scale, rotation, shape, color, texture, texCoords);
+                    added = true;
+                    break;
+                }
+            }
+        }
+
+        if (!added) {
+            batches.emplace_back(maxBatchSize, renderShader, zIndex);
+            batches.back().addShape(position, scale, rotation, shape, color, texture, texCoords);
+        }
+
+    }
 
     /**
-     * Draws a Circle on the screen.
-     * @param position x and y represent the position of the line on the screen, z is the z-index of the circle
-     * @param radius radius of the circle
-     * @param color color of the circle
-     * @param sprite leave null for opaque circle
-     * @param normalized indicates if the circle is drawn in screen space (1) or world space (0). The screen coords start from top left to bottom right and map from 0 to 100.
+     *
+     * @param position
+     * @param size
+     * @param color
+     * @param sprite
      */
-    virtual void drawCircle(const glm::vec3 &position, float radius, const glm::vec4 &color, const Sprite &sprite, bool normalized) = 0;
+    void drawQuad(const glm::vec3 position, const glm::vec2 size, const glm::vec4 color, const Sprite &sprite = Sprite(nullptr)) {
+        drawPrimitive(position, size, 0.0f, Shape::QUAD, color, sprite.texture, sprite.texCoords);
+    }
 
-    virtual void flush(uint32_t screenWidth, uint32_t screenHeight, Camera& camera) = 0;
+    void drawRotatedQuad(const glm::vec3 position, const glm::vec2 size, float rotation, const glm::vec4 color, const Sprite &sprite = Sprite(nullptr)) {
+        drawPrimitive(position, size, rotation, Shape::QUAD, color, sprite.texture, sprite.texCoords);
+    }
 
-	static Scope<Renderer> create(void* nativeWindow);
+    void drawText(glm::vec3 position, float scale, const glm::vec4 color, const Font &font, const std::string &text) {
 
+        for (char c: text) {
+
+            const Character &character = font.getCharacter(c);
+
+            float xpos = position.x + character.bearing.x * scale;
+            float ypos = position.y - (character.size.y - character.bearing.y) * scale;
+
+
+            float width = character.size.x * scale;
+            float height = character.size.y * scale;
+
+            auto sprite = Sprite(CreateRef<Texture>(character.textureID));
+
+            drawPrimitive(
+                    glm::vec3(xpos, ypos, position.z),
+                    glm::vec2(width, height),
+                    0.0f,
+                    Shape::TEXT,
+                    color,
+                    sprite.texture,
+                    sprite.texCoords
+            );
+
+            // Advance the position for the next character (considering the scale)
+            position.x += (character.advance / 64.0f) * scale;  // Correctly scale the advance (1/64th of a pixel)
+        }
+    }
+
+
+    void flush(uint32_t screenWidth, uint32_t screenHeight, Camera &camera) {
+
+        std::sort(batches.begin(), batches.end(),
+                  [](const RenderBatch &a, const RenderBatch &b) {
+                      return a.getZIndex() > b.getZIndex();
+                  });
+
+        glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        for (auto &batch: batches) {
+            batch.start();
+            batch.render(screenWidth, screenHeight, camera);
+        }
+        batches.clear();
+
+        GLenum err;
+        if ((err = glGetError()) != GL_NO_ERROR) {
+            AT_ERROR("OpenGL error: {0}", err);
+        }
+    }
+
+    void static init() {
+
+        if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
+            std::cout << "Failed to initialize GLAD" << std::endl;
+            exit(1);
+        }
+
+        int textureUnits;
+        glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &textureUnits);
+        AT_INFO("Texture units available on hardware: {0}.", textureUnits);
+
+        glEnable(GL_CULL_FACE);
+        glEnable(GL_BLEND); // enable transparency
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        // Enable Anti-Aliasing - todo: implement with framebuffer - also check window class when removing this, line 40
+        glEnable(GL_MULTISAMPLE);
+
+        // Initialize FreeType
+        FT_Library ft;
+        if (FT_Init_FreeType(&ft)) {
+            std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+            return;
+        }
+
+        renderShader = CreateRef<Shader>("assets/shaders/render.glsl");
+    }
+
+private:
+    uint32_t maxBatchSize = 0;
+    std::vector<RenderBatch> batches;
+    glm::vec4 clearColor{1.0f, 1.0f, 1.0f, 1.0f};
+
+    //FrameBuffer frameBuffer;
+
+    inline static Ref<Shader> renderShader;
+    inline static Ref<Shader> postprocessingShader;
+    inline static bool initialized = false;
 };

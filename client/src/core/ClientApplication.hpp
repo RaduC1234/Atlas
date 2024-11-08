@@ -7,9 +7,12 @@
 class ClientApplication {
 public:
     void run();
+    void changeScene(Scope<Scene> scene);
 private:
     Scope<Window> window;
     Scope<Scene> currentScene;
+
+    std::atomic<bool> isRunning = true;
 };
 
 

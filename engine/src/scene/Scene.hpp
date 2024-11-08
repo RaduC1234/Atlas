@@ -1,16 +1,12 @@
 #pragma once
 
-#include "Entity.hpp"
-
-#include "renderer/Renderer.hpp"
-#include "resource/ResourceBundle.hpp"
 
 class Scene {
 public:
 
     virtual ~Scene() = default;
 
-    virtual void onCreate(void *window) =0;
+    virtual void onCreate() = 0;
 
     virtual void onStart() = 0;
 
@@ -20,14 +16,4 @@ public:
 
     virtual void onDestroy() = 0;
 
-protected:
-
-    Scope<Renderer> renderer;
-    Registry registry;
-    Scope<ResourceBundle> resourceBundle;
-
-    friend class ImGuiLayer;
-    friend class SceneInitializer;
 };
-
-
