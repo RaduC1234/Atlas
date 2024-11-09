@@ -1,34 +1,36 @@
 #pragma once
 
-#include "core/Core.hpp"
+#include "CoreServer.hpp"
+constexpr size_t MAX_PLAYERS = 4;
 
-#include <SFML/Network.hpp>
-class Lobby {
+// Assuming a simple connection interface (this can be a class or struct you define elsewhere)
+class Connection {
 public:
-    explicit Lobby(int id);
-    ~Lobby();
-
-    bool addPlayer(sf::TcpSocket* player);
-    void removePlayer(sf::TcpSocket* player);
-    int getPlayerCount() const;
-    int getLobbyId() const;
-    //void sendLevel();
-    //void sendPacket(Packet packet);
-
-    void notifyShutdown();
-
-private:
-    int lobbyId;
-    std::vector<sf::TcpSocket*> players; // clasa separatata cu player PlayerConnection, Player din data si un enum CONNECTED, DISCONECTED AND WAITING
-    std::thread lobbyThread;
-    mutable std::mutex lobbyMutex;
-    bool isRunning = true;
-    static const int MAX_PLAYERS = 4;
-
-    void lobbyLoop();
-
+    virtual void send_text(const std::string& message) = 0; // Pure virtual method for sending text
 };
 
-/**
-* Packet
-*/
+class Lobby {
+public:
+    Lobby(const std::string& id);
+    ~Lobby();
+
+    bool addPlayer(const std::string& playerId);
+    bool removePlayer(const std::string& playerId);
+    bool canAddPlayer() const;
+    bool isEmpty() const;
+    void broadcast(const std::string& message);
+    void start();
+    void stop();
+
+private:
+    void gameLoop();
+    void updateGameState();
+    void broadcastGameState();
+
+    std::string id;
+    bool running;
+    std::thread gameThread;
+    std::unordered_map<std::string, std::string> players; // Store only player IDs
+    std::vector<std::shared_ptr<Connection>> connections; // A container for connections
+    std::mutex mutex;
+};
