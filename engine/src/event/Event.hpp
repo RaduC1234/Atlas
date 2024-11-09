@@ -63,4 +63,3 @@ public:
 private:
     Event& m_Event;
 };
-
