@@ -5,7 +5,7 @@ file(GLOB_RECURSE ENGINE_SOURCES "src/*.cpp" "src/*.hpp")
 
 add_library(engine OBJECT ${ENGINE_SOURCES})
 
-target_compile_definitions(engine PUBLIC ATLAS_ENABLE_ASSERT ATLAS_BACKEND_SFML)
+target_compile_definitions(engine PUBLIC ATLAS_ENABLE_ASSERT)
 
 # SQLite
 find_package(SQLiteCpp CONFIG REQUIRED)

@@ -11,7 +11,9 @@ public:
 
 class FileSystem {
 public:
-    static void setWorkingDirectory(std::string programWorkingDirectory);
+    static void setWorkingDirectory(const std::string& programWorkingDirectory);
+
+    static std::string fileToString(const std::string& filePath);
 };
 
 class FileDialogs {

@@ -3,7 +3,6 @@
 #include "RenderBatch.hpp"
 #include "Sprite.hpp"
 
-//#include "avalon/utils/AssetPool.hpp"
 //#include "FrameBuffer.hpp"
 
 enum Shape : uint32_t {
@@ -37,7 +36,7 @@ public:
      * @note <p>All shapes are sent to the GPU as quads, with their unique appearance handled in the
      * fragment shader at render time.
      *
-     * @position postition to draw to.
+     * @param postition to draw to.
      * @param shape the shape to add to the draw queue
      * @param texture the texture associated with the shape, used for batch matching
      */
@@ -65,13 +64,6 @@ public:
 
     }
 
-    /**
-     *
-     * @param position
-     * @param size
-     * @param color
-     * @param sprite
-     */
     void drawQuad(const glm::vec3 position, const glm::vec2 size, const glm::vec4 color, const Sprite &sprite = Sprite(nullptr)) {
         drawPrimitive(position, size, 0.0f, Shape::QUAD, color, sprite.texture, sprite.texCoords);
     }
@@ -80,8 +72,9 @@ public:
         drawPrimitive(position, size, rotation, Shape::QUAD, color, sprite.texture, sprite.texCoords);
     }
 
-    void drawText(glm::vec3 position, float scale, const glm::vec4 color, const Font &font, const std::string &text) {
+    void drawText(glm::vec3 position, float scale, const glm::vec4& color, const Font &font, const std::string &text) {
 
+       // https://learnopengl.com/In-Practice/Text-Rendering
         for (char c: text) {
 
             const Character &character = font.getCharacter(c);
@@ -93,7 +86,7 @@ public:
             float width = character.size.x * scale;
             float height = character.size.y * scale;
 
-            auto sprite = Sprite(CreateRef<Texture>(character.textureID));
+            auto sprite = Sprite(CreateRef<Texture>(character.textureID)); // this is bad for memory
 
             drawPrimitive(
                     glm::vec3(xpos, ypos, position.z),
@@ -113,13 +106,14 @@ public:
 
     void flush(uint32_t screenWidth, uint32_t screenHeight, Camera &camera) {
 
+        // sort the batches by their z-index so the transparency is applied correctly
         std::sort(batches.begin(), batches.end(),
                   [](const RenderBatch &a, const RenderBatch &b) {
                       return a.getZIndex() > b.getZIndex();
                   });
 
-        glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w); // clear the screen and apply the background color
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the color buffer and depth buffer
 
         for (auto &batch: batches) {
             batch.start();
@@ -135,16 +129,18 @@ public:
 
     void static init() {
 
+        // link glfw and glad
         if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
-            std::cout << "Failed to initialize GLAD" << std::endl;
-            exit(1);
+            AT_FATAL("Failed to initialize GLAD");
         }
 
+        // get the number of textures loadable in a single batch by the gpu
         int textureUnits;
         glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &textureUnits);
         AT_INFO("Texture units available on hardware: {0}.", textureUnits);
 
-        glEnable(GL_CULL_FACE);
+
+        glEnable(GL_CULL_FACE); // Cull faces behind for performance
         glEnable(GL_BLEND); // enable transparency
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 

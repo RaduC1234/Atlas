@@ -6,9 +6,13 @@ Requirements: vcpkg, cmake \
 \
 Dependencies:
 1. [GLM](https://github.com/g-truc/glm)
-2. [SFML](https://www.sfml-dev.org/index.php)
-3. [ENTT](https://github.com/skypjack/entt)
-4. [SQLiteCpp](https://github.com/SRombauts/SQLiteCpp)
+2. [GLAD-OpenGL](https://glad.dav1d.de/)
+3. [GLFW](https://www.glfw.org/)
+4. [Freetype](https://github.com/freetype/freetype)
+5. [Stb](https://github.com/nothings/stb)
+6. [ENTT](https://github.com/skypjack/entt)
+7. [SQLiteCpp](https://github.com/SRombauts/SQLiteCpp)
+8. [Nlohmann-Json](https://github.com/nlohmann/json)
 
 ### Tasks
 

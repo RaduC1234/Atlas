@@ -105,34 +105,38 @@ void RenderBatch::addShape(const glm::vec2 &position, const glm::vec2 &scale, fl
 
 void RenderBatch::render(int screenWidth, int screenHeight, Camera &camera) {
 
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    shader->bind();
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wireframe mode
+    shader->bind(); // use shader
 
     camera.applyViewport(screenWidth, screenHeight);
-    shader->uploadMat4f("uWorldProjection", camera.getProjectionMatrix());
+    shader->uploadMat4f("uWorldProjection", camera.getProjectionMatrix()); // upload uniforms to the gpu
     shader->uploadMat4f("uView", camera.getViewMatrix());
     shader->uploadFloat("uTime", Time::getTime());
 
+    // upload the textures to GPU memory
     for (int i = 0; i < textures.size(); i++) {
         glActiveTexture(GL_TEXTURE0 + i + 1);
         textures[i]->bind();
     }
 
+    // upload indices of the textures
     shader->uploadIntArray("uTextures", texSlots, 16);
 
+	// bind the VAO
     glBindVertexArray(VAO);
 
     // bind the VBO
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
 
-
     // bind the EBO
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices.size() * sizeof(uint32_t), indices.data());
 
+	// draw to the screen
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
+	// clear textures from GPU memory
     for (int i = 0; i < textures.size(); i++) {
         textures[i]->unbind();
     }
