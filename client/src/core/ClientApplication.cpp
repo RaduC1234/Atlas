@@ -1,6 +1,6 @@
 #include "ClientApplication.hpp"
 
-#include "core/PlatformUtils.hpp"
+#include "utils/PlatformUtils.hpp"
 #include "renderer/RenderManager.hpp"
 #include "levels/MenuScene.hpp"
 #include "levels/LoadingScene.hpp"

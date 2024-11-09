@@ -6,7 +6,7 @@
 #include "Font.hpp"
 #include "Color.hpp"
 
-#include "core/PlatformUtils.hpp"
+#include "utils/PlatformUtils.hpp"
 
 /**
  * The RenderBatch class manages a collection of 2D shapes, textures, and rendering data,
