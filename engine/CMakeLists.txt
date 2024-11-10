@@ -3,9 +3,7 @@ project(engine)
 
 file(GLOB_RECURSE ENGINE_SOURCES "src/*.cpp" "src/*.hpp")
 
-add_library(engine OBJECT ${ENGINE_SOURCES}
-        src/UI/AtlasButton.hpp
-        src/UI/AtlasButton.hpp)
+add_library(engine OBJECT ${ENGINE_SOURCES})
 
 target_compile_definitions(engine PUBLIC ATLAS_ENABLE_ASSERT)
 
