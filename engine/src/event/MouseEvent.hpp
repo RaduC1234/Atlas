@@ -1,45 +1,95 @@
-#pragma once
 #include "Event.hpp"
+#include "Atlas.hpp"
 
 class MouseEvent : public Event {
 public:
     virtual ~MouseEvent() = default;
-    virtual MouseCode getButton() const = 0;
+
+    // Common mouse event properties could go here
+    float getX() const { return m_X; }
+    float getY() const { return m_Y; }
+
+protected:
+    MouseEvent(float x = 0.0f, float y = 0.0f)
+        : m_X(x), m_Y(y) {}
+
+    float m_X;
+    float m_Y;
 };
 
-class MouseButtonPressEvent : public MouseEvent {
+class MouseButtonEvent : public MouseEvent {
 public:
-    explicit MouseButtonPressEvent(MouseCode button) : m_Button(button) {}
+    MouseCode getButton() const { return m_Button; }
 
-    MouseCode getButton() const override { return m_Button; }
+protected:
+    MouseButtonEvent(MouseCode button, float x = 0.0f, float y = 0.0f)
+        : MouseEvent(x, y), m_Button(button) {}
 
-    EVENT_CLASS_TYPE(MOUSE_BUTTON_PRESSED);
-private:
     MouseCode m_Button;
 };
 
-class MouseButtonReleaseEvent : public MouseEvent {
+class MouseButtonPressedEvent : public MouseButtonEvent {
 public:
-    explicit MouseButtonReleaseEvent(MouseCode button)
-        : m_Button(button) {}
+    MouseButtonPressedEvent(MouseCode button, float x = 0.0f, float y = 0.0f)
+        : MouseButtonEvent(button, x, y) {}
 
-    MouseCode getButton() const override { return m_Button; }
+    EventType getType() const override { return EventType::MOUSE_BUTTON_PRESSED; }
+    const char* getName() const override { return "MouseButtonPressed"; }
 
-    EVENT_CLASS_TYPE(MOUSE_BUTTON_RELEASED)
-private:
-    MouseCode m_Button;
+    std::string toString() const override {
+        return "MouseButtonPressedEvent: " + std::to_string(static_cast<int>(getButton()));
+    }
+
+    static EventType getStaticType() { return EventType::MOUSE_BUTTON_PRESSED; }
+};
+
+class MouseButtonReleasedEvent : public MouseButtonEvent {
+public:
+    MouseButtonReleasedEvent(MouseCode button, float x = 0.0f, float y = 0.0f)
+        : MouseButtonEvent(button, x, y) {}
+
+    EventType getType() const override { return EventType::MOUSE_BUTTON_RELEASED; }
+    const char* getName() const override { return "MouseButtonReleased"; }
+
+    std::string toString() const override {
+        return "MouseButtonReleasedEvent: " + std::to_string(static_cast<int>(getButton()));
+    }
+
+    static EventType getStaticType() { return EventType::MOUSE_BUTTON_RELEASED; }
 };
 
 class MouseMovedEvent : public MouseEvent {
 public:
-    MouseMovedEvent(int x, int y)
-        : m_X(x), m_Y(y) {}
+    MouseMovedEvent(float x, float y)
+        : MouseEvent(x, y) {}
 
-    MouseCode getButton() const override { return Mouse::ButtonLeft; }
-    int getX() const { return m_X; }
-    int getY() const { return m_Y; }
+    EventType getType() const override { return EventType::MOUSE_MOVED; }
+    const char* getName() const override { return "MouseMoved"; }
 
-    EVENT_CLASS_TYPE(MOUSE_MOVED)
+    std::string toString() const override {
+        return "MouseMovedEvent: " + std::to_string(m_X) + ", " + std::to_string(m_Y);
+    }
+
+    static EventType getStaticType() { return EventType::MOUSE_MOVED; }
+};
+
+class MouseScrolledEvent : public MouseEvent {
+public:
+    MouseScrolledEvent(float xOffset, float yOffset)
+        : m_XOffset(xOffset), m_YOffset(yOffset) {}
+
+    float getXOffset() const { return m_XOffset; }
+    float getYOffset() const { return m_YOffset; }
+
+    EventType getType() const override { return EventType::MOUSE_SCROLLED; }
+    const char* getName() const override { return "MouseScrolled"; }
+
+    std::string toString() const override {
+        return "MouseScrolledEvent: " + std::to_string(m_XOffset) + ", " + std::to_string(m_YOffset);
+    }
+
+    static EventType getStaticType() { return EventType::MOUSE_SCROLLED; }
+
 private:
-    int m_X, m_Y;
+    float m_XOffset, m_YOffset;
 };

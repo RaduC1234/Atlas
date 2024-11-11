@@ -3,7 +3,8 @@ project(engine)
 
 file(GLOB_RECURSE ENGINE_SOURCES "src/*.cpp" "src/*.hpp")
 
-add_library(engine OBJECT ${ENGINE_SOURCES})
+add_library(engine OBJECT ${ENGINE_SOURCES}
+        src/UI/TextBox.hpp)
 
 target_compile_definitions(engine PUBLIC ATLAS_ENABLE_ASSERT)
 
