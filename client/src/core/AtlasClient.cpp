@@ -15,7 +15,11 @@ void AtlasClient::run() {
     FileSystem::setWorkingDirectory(ATLAS_WORKING_DIRECTORY);
     AT_INFO("Working directory is: {0}", ATLAS_WORKING_DIRECTORY);
 
-    this->window = CreateScope<Window>();
+    AT_TRACE("Attempting to read config file...");
+    TRY_CATCH(this->clientConfig = Config::build("client.config"), AT_FATAL("Error reading config file. Exiting..."););
+    AT_INFO("Config file read successfully");
+
+    this->window = CreateScope<Window>(this->clientConfig["window_title"].toString());
 
     EventManager::init();
     RenderManager::init();

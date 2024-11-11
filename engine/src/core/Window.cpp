@@ -12,7 +12,7 @@ Window::Window(std::string title, int width, int height, bool vSync) : title(std
     glfwWindowHint(GLFW_MAXIMIZED, GLFW_FALSE); // make window maximized
     glfwWindowHint(GLFW_SAMPLES, 4);  // Request 4x MSAA for Anti-Aliasing
 
-    this->glfwWindow = glfwCreateWindow(this->width, this->height, this->title.c_str(), NULL, NULL);
+    this->glfwWindow = glfwCreateWindow(this->width, this->height, this->title.c_str(), nullptr, nullptr);
 
     if (glfwWindow == nullptr) {
         AT_FATAL("Error creating glfw window");
@@ -62,6 +62,10 @@ Window::Window(std::string title, int width, int height, bool vSync) : title(std
         }
     });
 
+    glfwSetCharCallback(glfwWindow, [](GLFWwindow *window, unsigned int codepoint) {
+        //Keyboard::keyTyped.emplace(codepoint);
+    });
+
     /**
      *  ===================================Mouse Callbacks=====================================
      */
@@ -84,8 +88,6 @@ Window::Window(std::string title, int width, int height, bool vSync) : title(std
     });
 
     glfwSetScrollCallback(glfwWindow, [](GLFWwindow *window, double xOffset, double yOffset) {
-        Window &data = *static_cast<Window *>(glfwGetWindowUserPointer(window));
-
         Mouse::scrollXOffset = xOffset;
         Mouse::scrollYOffset = yOffset;
     });
@@ -110,14 +112,14 @@ Window::~Window() {
     glfw_windowCount--;
 }
 
-void Window::onUpdate() {
+void Window::onUpdate() const {
     glfwPollEvents();
     glfwSwapBuffers(glfwWindow);
 }
 
 void Window::setWindowIcon(GLFWwindow *window, const char *iconPath) {
     GLFWimage images[1];
-    images[0].pixels = stbi_load(iconPath, &images[0].width, &images[0].height, 0, 4); //rgba channels
+    images[0].pixels = stbi_load(iconPath, &images[0].width, &images[0].height, nullptr, 4); //rgba channels
     if (images[0].pixels) {
         glfwSetWindowIcon(window, 1, images);
         stbi_image_free(images[0].pixels);

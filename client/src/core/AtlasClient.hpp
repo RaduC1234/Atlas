@@ -13,7 +13,7 @@ private:
     Scope<Scene> currentScene;
 
     std::atomic<bool> isRunning = true;
-    Config config;
+    Config clientConfig;
 };
 
 

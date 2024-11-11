@@ -42,4 +42,8 @@ target_link_libraries(engine PUBLIC nlohmann_json::nlohmann_json)
 find_package(Crow CONFIG REQUIRED)
 target_link_libraries(engine PUBLIC Crow::Crow)
 
+# ImGui
+find_package(imgui REQUIRED)
+target_link_libraries(engine PUBLIC imgui::imgui)
+
 target_include_directories(engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)

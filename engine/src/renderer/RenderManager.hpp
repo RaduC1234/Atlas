@@ -36,7 +36,7 @@ public:
     * @param size size of the glyphs
     * @param color color of the text
     */
-    static void drawText(const glm::vec3 &position, const std::string &text, const Ref<Font> &font, float size, const glm::vec4 &color);
+    static void drawText(const glm::vec3 &position, const std::string &text, const Ref<Font> &font, float size, const glm::vec4 &color, bool centered = false);
 
     /**
      * Draws a Circle on the screen.

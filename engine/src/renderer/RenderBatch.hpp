@@ -50,8 +50,8 @@ public:
         return full;
     }
 
-    uint32_t getZIndex() const {
-        return static_cast<uint32_t>(zIndex);
+    float getZIndex() const {
+        return zIndex;
     }
 
 private:
