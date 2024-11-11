@@ -49,6 +49,13 @@
 #define AT_ASSERT(X, ...)
 #endif
 
+#define TRY_CATCH(TRY_CODE, CATCH_CODE) \
+    try {                               \
+        TRY_CODE;                       \
+    } catch (const std::exception& e) {  \
+        CATCH_CODE;                      \
+    }
+
 #define BIT(x) (1 << x)
 
 
@@ -71,4 +78,17 @@ constexpr Ref<T> CreateRef(Args &&... args) {
 template<typename T>
 using WeakRef = std::weak_ptr<T>;
 
+
+
+inline std::vector<std::string> split(const std::string& str, char delimiter = ' ') {
+    std::vector<std::string> tokens;
+    std::string token;
+    std::stringstream ss(str);
+
+    while (std::getline(ss, token, delimiter)) {
+        tokens.push_back(token);
+    }
+
+    return tokens;
+}
 

@@ -1,9 +1,12 @@
 #pragma once
 
+#include "Font.hpp"
+#include "Framebuffer.hpp"
 #include "RenderBatch.hpp"
 #include "Sprite.hpp"
 
-//#include "FrameBuffer.hpp"
+#include <GLFW/glfw3.h> // make this the last include
+
 
 enum Shape : uint32_t {
     QUAD,
@@ -20,6 +23,8 @@ public:
             Renderer::init();
             initialized = true;
         }
+
+        this->frameBuffer = Framebuffer(800, 600);
     }
 
     /**
@@ -162,7 +167,7 @@ private:
     std::vector<RenderBatch> batches;
     glm::vec4 clearColor{1.0f, 1.0f, 1.0f, 1.0f};
 
-    //FrameBuffer frameBuffer;
+    Framebuffer frameBuffer;
 
     inline static Ref<Shader> renderShader;
     inline static Ref<Shader> postprocessingShader;

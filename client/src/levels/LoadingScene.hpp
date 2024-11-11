@@ -2,6 +2,7 @@
 
 #include "scene/Scene.hpp"
 #include "renderer/Camera.hpp"
+#include "renderer/Color.hpp"
 #include "renderer/RenderManager.hpp"
 
 class LoadingScene : public Scene {

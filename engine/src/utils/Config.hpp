@@ -24,19 +24,9 @@ class Config {
 public:
     ConfigValue operator[](const std::string& key) const;
 
+    static Config build(const std::string& filePath);
+
 private:
     std::unordered_map<std::string, std::string> data;
-
-    friend class ConfigParser;
-};
-
-class ConfigParser {
-public:
-    ConfigParser(const std::string& filename);
-
-    Config build();
-
-private:
-    std::string filename;
 };
 

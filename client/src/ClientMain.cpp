@@ -1,9 +1,8 @@
-#include "core/ClientApplication.hpp"
+#include "core/AtlasClient.hpp"
 
 int main(int argc, char** argv) {
 
-    auto* application = new ClientApplication();
-    application->run();
-    delete application;
+    AtlasClient client;
+    client.run();
     return 0;
 }

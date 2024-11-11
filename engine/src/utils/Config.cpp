@@ -42,20 +42,16 @@ ConfigValue Config::operator[](const std::string &key) const {
     return ConfigValue(it != data.end() ? it->second : "");
 }
 
-ConfigParser::ConfigParser(const std::string &filename) : filename(filename) {}
-
-Config ConfigParser::build() {
+Config Config::build(const std::string &filename) {
     Config config;
     std::ifstream file(filename);
 
     if (!file) {
-        std::cerr << "Could not open config file: " << filename << std::endl;
-        return config;
+        throw std::invalid_argument("Could not read config file");
     }
 
     std::string line;
     while (std::getline(file, line)) {
-        // Remove comments and trim whitespace
         line = line.substr(0, line.find('#'));
         line.erase(0, line.find_first_not_of(" \t"));
         line.erase(line.find_last_not_of(" \t") + 1);
@@ -67,7 +63,6 @@ Config ConfigParser::build() {
         std::istringstream lineStream(line);
         std::string key, value;
         if (std::getline(lineStream, key, '=') && std::getline(lineStream, value)) {
-            // Trim whitespace from key and value
             key.erase(0, key.find_first_not_of(" \t"));
             key.erase(key.find_last_not_of(" \t") + 1);
             value.erase(0, value.find_first_not_of(" \t"));

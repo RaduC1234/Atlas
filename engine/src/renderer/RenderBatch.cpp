@@ -1,5 +1,7 @@
 #include "RenderBatch.hpp"
 
+#include "utils/PlatformUtils.hpp"
+
 RenderBatch::RenderBatch(int32_t maxBatchSize, Ref<Shader> quadShader, float_t zIndex) : maxBatchSize(maxBatchSize), shader(std::move(quadShader)), zIndex(zIndex) {
     vertices.reserve(maxBatchSize * 4); // 4 vertices per quad
     indices.reserve(maxBatchSize * 6); // 6 indices per quad
@@ -60,7 +62,7 @@ void RenderBatch::addShape(const glm::vec2 &position, const glm::vec2 &scale, fl
 
     // Handle texture binding
     if (texture != nullptr) {
-        if (std::find(textures.begin(), textures.end(), texture) == textures.end())
+        if (std::ranges::find(textures, texture) == textures.end())
             textures.push_back(texture);
 
         for (int i = 0; i < textures.size(); i++) {
@@ -73,13 +75,13 @@ void RenderBatch::addShape(const glm::vec2 &position, const glm::vec2 &scale, fl
 
     float radians = glm::radians(rotation);
 
-    glm::mat2 rotationMatrix = glm::mat2(
+    auto rotationMatrix = glm::mat2(
             glm::cos(radians), -glm::sin(radians),
             glm::sin(radians), glm::cos(radians)
     );
 
     // Define vertices with bottom-left as the origin
-    glm::vec2 verticesPos[4] = {
+    const glm::vec2 verticesPos[4] = {
             rotationMatrix * glm::vec2(0.0f, 0.0f),                   // Bottom-left
             rotationMatrix * glm::vec2(scale.x, 0.0f),                // Bottom-right
             rotationMatrix * glm::vec2(scale.x, scale.y),             // Top-right
@@ -111,7 +113,7 @@ void RenderBatch::render(int screenWidth, int screenHeight, Camera &camera) {
     camera.applyViewport(screenWidth, screenHeight);
     shader->uploadMat4f("uWorldProjection", camera.getProjectionMatrix()); // upload uniforms to the gpu
     shader->uploadMat4f("uView", camera.getViewMatrix());
-    shader->uploadFloat("uTime", Time::getTime());
+    shader->uploadFloat("uTime", Time::now().toSeconds());
 
     // upload the textures to GPU memory
     for (int i = 0; i < textures.size(); i++) {

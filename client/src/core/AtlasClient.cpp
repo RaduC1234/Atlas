@@ -1,13 +1,13 @@
-#include "ClientApplication.hpp"
+#include "AtlasClient.hpp"
 
-#include "utils/PlatformUtils.hpp"
-#include "renderer/RenderManager.hpp"
-#include "levels/MenuScene.hpp"
-#include "levels/LoadingScene.hpp"
 #include "event/EventManager.hpp"
+#include "levels/LoadingScene.hpp"
+#include "levels/MenuScene.hpp"
+#include "renderer/RenderManager.hpp"
+#include "utils/PlatformUtils.hpp"
 
 
-void ClientApplication::run() {
+void AtlasClient::run() {
 
     Log::init();
     AT_INFO("Starting Atlas Client");
@@ -22,10 +22,9 @@ void ClientApplication::run() {
 
     AT_INFO("Client finished loading");
 
+    this->changeScene(CreateScope<MenuScene>());
 
-;    this->changeScene(CreateScope<MenuScene>());
-
-    float beginTime = Time::getTime();
+    float beginTime = Time::now().toSeconds();
     float endTime;
     float deltaTime = -1.0f;
 
@@ -39,7 +38,7 @@ void ClientApplication::run() {
             this->currentScene->onRender(this->window->getWidth(), this->window->getHeight());
         }
 
-        endTime = Time::getTime();
+        endTime = Time::now().toSeconds();
         deltaTime = endTime - beginTime;
         beginTime = endTime;
     }
@@ -47,7 +46,7 @@ void ClientApplication::run() {
     RenderManager::shutdown();
 }
 
-void ClientApplication::changeScene(Scope<Scene> scene) {
+void AtlasClient::changeScene(Scope<Scene> scene) {
     if (currentScene != nullptr)
         this->currentScene->onDestroy();
 

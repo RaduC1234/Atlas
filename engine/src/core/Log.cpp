@@ -23,7 +23,7 @@ void Log::setLogLevel(LogLevel level) {
 }
 
 void Log::log(LogLevel level, const std::string &message) {
-    if (level >= logLevel) {
+    if (level >= logLevel || level == LogLevel::Message) {
         applyColor(level);
         std::cout << "[" << getCurrentTime() << "/" << getLogLevelString(level) << "]: "
                   << message << std::endl;
@@ -44,8 +44,10 @@ std::string Log::getCurrentTime() {
 }
 
 // Get log level as string
-std::string Log::getLogLevelString(LogLevel level) {
+constexpr std::string Log::getLogLevelString(LogLevel level) {
     switch (level) {
+        case LogLevel::Message:
+            return "Message";
         case LogLevel::Trace:
             return "Trace";
         case LogLevel::Info:
@@ -65,12 +67,15 @@ void Log::applyColor(LogLevel level) {
 #ifdef _WIN32
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     switch (level) {
+        case LogLevel::Message:
+            SetConsoleTextAttribute(hConsole, 10);
+            break; // green
         case LogLevel::Trace:
             SetConsoleTextAttribute(hConsole, 7);
             break;    // White
         case LogLevel::Info:
-            SetConsoleTextAttribute(hConsole, 10);
-            break;   // Green
+            SetConsoleTextAttribute(hConsole, 13);
+            break;   // Violet (Magenta)
         case LogLevel::Warn:
             SetConsoleTextAttribute(hConsole, 14);
             break;   // Yellow
@@ -83,8 +88,9 @@ void Log::applyColor(LogLevel level) {
     }
 #else
     switch (level) {
+        case LogLevel::Message  std::cout << "\033[32m"; break;  // Green
         case LogLevel::Trace: std::cout << "\033[37m"; break;  // White
-        case LogLevel::Info:  std::cout << "\033[32m"; break;  // Green
+        case LogLevel::Info:  std::cout << "\033[35m"; break;  // Violet (Magenta)
         case LogLevel::Warn:  std::cout << "\033[33m"; break;  // Yellow
         case LogLevel::Error: std::cout << "\033[31m"; break;  // Red
         case LogLevel::Fatal: std::cout << "\033[1;31m"; break; // Bold Red

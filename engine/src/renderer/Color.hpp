@@ -6,11 +6,11 @@ class Color {
 public:
     float r = 1.0f, g = 1.0f, b = 1.0f, a = 1.0f;
 
-    Color() : r(0.0f), g(0.0f), b(0.0f), a(1.0f) {}
+    constexpr Color() : r(0.0f), g(0.0f), b(0.0f), a(1.0f) {}
 
-    Color(int r, int g, int b, int a = 255) : r(r / 255.0f), g(g / 255.0f), b(b / 255.0f), a(a / 255.0f) {}
+    constexpr Color(int r, int g, int b, int a = 255) : r(r / 255.0f), g(g / 255.0f), b(b / 255.0f), a(a / 255.0f) {}
 
-    Color(float r, float g, float b, float a = 1.0f) : r(r), g(g), b(b), a(a) {}
+    constexpr Color(float r, float g, float b, float a = 1.0f) : r(r), g(g), b(b), a(a) {}
 
     Color(const std::string &hex) {
         if (hex.length() == 8) {
@@ -28,3 +28,4 @@ public:
         return {r, g, b, a};
     }
 };
+

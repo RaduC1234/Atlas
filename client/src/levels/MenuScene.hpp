@@ -1,15 +1,17 @@
 #pragma once
 
 #include "core/Core.hpp"
-#include "scene/Scene.hpp"
+#include "renderer/Color.hpp"
+#include "renderer/Font.hpp"
 #include "scene/Entity.hpp"
+#include "scene/Scene.hpp"
 
 class MenuScene : public Scene {
 public:
 
 
     void onCreate() override {
-        this->camera = Camera({0, 0}, 4.0f);
+        this->camera = Camera({0, 0}, 2.0f);
 
         this->font = CreateRef<Font>("assets/fonts/Roboto-Light.ttf");
         this->texture = CreateRef<Texture>("assets/textures/default.png");
