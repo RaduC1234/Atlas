@@ -9,7 +9,6 @@
 class MenuScene : public Scene {
 public:
 
-
     void onCreate() override {
         this->camera = Camera({0, 0}, 2.0f);
 
@@ -39,7 +38,6 @@ public:
     }
 
     void onUpdate(float deltaTime) override {
-        bool moved = false;
         static glm::vec2 playerPosition = {0.0f, 0.0f};
 
         if (Keyboard::isKeyPressed(Keyboard::A)) {
@@ -55,7 +53,6 @@ public:
             } else {
                 currentSprite = characterA;
             }
-            moved = true;
         } else if (Keyboard::isKeyPressed(Keyboard::D)) {
             playerPosition.x += deltaTime * 200.0f;
             if (Keyboard::isKeyPressed(Keyboard::W)) {
@@ -69,18 +66,15 @@ public:
             } else {
                 currentSprite = characterD;
             }
-            moved = true;
         } else if (Keyboard::isKeyPressed(Keyboard::S)) {
             playerPosition.y -= deltaTime * 200.0f;
             currentSprite = characterS;
-            moved = true;
         } else if (Keyboard::isKeyPressed(Keyboard::W)) {
             playerPosition.y += deltaTime * 200.0f;
             currentSprite = characterW;
-            moved = true;
         }
 
-        RenderManager::drawQuad({playerPosition.x, playerPosition.y, 0.0f}, {100.0f, 100.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(currentSprite));
+        RenderManager::drawQuad({playerPosition.x, playerPosition.y, 0.0f}, {100.0f, 100.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(currentSprite), true);
         RenderManager::drawText({-65.0f, 0.0f, 1.0f}, "Atlas OpenGL", font, 2.0f, Color(1.0f, 1.0f, 1.0f, 1.0f), true);
         Sprite sprite1 = Sprite(this->fountainCorner1);
         Sprite sprite2 = Sprite(this->fountainCorner2);
@@ -88,10 +82,10 @@ public:
         Sprite sprite4 = Sprite(this->fountainCorner4);
 
         float fountainSize = 100.0f;
-        RenderManager::drawQuad({0.0f, 100.0f, 2.0f}, {fountainSize, fountainSize}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(this->fountainCorner1));
-        RenderManager::drawQuad({0.0f, 0.0f, 2.0f}, {fountainSize, fountainSize}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(this->fountainCorner3));
-        RenderManager::drawQuad({100.0f, 100.0f, 2.0f}, {fountainSize, fountainSize}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(this->fountainCorner2));
-        RenderManager::drawQuad({100.0f, 0.0f, 2.0f}, {fountainSize, fountainSize}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(this->fountainCorner4));
+        RenderManager::drawQuad({0.0f, 100.0f, 2.0f}, {fountainSize, fountainSize}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(this->fountainCorner1), true);
+        RenderManager::drawQuad({0.0f, 0.0f, 2.0f}, {fountainSize, fountainSize}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(this->fountainCorner3), true);
+        RenderManager::drawQuad({100.0f, 100.0f, 2.0f}, {fountainSize, fountainSize}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(this->fountainCorner2), true);
+        RenderManager::drawQuad({100.0f, 0.0f, 2.0f}, {fountainSize, fountainSize}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(this->fountainCorner4), true);
     }
 
 

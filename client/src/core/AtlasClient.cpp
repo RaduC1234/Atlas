@@ -23,6 +23,7 @@ void AtlasClient::run() {
 
     EventManager::init();
     RenderManager::init();
+    ImGuiLayer::init();
 
     AT_INFO("Client finished loading");
 
@@ -38,15 +39,19 @@ void AtlasClient::run() {
         //EventManager::pollEvents();
 
         if(deltaTime >= 0 && this->currentScene != nullptr) {
+            ImGuiLayer::onUpdate(deltaTime);
             this->currentScene->onUpdate(deltaTime);
             this->currentScene->onRender(this->window->getWidth(), this->window->getHeight());
+            ImGuiLayer::onImGuiRender();
         }
+
 
         endTime = Time::now().toSeconds();
         deltaTime = endTime - beginTime;
         beginTime = endTime;
     }
 
+    ImGuiLayer::shutdown();
     RenderManager::shutdown();
 }
 

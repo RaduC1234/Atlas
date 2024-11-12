@@ -1,8 +1,11 @@
 #pragma once
 
+#include <renderer/ImGuiLayer.h>
+
 #include "core/Core.hpp"
 #include "core/Window.hpp"
 #include "scene/Scene.hpp"
+#include "utils/Config.hpp"
 
 class AtlasClient {
 public:
