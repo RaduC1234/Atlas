@@ -70,14 +70,6 @@ public:
 
     }
 
-    void drawQuad(const glm::vec3 position, const glm::vec2 size, const glm::vec4 color, const Sprite &sprite = Sprite(nullptr), bool centered = true) {
-        drawPrimitive(position, size, 0.0f, Shape::QUAD, color, sprite.texture, sprite.texCoords, centered);
-    }
-
-    void drawRotatedQuad(const glm::vec3 position, const glm::vec2 size, float rotation, const glm::vec4 color, const Sprite &sprite = Sprite(nullptr), bool centered = true) {
-        drawPrimitive(position, size, rotation, Shape::QUAD, color, sprite.texture, sprite.texCoords, centered);
-    }
-
     void drawText(glm::vec3 position, float scale, const glm::vec4& color, const Font &font, const std::string &text, bool centered = false) {
 
 
