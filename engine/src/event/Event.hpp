@@ -13,9 +13,11 @@ class Event {
 public:
     virtual ~Event() = default;
     virtual EventType getType() const = 0;
+    virtual const char* getName() const = 0;
+    virtual std::string toString() const { return getName(); }
+
     bool handled = false;
 };
-
 // Event callback function type
 using EventCallbackFn = std::function<void(Event&)>;
 
@@ -63,4 +65,3 @@ public:
 private:
     Event& m_Event;
 };
-

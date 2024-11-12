@@ -1,13 +1,13 @@
-#include "ClientApplication.hpp"
+#include "AtlasClient.hpp"
 
-#include "core/PlatformUtils.hpp"
-#include "renderer/RenderManager.hpp"
-#include "levels/MenuScene.hpp"
-#include "levels/LoadingScene.hpp"
 #include "event/EventManager.hpp"
+#include "levels/LoadingScene.hpp"
+#include "levels/MenuScene.hpp"
+#include "renderer/RenderManager.hpp"
+#include "utils/PlatformUtils.hpp"
 
 
-void ClientApplication::run() {
+void AtlasClient::run() {
 
     Log::init();
     AT_INFO("Starting Atlas Client");
@@ -15,17 +15,21 @@ void ClientApplication::run() {
     FileSystem::setWorkingDirectory(ATLAS_WORKING_DIRECTORY);
     AT_INFO("Working directory is: {0}", ATLAS_WORKING_DIRECTORY);
 
-    this->window = CreateScope<Window>();
+    AT_TRACE("Attempting to read config file...");
+    TRY_CATCH(this->clientConfig = Config::build("client.config"), AT_FATAL("Error reading config file. Exiting..."););
+    AT_INFO("Config file read successfully");
+
+    this->window = CreateScope<Window>(this->clientConfig["window_title"].toString());
 
     EventManager::init();
     RenderManager::init();
+    ImGuiLayer::init();
 
     AT_INFO("Client finished loading");
 
+    this->changeScene(CreateScope<MenuScene>());
 
-;    this->changeScene(CreateScope<MenuScene>());
-
-    float beginTime = Time::getTime();
+    float beginTime = Time::now().toSeconds();
     float endTime;
     float deltaTime = -1.0f;
 
@@ -35,19 +39,23 @@ void ClientApplication::run() {
         //EventManager::pollEvents();
 
         if(deltaTime >= 0 && this->currentScene != nullptr) {
+            ImGuiLayer::onUpdate(deltaTime);
             this->currentScene->onUpdate(deltaTime);
             this->currentScene->onRender(this->window->getWidth(), this->window->getHeight());
+            ImGuiLayer::onImGuiRender();
         }
 
-        endTime = Time::getTime();
+
+        endTime = Time::now().toSeconds();
         deltaTime = endTime - beginTime;
         beginTime = endTime;
     }
 
+    ImGuiLayer::shutdown();
     RenderManager::shutdown();
 }
 
-void ClientApplication::changeScene(Scope<Scene> scene) {
+void AtlasClient::changeScene(Scope<Scene> scene) {
     if (currentScene != nullptr)
         this->currentScene->onDestroy();
 

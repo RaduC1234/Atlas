@@ -3,10 +3,6 @@
 #include "Texture.hpp"
 #include "Shader.hpp"
 #include "Camera.hpp"
-#include "Font.hpp"
-#include "Color.hpp"
-
-#include "core/PlatformUtils.hpp"
 
 /**
  * The RenderBatch class manages a collection of 2D shapes, textures, and rendering data,
@@ -42,19 +38,19 @@ public:
 
     void render(int screenWidth, int screenHeight, Camera &camera);
 
-    bool hasTextureRoom() {
+    bool hasTextureRoom() const {
         return textures.size() < 16;
     }
 
     bool hasTexture(const Ref<Texture> &texture) {
-        return std::find(textures.begin(), textures.end(), texture) != textures.end();
+        return std::ranges::find(textures, texture) != textures.end();
     }
 
     bool isFull() const {
         return full;
     }
 
-    int getZIndex() const {
+    float getZIndex() const {
         return zIndex;
     }
 

@@ -1,63 +1,75 @@
 #include "Lobby.hpp"
 
-
-Lobby::Lobby(int id) : lobbyId(id), lobbyThread(&Lobby::lobbyLoop, this) {
-}
+Lobby::Lobby(const std::string& id) : id(id), running(false) {}
 
 Lobby::~Lobby() {
-    isRunning = false;
-    if (lobbyThread.joinable()) {
-        lobbyThread.join();
-    }
-
-    std::lock_guard<std::mutex> lock(lobbyMutex);
-    players.clear();
+    stop();
 }
 
-bool Lobby::addPlayer(sf::TcpSocket* player) {
-    std::lock_guard<std::mutex> lock(lobbyMutex);
-    if (players.size() >= MAX_PLAYERS) {
-        return false;
+bool Lobby::addPlayer(const std::string& playerId) {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (players.size() < MAX_PLAYERS) {
+        players[playerId] = "default";
+        std::cout << "Player " << playerId << " added to lobby " << id << std::endl;
+        return true;
     }
-    players.push_back(player);
-    return true;
+    return false;
 }
 
-void Lobby::removePlayer(sf::TcpSocket* player) {
-    std::lock_guard<std::mutex> lock(lobbyMutex);
-    auto it = std::find(players.begin(), players.end(), player);
+bool Lobby::removePlayer(const std::string& playerId) {
+    std::lock_guard<std::mutex> lock(mutex);
+    auto it = players.find(playerId);
     if (it != players.end()) {
         players.erase(it);
+        std::cout << "Player " << playerId << " removed from lobby " << id << std::endl;
+        return true;
+    }
+    return false;
+}
+
+bool Lobby::canAddPlayer() const {
+    return players.size() < MAX_PLAYERS;
+}
+
+bool Lobby::isEmpty() const {
+    return players.empty();
+}
+
+void Lobby::broadcast(const std::string& message) {
+    std::lock_guard<std::mutex> lock(mutex);
+    for (auto& conn : connections) {
+        conn->send_text(message);
     }
 }
 
-int Lobby::getPlayerCount() const {
-    std::lock_guard<std::mutex> lock(lobbyMutex);
-    return static_cast<int>(players.size());
+void Lobby::start() {
+    if (running) return;
+    running = true;
+    gameThread = std::thread(&Lobby::gameLoop, this);
+    std::cout << "Lobby " << id << " has started" << std::endl;
 }
 
-int Lobby::getLobbyId() const {
-    return lobbyId;
-}
-
-void Lobby::lobbyLoop() {
-    while (isRunning) {
-        // Main lobby logic here
-        std::this_thread::sleep_for(std::chrono::milliseconds(16)); // ~60 fps
+void Lobby::stop() {
+    if (!running) return;
+    running = false;
+    if (gameThread.joinable()) {
+        gameThread.join();
+        std::cout << "Lobby " << id << " has stopped" << std::endl;
     }
 }
 
-void Lobby::notifyShutdown() {
-    std::lock_guard<std::mutex> lock(lobbyMutex);
-    sf::Packet shutdownPacket;
-    shutdownPacket << "LOBBY_SHUTDOWN" << "Server is shutting down";
-
-    for (auto player : players) {
-        try {
-            player->send(shutdownPacket);
-        }
-        catch (...) {
-            // Ignore errors during shutdown
-        }
+void Lobby::gameLoop() {
+    while (running) {
+        updateGameState();
+        broadcastGameState();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+}
+
+void Lobby::updateGameState() {
+    std::cout << "Updating game state in lobby " << id << std::endl;
+}
+
+void Lobby::broadcastGameState() {
+    std::cout << "Broadcasting game state in lobby " << id << std::endl;
 }

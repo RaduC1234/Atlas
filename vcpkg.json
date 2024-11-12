@@ -15,9 +15,6 @@
     "name" : "freetype",
     "version>=" : "2.13.3"
   }, {
-    "name" : "imgui",
-    "version>=" : "1.91.0"
-  }, {
     "name" : "glfw3",
     "version>=" : "3.4#1"
   }, {
@@ -29,5 +26,8 @@
   }, {
     "name" : "stb",
     "version>=" : "2024-07-29#1"
+  }, {
+    "name" : "imgui",
+    "version>=" : "1.91.0"
   } ]
 }

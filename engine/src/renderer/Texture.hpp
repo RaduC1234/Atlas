@@ -6,12 +6,6 @@
 #include "core/Core.hpp"
 
 class Texture {
-private:
-    GLuint textureID;
-    int width, height, channel;
-
-    std::string filePath;
-
 public:
     explicit Texture(const std::string& filePath) : filePath(filePath) {
         generateAndLoad(filePath.c_str());
@@ -84,5 +78,12 @@ public:
     GLuint getTextureId() const {
         return textureID;
     }
+
+private:
+    GLuint textureID;
+    int width, height, channel;
+
+    std::string filePath;
+
 };
 

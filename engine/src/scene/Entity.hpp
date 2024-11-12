@@ -5,10 +5,12 @@
 using Registry = entt::registry;
 using Actor = entt::entity;
 
-struct TransformComponent {
-    glm::vec2 position;
+/*
+class Entity {
+
 };
 
-struct SpriteComponent {
-    Sprite sprite;
+class Registry {
+
 };
+*/

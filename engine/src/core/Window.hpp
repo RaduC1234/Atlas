@@ -13,7 +13,7 @@ public:
 
     ~Window();
 
-    void onUpdate();
+    void onUpdate() const;
 
     int getWidth() const {
         return width;

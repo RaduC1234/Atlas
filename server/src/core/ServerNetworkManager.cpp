@@ -1,248 +1,193 @@
 #include "ServerNetworkManager.hpp"
 
+using json = nlohmann::json;
 
-static constexpr size_t BUFFER_SIZE = 8192;
-static constexpr size_t MAX_DLL_SIZE = 10 * 1024 * 1024;  // 10MB limit
-static constexpr auto CLIENT_TIMEOUT = std::chrono::seconds(30);
-
-ServerNetworkingManager::ServerNetworkingManager(std::atomic<bool>& running)
-    : serverRunning(running) {}
-
-bool ServerNetworkingManager::verifyDLL(const std::vector<char>& buffer) {
-    if (buffer.size() < 64) {  // Minimum size for PE header
-        return false;
-    }
-
-    // Check MZ signature
-    if (buffer[0] != 'M' || buffer[1] != 'Z') {
-        return false;
-    }
-
-    // Get PE header offset (at 0x3C)
-    uint32_t peOffset = *reinterpret_cast<const uint32_t*>(&buffer[0x3C]);
-
-    // Verify PE offset is within bounds
-    if (peOffset >= buffer.size() - 4) {
-        return false;
-    }
-
-    // Check PE signature ("PE\0\0")
-    return buffer[peOffset] == 'P' &&
-           buffer[peOffset + 1] == 'E' &&
-           buffer[peOffset + 2] == 0 &&
-           buffer[peOffset + 3] == 0;
+ServerNetworkManager::ServerNetworkManager(
+    const std::string& ip, uint16_t port,
+    CommandHandler* cmdHandler,
+    RequestHandler* reqHandler)
+    : ip(ip)
+    , port(port)
+    , running(false)
+    , commandHandler(cmdHandler)
+    , requestHandler(reqHandler) {
+    setupRoutes();
+    setupWebSocket();
 }
 
-void ServerNetworkingManager::handleClient(sf::TcpSocket* client) {
-    if (!client) {
-        AT_ERROR("Null client pointer received");
+ServerNetworkManager::~ServerNetworkManager() {
+    if (running) {
+        stop();
+    }
+}
+
+void ServerNetworkManager::setupRoutes() {
+    CROW_ROUTE(app, "/api/lobby/create")
+    .methods("POST"_method)
+    ([this](const crow::request& req) {
+        try {
+            auto params = json::parse(req.body);
+            auto response = requestHandler->handleCreateLobbyRequest(params);
+            return crow::response(200, response.dump());
+        } catch (const std::exception& e) {
+            return crow::response(400, "Invalid request: " + std::string(e.what()));
+        }
+    });
+
+    CROW_ROUTE(app, "/api/lobby/join")
+    .methods("POST"_method)
+    ([this](const crow::request& req) {
+        try {
+            auto params = json::parse(req.body);
+            auto lobbyId = params["lobbyId"].get<std::string>();
+            auto playerId = params["playerId"].get<std::string>();
+
+            auto lobby = getLobby(lobbyId);
+            if (!lobby) {
+                return crow::response(404, "Lobby not found");
+            }
+
+            if (!lobby->canAddPlayer()) {
+                return crow::response(403, "Lobby is full");
+            }
+
+            handlePlayerJoin(lobbyId, playerId);
+            return crow::response(200);
+        } catch (const std::exception& e) {
+            return crow::response(400, "Invalid request: " + std::string(e.what()));
+        }
+    });
+}
+
+void ServerNetworkManager::setupWebSocket() {
+    CROW_WEBSOCKET_ROUTE(app, "/ws")
+    .onopen([&](crow::websocket::connection& conn) {
+        std::cout << "WebSocket connection opened" << std::endl;
+    })
+    .onclose([&](crow::websocket::connection& conn, const std::string& reason) {
+        std::cout << "WebSocket connection closed: " << reason << std::endl;
+    })
+    .onmessage([&](crow::websocket::connection& conn, const std::string& data, bool is_binary) {
+        if (!is_binary) {
+            try {
+                auto j = json::parse(data);
+                std::string command = j["command"];
+
+                if (command == "join_lobby") {
+                    handlePlayerJoin(j["lobbyId"], j["playerId"]);
+                } else if (command == "leave_lobby") {
+                    handlePlayerLeave(j["lobbyId"], j["playerId"]);
+                } else {
+                    commandHandler->handleCommand(j);
+                }
+            } catch (const std::exception& e) {
+                std::cerr << "Error handling WebSocket message: " << e.what() << std::endl;
+                conn.send_text("Error: Invalid message format");
+            }
+        }
+    });
+}
+
+void ServerNetworkManager::start() {
+    if (running) {
         return;
     }
 
-    try {
-        // Set timeout
-        client->setBlocking(false);
-
-        std::vector<char> buffer;
-        buffer.reserve(BUFFER_SIZE);
-        size_t totalReceived = 0;
-        auto startTime = std::chrono::steady_clock::now();
-
-        while (totalReceived < MAX_DLL_SIZE) {
-            std::vector<char> chunk(BUFFER_SIZE);
-            size_t received;
-
-            auto status = client->receive(chunk.data(), chunk.size(), received);
-
-            if (status == sf::Socket::Done) {
-                buffer.insert(buffer.end(), chunk.begin(), chunk.begin() + received);
-                totalReceived += received;
-                break;  // Added break to exit after successful receive
-            }
-            else if (status == sf::Socket::NotReady) {
-                // Check timeout
-                if (std::chrono::steady_clock::now() - startTime > CLIENT_TIMEOUT) {
-                    throw std::runtime_error("Client timeout");
-                }
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                continue;
-            }
-            else {
-                throw std::runtime_error("Socket error during receive");
-            }
-        }
-
-        if (totalReceived >= MAX_DLL_SIZE) {
-            throw std::runtime_error("DLL size exceeds maximum allowed");
-        }
-
-        bool isDLL = verifyDLL(buffer);
-
-        sf::Packet responsePacket;
-        responsePacket << (isDLL ? "DLL_VERIFIED" : "INVALID_DLL");
-
-        if (client->send(responsePacket) != sf::Socket::Done) {
-            throw std::runtime_error("Failed to send response");
-        }
-
-        AT_INFO("Data received from client: {} bytes, {}",
-               totalReceived, isDLL ? "Valid DLL" : "Invalid DLL");
-
-        if (isDLL) {
-            handleLobbyRequests(client);
-        }
-    }
-    catch (const std::exception& e) {
-        AT_ERROR("Error handling client: {}", e.what());
-
+    running = true;
+    serverThread = std::thread([this]() {
         try {
-            sf::Packet errorPacket;
-            errorPacket << "ERROR" << e.what();
-            client->send(errorPacket);
-        } catch (...) {
-            // Ignore send errors during error handling
+            app.bindaddr(ip)
+               .port(port)
+               .multithreaded()
+               .run();
+        } catch (const std::exception& e) {
+            std::cerr << "Error starting server: " << e.what() << std::endl;
+            running = false;
         }
-    }
-
-    removeClient(client);
-    delete client;
+    });
 }
 
-void ServerNetworkingManager::removeClient(sf::TcpSocket* client) {
-    std::lock_guard<std::mutex> lock(serverMutex);
-    auto it = std::find(clients.begin(), clients.end(), client);
-    if (it != clients.end()) {
-        clients.erase(it);
+void ServerNetworkManager::stop() {
+    if (!running) {
+        return;
     }
 
-    for (auto& lobby : lobbies) {
-        lobby.second->removePlayer(client);
+    std::cout << "Stopping server..." << std::endl;
+    app.stop();
+
+    if (serverThread.joinable()) {
+        serverThread.join();
     }
+
+    // Cleanup all lobbies
+    std::lock_guard<std::mutex> lock(lobbiesMutex);
+    lobbies.clear();
+    running = false;
 }
 
-bool ServerNetworkingManager::addClient(sf::TcpSocket* client) {
-    std::lock_guard<std::mutex> lock(serverMutex);
-    if (clients.size() >= MAX_CLIENTS) {
-        return false;
-    }
-    clients.push_back(client);
-    return true;
+std::string ServerNetworkManager::createLobby() {
+    std::lock_guard<std::mutex> lock(lobbiesMutex);
+    std::string lobbyId = generateLobbyId();
+
+    auto lobby = std::make_unique<Lobby>(lobbyId);
+    lobbies[lobbyId] = std::move(lobby);
+
+    return lobbyId;
 }
 
-void ServerNetworkingManager::handleLobbyRequests(sf::TcpSocket* client) {
-    while (serverRunning) {
-        try {
-            sf::Packet packet;
-            auto status = client->receive(packet);
-
-            if (status == sf::Socket::Disconnected) {
-                AT_INFO("Client disconnected");
-                break;
-            }
-            else if (status != sf::Socket::Done) {
-                throw std::runtime_error("Error receiving lobby request");
-            }
-
-            std::string command;
-            if (!(packet >> command)) {
-                throw std::runtime_error("Invalid packet format");
-            }
-
-            if (command == "CREATE_LOBBY") {
-                createLobby(client);
-            }
-            else if (command == "JOIN_LOBBY") {
-                joinLobby(client, packet);
-            }
-            else {
-                throw std::runtime_error("Unknown lobby command: " + command);
-            }
-        }
-        catch (const std::exception& e) {
-            AT_ERROR("Lobby request error: {}", e.what());
-
-            try {
-                sf::Packet errorPacket;
-                errorPacket << "ERROR" << e.what();
-                client->send(errorPacket);
-            } catch (...) {
-                break;
-            }
-        }
-    }
+void ServerNetworkManager::deleteLobby(const std::string& lobbyId) {
+    std::lock_guard<std::mutex> lock(lobbiesMutex);
+    lobbies.erase(lobbyId);
 }
 
-void ServerNetworkingManager::handleCommand(const std::string& command) {
-    if (command == "status") {
-        AT_INFO("Server is running and accepting clients.");
-    } else if (command == "shutdown") {
-        AT_INFO("Shutting down the server.");
-        serverRunning = false;
-    } else if (command == "list_clients") {
-        std::lock_guard<std::mutex> lock(serverMutex);
-        AT_INFO("Connected clients: {}/{}", clients.size(), MAX_CLIENTS);
-        AT_INFO("Active lobbies: {}", lobbies.size());
-        for (const auto& lobby : lobbies) {
-            AT_INFO("Lobby {}: {}/4 players", lobby.first, lobby.second->getPlayerCount());
-        }
-    } else if (command == "help") {
-        showHelp();
-    } else {
-        AT_WARN("Unknown command: {}", command);
-    }
-}
-
-// Helper functions
-void ServerNetworkingManager::createLobby(sf::TcpSocket* client) {
-    std::lock_guard<std::mutex> lock(serverMutex);
-    int lobbyId = nextLobbyId++;
-    lobbies[lobbyId] = std::make_unique<Lobby>(lobbyId);
-
-    if (!lobbies[lobbyId]->addPlayer(client)) {
-        lobbies.erase(lobbyId);
-        throw std::runtime_error("Failed to add player to new lobby");
-    }
-
-    sf::Packet response;
-    response << "LOBBY_CREATED" << lobbyId;
-    if (client->send(response) != sf::Socket::Done) {
-        throw std::runtime_error("Failed to send lobby creation response");
-    }
-
-    AT_INFO("Created lobby {}", lobbyId);
-}
-
-void ServerNetworkingManager::joinLobby(sf::TcpSocket* client, sf::Packet& packet) {
-    int lobbyId;
-    if (!(packet >> lobbyId)) {
-        throw std::runtime_error("Invalid lobby ID format");
-    }
-
-    std::lock_guard<std::mutex> lock(serverMutex);
+Lobby* ServerNetworkManager::getLobby(const std::string& lobbyId) {
+    std::lock_guard<std::mutex> lock(lobbiesMutex);
     auto it = lobbies.find(lobbyId);
-
-    if (it == lobbies.end()) {
-        throw std::runtime_error("Lobby not found: " + std::to_string(lobbyId));
-    }
-
-    if (!it->second->addPlayer(client)) {
-        throw std::runtime_error("Lobby is full");
-    }
-
-    sf::Packet response;
-    response << "JOINED_LOBBY" << lobbyId;
-    if (client->send(response) != sf::Socket::Done) {
-        it->second->removePlayer(client);
-        throw std::runtime_error("Failed to send join response");
-    }
-
-    AT_INFO("Client joined lobby {}", lobbyId);
+    return it != lobbies.end() ? it->second.get() : nullptr;
 }
 
-void ServerNetworkingManager::showHelp() {
-    std::cout << "Available commands:\n";
-    std::cout << " - help: Show this help message\n";
-    std::cout << " - status: Show server status\n";
-    std::cout << " - shutdown: Shutdown the server\n";
-    std::cout << " - list_clients: Show the number of clients and active lobbies\n";
+std::string ServerNetworkManager::generateLobbyId() {
+    static const char chars[] = "0123456789ABCDEF";
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    static std::uniform_int_distribution<> dis(0, sizeof(chars) - 2);
+
+    std::string id;
+    for (int i = 0; i < 6; ++i) {
+        id += chars[dis(gen)];
+    }
+    return id;
+}
+
+void ServerNetworkManager::handlePlayerJoin(const std::string& lobbyId, const std::string& playerId) {
+    auto lobby = getLobby(lobbyId);
+    if (lobby) {
+        lobby->addPlayer(playerId);
+        broadcastToLobby(lobbyId, json{
+            {"type", "player_joined"},
+            {"playerId", playerId}
+        }.dump());
+    }
+}
+
+void ServerNetworkManager::handlePlayerLeave(const std::string& lobbyId, const std::string& playerId) {
+    auto lobby = getLobby(lobbyId);
+    if (lobby) {
+        lobby->removePlayer(playerId);
+        broadcastToLobby(lobbyId, json{
+            {"type", "player_left"},
+            {"playerId", playerId}
+        }.dump());
+
+        if (lobby->isEmpty()) {
+            deleteLobby(lobbyId);
+        }
+    }
+}
+
+void ServerNetworkManager::broadcastToLobby(const std::string& lobbyId, const std::string& message) {
+    auto lobby = getLobby(lobbyId);
+    if (lobby) {
+        lobby->broadcast(message);
+    }
 }

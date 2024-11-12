@@ -8,7 +8,8 @@
 #include <iomanip>
 
 enum class LogLevel {
-    Trace,
+    Message = -1,
+    Trace = 0,
     Info,
     Warn,
     Error,
@@ -37,7 +38,7 @@ public:
 private:
     std::string getCurrentTime();
 
-    std::string getLogLevelString(LogLevel level);
+    constexpr std::string getLogLevelString(LogLevel level);
 
     void applyColor(LogLevel level);
 
@@ -49,3 +50,4 @@ private:
 #define AT_WARN(...)  { ::Log::getCoreLogger()->log(LogLevel::Warn, __VA_ARGS__); }
 #define AT_INFO(...)  { ::Log::getCoreLogger()->log(LogLevel::Info, __VA_ARGS__); }
 #define AT_TRACE(...) { ::Log::getCoreLogger()->log(LogLevel::Trace, __VA_ARGS__); }
+#define AT_MESSAGE(...) { ::Log::getCoreLogger()->log(LogLevel::Message, __VA_ARGS__); }

@@ -1,11 +1,14 @@
 #pragma once
 
 #include "core/Core.hpp"
-#include "scene/Scene.hpp"
+#include "renderer/Color.hpp"
+#include "renderer/Font.hpp"
 #include "scene/Entity.hpp"
+#include "scene/Scene.hpp"
 
 class MenuScene : public Scene {
 public:
+
     void onCreate() override {
         this->camera = Camera({0, 0}, 2.0f);
 
@@ -22,6 +25,12 @@ public:
         this->characterSA = CreateRef<Texture>("assets/textures/blueMageSprite/FL.png");
 
         this->currentSprite = CreateRef<Texture>("assets/textures/blueMageSprite/F.png");
+
+        this->fountainCorner1 = CreateRef<Texture>("assets/textures/fountain/fountain1.png");
+        this->fountainCorner2 = CreateRef<Texture>("assets/textures/fountain/fountain2.png");
+        this->fountainCorner3 = CreateRef<Texture>("assets/textures/fountain/fountain3.png");
+        this->fountainCorner4 = CreateRef<Texture>("assets/textures/fountain/fountain4.png");
+
     }
 
     void onStart() override {
@@ -29,7 +38,6 @@ public:
     }
 
     void onUpdate(float deltaTime) override {
-        bool moved = false;
         static glm::vec2 playerPosition = {0.0f, 0.0f};
 
         if (Keyboard::isKeyPressed(Keyboard::A)) {
@@ -45,7 +53,6 @@ public:
             } else {
                 currentSprite = characterA;
             }
-            moved = true;
         } else if (Keyboard::isKeyPressed(Keyboard::D)) {
             playerPosition.x += deltaTime * 200.0f;
             if (Keyboard::isKeyPressed(Keyboard::W)) {
@@ -59,19 +66,26 @@ public:
             } else {
                 currentSprite = characterD;
             }
-            moved = true;
         } else if (Keyboard::isKeyPressed(Keyboard::S)) {
             playerPosition.y -= deltaTime * 200.0f;
             currentSprite = characterS;
-            moved = true;
         } else if (Keyboard::isKeyPressed(Keyboard::W)) {
             playerPosition.y += deltaTime * 200.0f;
             currentSprite = characterW;
-            moved = true;
         }
 
-        RenderManager::drawQuad({playerPosition.x, playerPosition.y, 0.0f}, {75.0f, 75.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(currentSprite));
-        RenderManager::drawText({-65.0f, 0.0f, 1.0f}, "Atlas OpenGL", font, 2.0f, Color(1.0f, 1.0f, 1.0f, 1.0f));
+        RenderManager::drawQuad({playerPosition.x, playerPosition.y, 0.0f}, {100.0f, 100.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(currentSprite), true);
+        RenderManager::drawText({-65.0f, 0.0f, 1.0f}, "Atlas OpenGL", font, 2.0f, Color(1.0f, 1.0f, 1.0f, 1.0f), true);
+        Sprite sprite1 = Sprite(this->fountainCorner1);
+        Sprite sprite2 = Sprite(this->fountainCorner2);
+        Sprite sprite3 = Sprite(this->fountainCorner3);
+        Sprite sprite4 = Sprite(this->fountainCorner4);
+
+        float fountainSize = 100.0f;
+        RenderManager::drawQuad({0.0f, 100.0f, 2.0f}, {fountainSize, fountainSize}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(this->fountainCorner1), true);
+        RenderManager::drawQuad({0.0f, 0.0f, 2.0f}, {fountainSize, fountainSize}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(this->fountainCorner3), true);
+        RenderManager::drawQuad({100.0f, 100.0f, 2.0f}, {fountainSize, fountainSize}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(this->fountainCorner2), true);
+        RenderManager::drawQuad({100.0f, 0.0f, 2.0f}, {fountainSize, fountainSize}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(this->fountainCorner4), true);
     }
 
 
@@ -99,4 +113,9 @@ protected:
     Ref<Texture> characterWA;
     Ref<Texture> characterSD;
     Ref<Texture> characterSA;
+
+    Ref<Texture> fountainCorner1;
+    Ref<Texture> fountainCorner2;
+    Ref<Texture> fountainCorner3;
+    Ref<Texture> fountainCorner4;
 };
