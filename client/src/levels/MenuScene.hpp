@@ -8,15 +8,21 @@
 #include "resource/ResourceManager.hpp"
 #include "scene/Entity.hpp"
 #include "scene/Scene.hpp"
+#include "system/PawnSystem.hpp"
+#include "system/RenderSystem.hpp"
 
 class MenuScene : public Scene {
 public:
     void onCreate() override {
-        //ImGui::Begin("Debug Window");
 
         this->camera = Camera({0, 0}, 2.0f);
 
         ResourceManager::load<Font>("font", "assets/fonts/Roboto-Light.ttf");
+
+        const auto font = registry.create();
+        registry.emplace<TransformComponent>(font, glm::vec3(-65.0f, 0.0f, 1.0f), 0.0f , glm::vec2(1.0f, 0.0f));
+
+
 
         ResourceManager::load<Texture>("characterW", "assets/textures/blueMageSprite/B.png");
         ResourceManager::load<Texture>("characterA", "assets/textures/blueMageSprite/L.png");
@@ -83,6 +89,9 @@ public:
 
         RenderManager::drawQuad({playerPosition.x, playerPosition.y, 0.0f}, {100.0f, 100.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, Sprite(currentSprite), true);
         RenderManager::drawText({-65.0f, 0.0f, 1.0f}, "Atlas OpenGL", ResourceManager::get<Font>("font"), 2.0f, Color(1.0f, 1.0f, 1.0f, 1.0f), true);
+
+        renderingSystem.update(deltaTime, this->registry);
+
         Sprite sprite1 = Sprite(this->fountainCorner1);
         Sprite sprite2 = Sprite(this->fountainCorner2);
         Sprite sprite3 = Sprite(this->fountainCorner3);
@@ -108,8 +117,11 @@ public:
     }
 
 protected:
-    Camera camera;
-    Registry registry;
+    Camera camera{};
+    Registry registry{};
+
+    RenderSystem renderingSystem{};
+    PawnSystem pawnSystem{};
 
     Ref<Texture> currentSprite;
 

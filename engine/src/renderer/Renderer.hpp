@@ -7,12 +7,7 @@
 
 #include <GLFW/glfw3.h> // make this the last include
 
-
-enum Shape : uint32_t {
-    QUAD,
-    CIRCLE,
-    TEXT
-};
+#include "Shapes.hpp"
 
 class Renderer {
 public:
