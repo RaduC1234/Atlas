@@ -40,9 +40,10 @@ public:
     }
 
     void onUpdate(float deltaTime) override {
-        //ImGuiIO &io = ImGui::GetIO();
-        //ImGui::Text("FPS: %.1f", io.Framerate);
-        //ImGui::Text("Screen: (%1.f, %1.f)", Mouse::getX(), Mouse::getY());
+        ImGui::Begin("Debug Window");
+        ImGuiIO &io = ImGui::GetIO();
+        ImGui::Text("FPS: %.1f", io.Framerate);
+        ImGui::Text("Screen: (%1.f, %1.f)", Mouse::getX(), Mouse::getY());
 
         static glm::vec2 playerPosition = {0.0f, 0.0f};
 
@@ -98,7 +99,9 @@ public:
     void onRender(int screenWidth, int screenHeight) override {
         RenderManager::flush(screenWidth, screenHeight, camera);
 
-        //ImGui::End();
+        auto coords = this->camera.screenToWorld({Mouse::getX(), Mouse::getY()});
+        ImGui::Text("World: (%1.f, %1.f)", coords.x, coords.y);
+        ImGui::End();
     }
 
     void onDestroy() override {

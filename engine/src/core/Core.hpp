@@ -21,11 +21,13 @@
 #include <variant>
 #include <vector>
 
-
 #include "Keyboard.hpp"
 #include "Mouse.hpp"
 
 #include "Log.hpp"
+
+#include <nlohmann/json.hpp>
+using JsonData = nlohmann::json;
 
 #ifdef __cplusplus
 #define EXTERN_C extern "C"

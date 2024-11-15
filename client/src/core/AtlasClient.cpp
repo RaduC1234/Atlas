@@ -4,6 +4,7 @@
 #include "levels/LoadingScene.hpp"
 #include "levels/MenuScene.hpp"
 #include "renderer/RenderManager.hpp"
+#include "resource/ResourceManager.hpp"
 #include "utils/PlatformUtils.hpp"
 
 
@@ -51,6 +52,7 @@ void AtlasClient::run() {
         beginTime = endTime;
     }
 
+    ResourceManager::clearAll();
     ImGuiLayer::shutdown();
     RenderManager::shutdown();
 }
