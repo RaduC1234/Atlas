@@ -36,7 +36,7 @@ void AtlasClient::run() {
 
     while (isRunning) {
 
-        this->window->onUpdate();
+
         //EventManager::pollEvents();
 
         if(deltaTime >= 0 && this->currentScene != nullptr) {
@@ -46,6 +46,7 @@ void AtlasClient::run() {
             ImGuiLayer::onImGuiRender();
         }
 
+        this->window->onUpdate();
 
         endTime = Time::now().toSeconds();
         deltaTime = endTime - beginTime;

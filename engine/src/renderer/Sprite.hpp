@@ -30,14 +30,18 @@ struct Sprite {
 
     }
 
-public:
-    Ref<Texture> texture;
-
-    TextureCoords texCoords = {
+    static TextureCoords defaultTexCoords() {
+        return {
             glm::vec2(0, 1),
             glm::vec2(1, 1),
             glm::vec2(1, 0),
             glm::vec2(0, 0)
-    };
+        };
+    }
+
+public:
+    Ref<Texture> texture;
+
+    TextureCoords texCoords = defaultTexCoords();
 
 };
