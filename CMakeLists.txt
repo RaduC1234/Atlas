@@ -9,5 +9,6 @@ add_definitions(-DATLAS_WORKING_DIRECTORY="${ATLAS_WORKING_DIRECTORY}")
 
 # Add subdirectories
 add_subdirectory(engine)
+add_subdirectory(matchmaker)
 add_subdirectory(client)
 add_subdirectory(server)

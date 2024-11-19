@@ -29,6 +29,10 @@
 #include <nlohmann/json.hpp>
 using JsonData = nlohmann::json;
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 #ifdef __cplusplus
 #define EXTERN_C extern "C"
 #else
@@ -57,6 +61,8 @@ using JsonData = nlohmann::json;
     } catch (const std::exception& e) {  \
         CATCH_CODE;                      \
     }
+
+#define SYNCHRONIZED(mutex) if (std::unique_lock<std::mutex> lockGuard{mutex}; true)
 
 #define BIT(x) (1 << x)
 
