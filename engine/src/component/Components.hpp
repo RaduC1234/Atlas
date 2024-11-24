@@ -4,6 +4,7 @@
 
 #include "renderer/Sprite.hpp"
 #include "renderer/Shapes.hpp"
+#include "resource/Animation.hpp"
 
 
 struct TransformComponent {
@@ -44,4 +45,28 @@ struct RenderComponent {
 
 struct PawnComponent {
     uint32_t serverId;
+};
+
+struct AnimationComponent
+{
+    std::shared_ptr<Animation> currentAnimation;
+    float animationTimer = 0.0f;
+    size_t currentFrame = 0;
+
+    void update(double deltaTime) {
+        if (!currentAnimation) return;
+
+        animationTimer += deltaTime;
+        if (animationTimer >= currentAnimation->getFrameDuration()) {
+            animationTimer = 0.0f;
+            currentFrame = (currentFrame + 1) % currentAnimation->getFrames().size();
+        }
+    }
+
+    std::string getCurrentFrame() const {
+        if (!currentAnimation) return "";
+        const auto& frames = currentAnimation->getFrames();
+        if (frames.empty()) return "";
+        return frames[currentFrame];
+    }
 };
