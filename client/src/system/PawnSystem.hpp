@@ -24,7 +24,7 @@ public:
         animationStates.reserve(100); // Reserve space for efficiency
     }
 
-    void update(double deltaTime, Registry& registry) {
+    void update(double deltaTime, Registry& registry, Camera& camera) {
         auto view = registry.view<TransformComponent, PawnComponent, RenderComponent>();
 
         for(const auto& entity : view) {
@@ -41,6 +41,9 @@ public:
 
             updateMovement(deltaTime, transform, render, anim);
             updateAnimation(deltaTime, render, anim);
+
+            // Center camera on character
+            camera.setPosition(transform.position);
         }
     }
 
