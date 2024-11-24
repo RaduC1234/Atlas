@@ -1,12 +1,9 @@
 #include "AtlasClient.hpp"
 
-#include "event/EventManager.hpp"
 #include "levels/LoadingScene.hpp"
 #include "levels/MenuScene.hpp"
+#include "renderer/ImGuiLayer.h"
 #include "renderer/RenderManager.hpp"
-#include "resource/ResourceManager.hpp"
-#include "utils/PlatformUtils.hpp"
-
 
 void AtlasClient::run() {
 
