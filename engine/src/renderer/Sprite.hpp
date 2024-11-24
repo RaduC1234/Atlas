@@ -10,25 +10,18 @@ using TextureCoords = std::array<glm::vec2, 4>;
 struct Sprite {
 
     // this is for when there is no texture applied to the object
-    constexpr Sprite() = default;
-
-    Sprite(Ref<Texture> texture) : texture(std::move(texture)) {}
-
-    Sprite(Ref<Texture> texture, const TextureCoords& texCoors) : texture(std::move(texture)), texCoords(texCoors) {}
-
-    /**
-     * Flips the sprite texture on X axis
-     */
-    void flipX() {
-
+    Sprite() {
+        this->texture = nullptr;
+        this->texCoords = defaultTexCoords();
     }
 
-    /**
-     * Flips the sprite texture on Y axis
-     */
-    void flipY() {
+    Sprite(Ref<Texture> texture, const TextureCoords &texCoors = defaultTexCoords()) : texture(std::move(texture)), texCoords(texCoors) {}
 
-    }
+    Sprite(const std::string &texKey, const TextureCoords &texCoords = defaultTexCoords());
+
+    Ref<Texture> texture;
+    TextureCoords texCoords = defaultTexCoords();
+
 
     static TextureCoords defaultTexCoords() {
         return {
@@ -38,10 +31,4 @@ struct Sprite {
             glm::vec2(0, 0)
         };
     }
-
-public:
-    Ref<Texture> texture;
-
-    TextureCoords texCoords = defaultTexCoords();
-
 };
