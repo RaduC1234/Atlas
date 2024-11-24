@@ -1,11 +1,6 @@
 #pragma once
 
-#include <renderer/ImGuiLayer.h>
-
-#include "core/Core.hpp"
-#include "core/Window.hpp"
-#include "scene/Scene.hpp"
-#include "utils/Config.hpp"
+#include <Atlas.hpp>
 
 class AtlasClient {
 public:
@@ -15,7 +10,7 @@ private:
     Scope<Window> window;
     Scope<Scene> currentScene;
 
-    std::atomic<bool> isRunning = true;
+    std::atomic_bool isRunning{true};
     Config clientConfig;
 };
 

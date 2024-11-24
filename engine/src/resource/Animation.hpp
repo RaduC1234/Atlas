@@ -1,7 +1,3 @@
-//
-// Created by Karina on 11/22/2024.
-//
-
 #pragma once
 
 #include <core/Core.hpp>

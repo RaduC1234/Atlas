@@ -2,15 +2,14 @@
 
 #include <imgui.h>
 
+#include "component/Components.hpp"
 #include "core/Core.hpp"
-#include "scene/Entity.hpp"
-#include "renderer/Color.hpp"
 #include "renderer/Font.hpp"
 #include "resource/ResourceManager.hpp"
+#include "scene/Entity.hpp"
 #include "scene/Scene.hpp"
-#include "component/Components.hpp"
-#include "system/RenderSystem.hpp"
 #include "system/PawnSystem.hpp"
+#include "system/RenderSystem.hpp"
 
 class MenuScene : public Scene {
 public:
@@ -28,18 +27,14 @@ public:
 
     void onStart() override {}
 
-    void onUpdate(float deltaTime) override {
-        updateDebugWindow();
+    void onUpdate(float deltaTime) override {ImGui::Begin("Debug Window");
+        ImGuiIO& io = ImGui::GetIO();
+        ImGui::Text("FPS: %.1f", io.Framerate);
+        ImGui::Text("Screen: (%1.f, %1.f)", Mouse::getX(), Mouse::getY());
+
 
         // Update systems
-        pawnSystem->update(deltaTime, registry);
-
-        // Update camera to follow player
-        if (auto player = registry.valid(playerEntity)) {
-            auto& transform = registry.get<TransformComponent>(playerEntity);
-            camera.setPosition({transform.position.x, transform.position.y});
-        }
-
+        pawnSystem->update(deltaTime, registry, camera);
         renderSystem->update(deltaTime, registry);
     }
 
@@ -138,13 +133,6 @@ protected:
             "Atlas OpenGL",
             "font"
         );
-    }
-
-    void updateDebugWindow() {
-        ImGui::Begin("Debug Window");
-        ImGuiIO& io = ImGui::GetIO();
-        ImGui::Text("FPS: %.1f", io.Framerate);
-        ImGui::Text("Screen: (%1.f, %1.f)", Mouse::getX(), Mouse::getY());
     }
 
 private:

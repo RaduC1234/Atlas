@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/Core.hpp"
+#include "Event.hpp"
 
 class EventManager {
 public:
@@ -34,10 +35,8 @@ public:
     }
 
 private:
-    static std::unique_ptr<EventListener> s_Listener;
+    inline static std::unique_ptr<EventListener> s_Listener{nullptr};
 };
-
-std::unique_ptr<EventListener> EventManager::s_Listener = nullptr;
 
 
 /**
