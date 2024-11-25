@@ -23,12 +23,14 @@ void AtlasServer::run() {
     AT_INFO("Starting Atlas Dedicated Server on port {0}. Running at {1} ticks per second.", this->serverConfig["server_port"].toString(), ticksPerSec);
     Time nextLoop = Time::now();
 
-    ServerNetworkManager::start(8080);
+    ServerNetworkManager::start(this->serverConfig["server_port"].toInt());
 
     while(isRunning) {
         while (nextLoop < Time::now()) {
             ServerNetworkManager::tick();
             nextLoop  = nextLoop.addMilliseconds(millisecondsPerTick);
+
+            ServerNetworkManager::tick();
 
             if(nextLoop > Time::now()) {
                 std::this_thread::sleep_for(nextLoop - Time::now());

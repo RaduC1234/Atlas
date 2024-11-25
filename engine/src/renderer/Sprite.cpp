@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Sprite.hpp"
 
 #include "resource/ResourceManager.hpp"

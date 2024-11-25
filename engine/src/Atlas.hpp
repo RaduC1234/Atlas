@@ -7,10 +7,6 @@
 // events
 #include "event/EventManager.hpp"
 
-// network
-#include "network/Packet.hpp"
-#include "network/Request.hpp"
-
 // resource
 #include "resource/ResourceManager.hpp"
 
