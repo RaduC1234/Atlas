@@ -1,13 +1,11 @@
 #pragma once
 
+#include <Atlas.hpp>
 #include <imgui.h>
 
 #include "component/Components.hpp"
-#include "core/Core.hpp"
 #include "renderer/Font.hpp"
 #include "resource/ResourceManager.hpp"
-#include "scene/Entity.hpp"
-#include "scene/Scene.hpp"
 #include "system/PawnSystem.hpp"
 #include "system/RenderSystem.hpp"
 
@@ -15,12 +13,28 @@ class MenuScene : public Scene {
 public:
     void onCreate() override {
         this->camera = Camera({0, 0}, 2.0f);
-        loadResources();
+
+        ResourceManager::load<Font>("font", "assets/fonts/Roboto-Light.ttf");
+
+        ResourceManager::load<Texture>("characterW", "assets/textures/blueMageSprite/back1.png");
+        ResourceManager::load<Texture>("characterW_Alt", "assets/textures/blueMageSprite/back2.png");
+        ResourceManager::load<Texture>("characterA", "assets/textures/blueMageSprite/left1.png");
+        ResourceManager::load<Texture>("characterA_Alt", "assets/textures/blueMageSprite/left2.png");
+        ResourceManager::load<Texture>("characterS", "assets/textures/blueMageSprite/front1.png");
+        ResourceManager::load<Texture>("characterS_Alt", "assets/textures/blueMageSprite/front2.png");
+        ResourceManager::load<Texture>("characterD", "assets/textures/blueMageSprite/right1.png");
+        ResourceManager::load<Texture>("characterD_Alt", "assets/textures/blueMageSprite/right2.png");
+
+        ResourceManager::load<Texture>("fountainCorner1", "assets/textures/fountain/fountain1.png");
+        ResourceManager::load<Texture>("fountainCorner2", "assets/textures/fountain/fountain2.png");
+        ResourceManager::load<Texture>("fountainCorner3", "assets/textures/fountain/fountain3.png");
+        ResourceManager::load<Texture>("fountainCorner4", "assets/textures/fountain/fountain4.png");
+
         createPlayer();
         createFountain();
         createUIElements();
 
-        // Initialize systems
+
         renderSystem = CreateRef<RenderSystem>();
         pawnSystem = CreateRef<PawnSystem>();
     }
@@ -50,23 +64,7 @@ public:
 
 protected:
     void loadResources() {
-        ResourceManager::load<Font>("font", "assets/fonts/Roboto-Light.ttf");
 
-        // Character Sprites
-        ResourceManager::load<Texture>("characterW", "assets/textures/blueMageSprite/back1.png");
-        ResourceManager::load<Texture>("characterW_Alt", "assets/textures/blueMageSprite/back2.png");
-        ResourceManager::load<Texture>("characterA", "assets/textures/blueMageSprite/left1.png");
-        ResourceManager::load<Texture>("characterA_Alt", "assets/textures/blueMageSprite/left2.png");
-        ResourceManager::load<Texture>("characterS", "assets/textures/blueMageSprite/front1.png");
-        ResourceManager::load<Texture>("characterS_Alt", "assets/textures/blueMageSprite/front2.png");
-        ResourceManager::load<Texture>("characterD", "assets/textures/blueMageSprite/right1.png");
-        ResourceManager::load<Texture>("characterD_Alt", "assets/textures/blueMageSprite/right2.png");
-
-        // Fountain Sprites
-        ResourceManager::load<Texture>("fountainCorner1", "assets/textures/fountain/fountain1.png");
-        ResourceManager::load<Texture>("fountainCorner2", "assets/textures/fountain/fountain2.png");
-        ResourceManager::load<Texture>("fountainCorner3", "assets/textures/fountain/fountain3.png");
-        ResourceManager::load<Texture>("fountainCorner4", "assets/textures/fountain/fountain4.png");
     }
 
     void createPlayer() {
