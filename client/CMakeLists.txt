@@ -3,10 +3,7 @@ project(Client)
 
 file(GLOB_RECURSE SERVER_SOURCES "src/*.cpp" "src/*.hpp")
 
-add_executable(client ${SERVER_SOURCES}
-        src/UI/Button.hpp
-        src/UI/UIComponent.hpp
-        src/UI/UISystem.hpp)
+add_executable(client ${SERVER_SOURCES})
 
 target_link_libraries(client PRIVATE engine)
 

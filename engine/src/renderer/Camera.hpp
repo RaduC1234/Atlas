@@ -23,6 +23,10 @@ public:
         return projectionMatrix;
     }
 
+    glm::vec2 getPosition() const {
+        return worldPosition;
+    }
+
     void setPosition(const glm::vec2 &position) {
         worldPosition = position;
     }

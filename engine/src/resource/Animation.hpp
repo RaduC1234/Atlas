@@ -1,21 +1,19 @@
 #pragma once
 
 #include <core/Core.hpp>
+#include "resource/ResourceManager.hpp"
 
-class Animation
-{
+class Animation {
 public:
     Animation(const std::string& animationName, const std::string& filePath) {
         try {
-            auto customLoad = [&](const std::string& key, const std::string& path) -> nlohmann::json {
-                auto jsonResource = ResourceManager::load<nlohmann::json>(key, path);
-                if (!jsonResource) {
-                    throw std::runtime_error("Failed to load JSON resource: " + key);
-                }
-                return *jsonResource;
-            };
-
-            nlohmann::json jsonData = customLoad(animationName, filePath);
+            // Load the JSON file
+            nlohmann::json jsonData;
+            std::ifstream file(filePath);
+            if (!file.is_open()) {
+                throw std::runtime_error("Failed to open JSON file: " + filePath);
+            }
+            file >> jsonData;
 
             if (jsonData.contains(animationName)) {
                 const auto& animData = jsonData.at(animationName);
@@ -31,10 +29,13 @@ public:
         }
     }
 
-    const std::string getName() const { return m_name; };
-    const std::vector<std::string>& getFrames() const { return m_frames; };
-    float getFrameDuration() const { return m_frameDuration; };
-    bool isLooping() const { return m_loop; };
+    explicit Animation(const std::string& animationName)
+        : m_name(animationName) {}
+
+    const std::string& getName() const { return m_name; }
+    const std::vector<std::string>& getFrames() const { return m_frames; }
+    float getFrameDuration() const { return m_frameDuration; }
+    bool isLooping() const { return m_loop; }
 
 private:
     std::string m_name;

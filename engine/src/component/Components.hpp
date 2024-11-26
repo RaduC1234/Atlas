@@ -47,14 +47,15 @@ struct PawnComponent {
     uint32_t serverId;
 };
 
-struct AnimationComponent
-{
+struct AnimationComponent {
     std::shared_ptr<Animation> currentAnimation;
+    std::unordered_map<std::string, std::shared_ptr<Animation>> animations;
     float animationTimer = 0.0f;
     size_t currentFrame = 0;
+    bool paused = false;
 
     void update(double deltaTime) {
-        if (!currentAnimation) return;
+        if (paused || !currentAnimation) return;
 
         animationTimer += deltaTime;
         if (animationTimer >= currentAnimation->getFrameDuration()) {
@@ -64,9 +65,38 @@ struct AnimationComponent
     }
 
     std::string getCurrentFrame() const {
-        if (!currentAnimation) return "";
+        if (!currentAnimation) {
+            std::cerr << "Warning: No current animation is set.\n";
+            return "";
+        }
         const auto& frames = currentAnimation->getFrames();
-        if (frames.empty()) return "";
+        if (frames.empty()) {
+            std::cerr << "Warning: Current animation '" << currentAnimation->getName() << "' has no frames.\n";
+            return "";
+        }
         return frames[currentFrame];
+    }
+
+    void setAnimation(const std::string& animationKey) {
+        if (animations.find(animationKey) != animations.end()) {
+            currentAnimation = animations[animationKey];
+            animationTimer = 0.0f;
+            currentFrame = 0;
+        } else {
+            std::cerr << "Warning: Animation '" << animationKey << "' not found.\n";
+        }
+    }
+
+    void pause() { paused = true; }
+    void resume() { paused = false; }
+
+    void validateAnimations() const {
+        for (const auto& [key, anim] : animations) {
+            if (!anim) {
+                std::cerr << "Error: Animation '" << key << "' is null.\n";
+            } else if (anim->getFrames().empty()) {
+                std::cerr << "Warning: Animation '" << key << "' has no frames.\n";
+            }
+        }
     }
 };
