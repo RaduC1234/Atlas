@@ -1,13 +1,14 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "UIComponent.hpp"
+#include "UI/UIComponent.hpp"
 #include "core/Mouse.hpp"
 #include "renderer/Camera.hpp"
 #include "component/Components.hpp"
 #include "scene/Entity.hpp"
 #include "Button.hpp"
 
+// Assuming Actor = entt::entity and that entt::null is used to represent an invalid Actor
 class UISystem {
 public:
     void update(Registry& registry, const Camera& camera) {
@@ -18,7 +19,7 @@ public:
         bool isDragging = Mouse::isDragging();
 
         // Track previously interacted UI element to handle z-ordering
-        Actor hoveredEntity = Actor::null();
+        Actor hoveredEntity = entt::null; // Use entt::null to represent an invalid actor
         float closestDepth = std::numeric_limits<float>::max();
 
         // First pass: Find the topmost UI element being hovered
@@ -36,7 +37,7 @@ public:
         registry.view<UIComponent, TransformComponent>().each(
             [&](Actor entity, UIComponent& uiComponent, TransformComponent& transform) {
                 handleInteraction(registry, entity, uiComponent, transform, mousePosition,
-                                isMousePressed, isDragging, entity == hoveredEntity);
+                                  isMousePressed, isDragging, entity == hoveredEntity);
             });
     }
 
@@ -57,7 +58,7 @@ private:
                     if (isHovered) {
                         button->hover();
                     } else {
-                        button->release(entity);  // Return to normal state
+                        button->release();  // No argument here, just call release()
                     }
                 }
             }
@@ -74,7 +75,7 @@ private:
                 else if (uiComponent.isPressed && !isMousePressed) {
                     uiComponent.isPressed = false;
                     if (isHovered) {  // Only trigger if still hovering
-                        button->release(entity);
+                        button->release();  // No argument here, just call release()
                     }
                 }
             }

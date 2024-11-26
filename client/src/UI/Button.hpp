@@ -7,18 +7,16 @@
 #include "renderer/Color.hpp"
 #include "renderer/Sprite.hpp"
 #include "renderer/Texture.hpp"
+#include "renderer/RenderManager.hpp"
 
 class Button : public UIComponent {
 public:
     struct ButtonStyle {
-        // Visual state colors for when no texture is used
         Color NormalColor{1.0f, 1.0f, 1.0f, 1.0f};
         Color HoverColor{0.9f, 0.9f, 0.9f, 1.0f};
         Color PressedColor{0.8f, 0.8f, 0.8f, 1.0f};
-
-        // Text properties
         std::string Text;
-        std::string FontKey;
+        Ref<Font> FontKey;
         Color TextColor{0.0f, 0.0f, 0.0f, 1.0f};
     };
 
@@ -28,69 +26,82 @@ public:
         , size(size)
         , style(style)
         , currentColor(style.NormalColor)
-        , sprite(nullptr)  // No sprite
+        , sprite(nullptr) // No sprite
     {
-        type = Type::Button;
+        type = UIComponent::Type::Button;
     }
 
     // Constructor for sprite-based button
-    Button(const glm::vec2& position, const glm::vec2& size, Ref<Texture> texture, const std::string& text = "")
+    Button(const glm::vec2& position, const glm::vec2& size, const Ref<Texture> texture, const std::string& text = "")
         : position(position)
         , size(size)
         , sprite(CreateRef<Sprite>(texture))
         , currentColor(Color(1.0f, 1.0f, 1.0f, 1.0f))
     {
-        type = Type::Button;
+        type = UIComponent::Type::Button;
         style.Text = text;
     }
 
-    // State handlers
+    // Interaction handlers
     void hover() {
-        if (sprite) {
-            currentColor = Color(0.9f, 0.9f, 0.9f, 1.0f);  // Slightly dim the sprite
-        } else {
-            currentColor = style.HoverColor;
-        }
+        currentColor = sprite ? Color(0.9f, 0.9f, 0.9f, 1.0f) : style.HoverColor;
     }
 
     void press() {
-        if (sprite) {
-            currentColor = Color(0.8f, 0.8f, 0.8f, 1.0f);  // Dim the sprite more
-        } else {
-            currentColor = style.PressedColor;
-        }
+        currentColor = sprite ? Color(0.8f, 0.8f, 0.8f, 1.0f) : style.PressedColor;
     }
 
-    void release(Actor actor) {
-        currentColor = Color(1.0f, 1.0f, 1.0f, 1.0f);
+    void release() {
+        currentColor = style.NormalColor;
         if (onClick) onClick();
     }
 
-    // Get render component for the renderer
-    RenderComponent getRenderComponent() const {
+    // Rendering the button
+    void render() const {
+        // Draw the button background
         if (sprite && sprite->texture) {
-            return RenderComponent(
-                sprite->texture->getFilePath(),
-                sprite->texCoords,
-                currentColor
+            RenderManager::drawQuad(glm::vec3(position, 0.0f), size, currentColor, *sprite);
+        } else {
+            RenderManager::drawQuad(glm::vec3(position, 0.0f), size, currentColor);
+        }
+
+        // Draw the button text
+        if (!style.Text.empty()) {
+            glm::vec3 textPosition(position.x + size.x / 2, position.y + size.y / 2, 1.0f); // Center text in button
+            RenderManager::drawText(
+                textPosition,
+                style.Text,
+                style.FontKey,
+                size.y * 0.4f,                      // Scale text size relative to button height
+                style.TextColor,
+                true                                // Center-align text
             );
         }
-
-        if (!style.Text.empty()) {
-            return RenderComponent(style.Text, style.FontKey);
-        }
-
-        // Fallback to colored quad
-        return RenderComponent("", Sprite::defaultTexCoords(), currentColor);
     }
+
+    // Customization methods
+    void setStyle(const ButtonStyle& newStyle) { style = newStyle; }
+    void setNormalColor(const Color& color) { style.NormalColor = color; }
+    void setHoverColor(const Color& color) { style.HoverColor = color; }
+    void setPressedColor(const Color& color) { style.PressedColor = color; }
+    void setText(const std::string& text) { style.Text = text; }
+    void setTextColor(const Color& color) { style.TextColor = color; }
+    void setFont(const Ref<Font>& font) { style.FontKey = font; }
+    void setOnClick(const std::function<void()>& callback) { onClick = callback; }
 
     // Getters
     const glm::vec2& getPosition() const { return position; }
     const glm::vec2& getSize() const { return size; }
     const std::string& getText() const { return style.Text; }
+    const Color& getNormalColor() const { return style.NormalColor; }
+    const Color& getHoverColor() const { return style.HoverColor; }
+    const Color& getPressedColor() const { return style.PressedColor; }
+    const Color& getTextColor() const { return style.TextColor; }
     bool hasSprite() const { return sprite != nullptr && sprite->texture != nullptr; }
 
-    void setSprite(Ref<Texture> texture) {
+    void setPosition(const glm::vec2& newPosition) { position = newPosition; }
+    void setSize(const glm::vec2& newSize) { size = newSize; }
+    void setSprite(const Ref<Texture>& texture) {
         sprite = CreateRef<Sprite>(texture);
     }
 
@@ -100,4 +111,5 @@ private:
     ButtonStyle style;
     Color currentColor;
     Ref<Sprite> sprite;
+    std::function<void()> onClick;
 };

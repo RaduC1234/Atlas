@@ -1,3 +1,5 @@
+#pragma once
+
 #include <functional>
 
 struct UIComponent {
@@ -9,11 +11,14 @@ struct UIComponent {
     };
 
     Type type;
-    std::function<void()> onClick; // Callback for interaction
-
     bool isHovered = false;  // To track hover state
     bool isPressed = false;  // To track pressed state
 
-    UIComponent(Type type, std::function<void()> callback = nullptr)
-        : type(type), onClick(std::move(callback)) {}
+    // Virtual destructor for polymorphism
+    virtual ~UIComponent() = default;
+
+    // Optional: Pure virtual methods for common interactions
+    virtual void onHover() {}
+    virtual void onPress() {}
+    virtual void onRelease() {}
 };
