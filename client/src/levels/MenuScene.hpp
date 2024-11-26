@@ -1,136 +1,101 @@
 #pragma once
 
-#include <Atlas.hpp>
 #include <imgui.h>
-
 #include "component/Components.hpp"
+#include "core/Core.hpp"
 #include "renderer/Font.hpp"
 #include "resource/ResourceManager.hpp"
+#include "scene/Entity.hpp"
+#include "scene/Scene.hpp"
 #include "system/PawnSystem.hpp"
 #include "system/RenderSystem.hpp"
+#include "system/AnimationSystem.hpp"
+#include "UI/Button.hpp"
+#include "UI/UISystem.hpp"
 
 class MenuScene : public Scene {
 public:
     void onCreate() override {
-        this->camera = Camera({0, 0}, 2.0f);
+        this->camera = Camera({0, 0}, 2.0f); // Initialize the camera with zoom level 2.0f
 
-        ResourceManager::load<Font>("font", "assets/fonts/Roboto-Light.ttf");
+        loadResources(); // Load assets required by the scene
+        createPlayer();  // Create the player entity
 
-        ResourceManager::load<Texture>("characterW", "assets/textures/blueMageSprite/back1.png");
-        ResourceManager::load<Texture>("characterW_Alt", "assets/textures/blueMageSprite/back2.png");
-        ResourceManager::load<Texture>("characterA", "assets/textures/blueMageSprite/left1.png");
-        ResourceManager::load<Texture>("characterA_Alt", "assets/textures/blueMageSprite/left2.png");
-        ResourceManager::load<Texture>("characterS", "assets/textures/blueMageSprite/front1.png");
-        ResourceManager::load<Texture>("characterS_Alt", "assets/textures/blueMageSprite/front2.png");
-        ResourceManager::load<Texture>("characterD", "assets/textures/blueMageSprite/right1.png");
-        ResourceManager::load<Texture>("characterD_Alt", "assets/textures/blueMageSprite/right2.png");
-
-        ResourceManager::load<Texture>("fountainCorner1", "assets/textures/fountain/fountain1.png");
-        ResourceManager::load<Texture>("fountainCorner2", "assets/textures/fountain/fountain2.png");
-        ResourceManager::load<Texture>("fountainCorner3", "assets/textures/fountain/fountain3.png");
-        ResourceManager::load<Texture>("fountainCorner4", "assets/textures/fountain/fountain4.png");
-
-        createPlayer();
-        createFountain();
-        createUIElements();
-
-
+        // Initialize ECS systems
         renderSystem = CreateRef<RenderSystem>();
-        pawnSystem = CreateRef<PawnSystem>();
+        pawnSystem = CreateRef<PawnSystem>(200.0f, 0.1f); // Movement speed: 200, Camera smoothing: 0.1
+        animationSystem = CreateRef<AnimationSystem>();
+
+        // Validate all animations (for debugging purposes)
+        animationSystem->validateAllAnimations(registry);
     }
 
     void onStart() override {}
 
-    void onUpdate(float deltaTime) override {ImGui::Begin("Debug Window");
-        ImGuiIO& io = ImGui::GetIO();
-        ImGui::Text("FPS: %.1f", io.Framerate);
-        ImGui::Text("Screen: (%1.f, %1.f)", Mouse::getX(), Mouse::getY());
+    void onUpdate(float deltaTime) override {
+        // Debug window using ImGui
+        debugWindow();
 
-
-        // Update systems
-        pawnSystem->update(deltaTime, registry, camera);
-        renderSystem->update(deltaTime, registry);
+        // Update ECS systems
+        pawnSystem->update(deltaTime, registry, camera); // Handle player movement
+        animationSystem->update(deltaTime, registry);    // Update animations
+        renderSystem->update(deltaTime, registry);       // Handle rendering
     }
 
     void onRender(int screenWidth, int screenHeight) override {
-        RenderManager::flush(screenWidth, screenHeight, camera);
-
-        auto coords = this->camera.screenToWorld({Mouse::getX(), Mouse::getY()});
-        ImGui::Text("World: (%1.f, %1.f)", coords.x, coords.y);
-        ImGui::End();
+        RenderManager::flush(screenWidth, screenHeight, camera); // Flush render queue
     }
 
     void onDestroy() override {}
 
 protected:
     void loadResources() {
-
+        // Load assets such as fonts and animations
+        ResourceManager::load<Font>("font", "assets/fonts/Roboto-Light.ttf");
+        ResourceManager::loadAnimations("assets/animations/animations.json");
     }
 
     void createPlayer() {
-        playerEntity = registry.create();
+        auto playerEntity = registry.create();
 
-        // Add transform component
-        auto& transform = registry.emplace<TransformComponent>(
-            playerEntity,
-            glm::vec3(0.0f, 0.0f, 0.0f),
-            0.0f,
-            glm::vec2(100.0f, 100.0f)
-        );
+        // Add TransformComponent
+        registry.emplace<TransformComponent>(playerEntity,glm::vec3(0.0f, 0.0f, 0.0f),0.0f,glm::vec2(100.0f, 100.0f));
 
-        // Add render component
-        auto& render = registry.emplace<RenderComponent>(
-            playerEntity,
-            "characterS",
-            TextureCoords(),
-            glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
-        );
+        // Add RenderComponent with default texture
+        registry.emplace<RenderComponent>(playerEntity,"front1.png",TextureCoords(),glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
-        // Add pawn component
-        auto& pawn = registry.emplace<PawnComponent>(playerEntity);
-        pawn.serverId = 1; // Assign a unique server ID
+        // Add PawnComponent for movement handling
+        registry.emplace<PawnComponent>(playerEntity);
+
+        // Add and configure AnimationComponent
+        auto& animation = registry.emplace<AnimationComponent>(playerEntity);
+
+        // Load animations from the ResourceManager
+        animation.animations = ResourceManager::loadAnimations("assets/animations/animations.json");
+
+        // Set default animation
+        animation.setAnimation("walk_down");
+
+        // Validate animations to ensure proper setup
+        animation.validateAnimations();
+
+        // Store reference to the player entity
+        this->playerEntity = playerEntity;
     }
 
-    void createFountainQuad(const glm::vec3& position, const std::string& textureKey) {
-        auto entity = registry.create();
+    void debugWindow() {
+        ImGui::Begin("Debug Window");
 
-        registry.emplace<TransformComponent>(
-            entity,
-            position,
-            0.0f,
-            glm::vec2(100.0f, 100.0f)
-        );
+        // Display FPS
+        ImGuiIO& io = ImGui::GetIO();
+        ImGui::Text("FPS: %.1f", io.Framerate);
 
-        registry.emplace<RenderComponent>(
-            entity,
-            textureKey,
-            TextureCoords(),
-            glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
-        );
-    }
+        // Display mouse position on screen and world
+        ImGui::Text("Mouse Screen: (%.1f, %.1f)", Mouse::getX(), Mouse::getY());
+        auto coords = this->camera.screenToWorld({Mouse::getX(), Mouse::getY()});
+        ImGui::Text("Mouse World: (%.1f, %.1f)", coords.x, coords.y);
 
-    void createFountain() {
-        createFountainQuad({0.0f, 100.0f, 2.0f}, "fountainCorner1");
-        createFountainQuad({100.0f, 100.0f, 2.0f}, "fountainCorner2");
-        createFountainQuad({0.0f, 0.0f, 2.0f}, "fountainCorner3");
-        createFountainQuad({100.0f, 0.0f, 2.0f}, "fountainCorner4");
-    }
-
-    void createUIElements() {
-        auto textEntity = registry.create();
-
-        registry.emplace<TransformComponent>(
-            textEntity,
-            glm::vec3(-65.0f, 0.0f, 1.0f),
-            0.0f,
-            glm::vec2(2.0f, 2.0f)
-        );
-
-        registry.emplace<RenderComponent>(
-            textEntity,
-            "Atlas OpenGL",
-            "font"
-        );
+        ImGui::End();
     }
 
 private:
@@ -138,6 +103,8 @@ private:
     Registry registry;
     Actor playerEntity;
 
+    // ECS Systems
     Ref<RenderSystem> renderSystem;
     Ref<PawnSystem> pawnSystem;
+    Ref<AnimationSystem> animationSystem;
 };
