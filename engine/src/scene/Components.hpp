@@ -45,6 +45,7 @@ struct RenderComponent {
 
 struct PawnComponent {
     uint32_t serverId;
+    bool active{true};
 };
 
 struct AnimationComponent {

@@ -1,12 +1,9 @@
 #pragma once
 
 #include <imgui.h>
-#include "component/Components.hpp"
-#include "core/Core.hpp"
+#include <Atlas.hpp>
+
 #include "renderer/Font.hpp"
-#include "resource/ResourceManager.hpp"
-#include "scene/Entity.hpp"
-#include "scene/Scene.hpp"
 #include "system/PawnSystem.hpp"
 #include "system/RenderSystem.hpp"
 #include "system/AnimationSystem.hpp"

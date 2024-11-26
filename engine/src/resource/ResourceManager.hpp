@@ -1,12 +1,9 @@
 #pragma once
 
+#include <nlohmann/json.hpp>
+
 #include "ResourceCache.hpp"
 #include "Animation.hpp"
-#include <nlohmann/json.hpp>
-#include <unordered_map>
-#include <memory>
-#include <fstream>
-#include <stdexcept>
 
 class ResourceManager {
 public:

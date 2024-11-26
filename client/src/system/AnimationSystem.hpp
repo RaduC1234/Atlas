@@ -1,10 +1,7 @@
 #pragma once
 
-#include <unordered_map>
-#include <memory>
-#include "component/Components.hpp"
-#include "scene/Entity.hpp"
-#include "resource/Animation.hpp"
+#include <Atlas.hpp>
+
 
 class AnimationSystem {
 public:

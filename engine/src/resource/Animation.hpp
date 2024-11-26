@@ -1,7 +1,6 @@
 #pragma once
 
 #include <core/Core.hpp>
-#include "resource/ResourceManager.hpp"
 
 class Animation {
 public:

@@ -1,8 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "component/Components.hpp"
-#include "scene/Entity.hpp"
+#include <Atlas.hpp>
 #include "renderer/Camera.hpp"
 
 class PawnSystem {

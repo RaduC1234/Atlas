@@ -1,9 +1,8 @@
 #pragma once
 
-#include "component/Components.hpp"
+#include <Atlas.hpp>
+
 #include "renderer/RenderManager.hpp"
-#include "resource/ResourceManager.hpp"
-#include "scene/Entity.hpp"
 
 class RenderSystem {
 public:

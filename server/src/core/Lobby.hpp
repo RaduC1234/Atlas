@@ -1,31 +1,23 @@
 #pragma once
 
 #include <Atlas.hpp>
+#include "Client.hpp"
 
 #include "data/Match.hpp"
 
-struct GameMap {
-    //std::
-};
 class Lobby {
 public:
-    void setup();
-    void start();
+
 private:
-    std::vector<Client> clients;
-    uint32_t id{getId()};
 
-    auto generateMap()
-
-    uint32_t getId() {
-        static uint32_t ids = 0;
-        return ids++;
+    static uint32_t generateId() {
+        std::random_device rd;
+        std::mt19937 gen(rd);
+        std::uniform_int_distribution<> dis(1000, 9999);
+        return dis(gen);
     }
+
+    Registry levelRegistry; // entt registry
+    std::vector<Client> clients;
+    uint32_t id{generateId()};
 };
-
-inline void Lobby::setup() {
-    //GameMap<12, 14> gameMap = ;
-}
-
-inline void Lobby::start() {
-}

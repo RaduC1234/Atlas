@@ -1,5 +1,4 @@
 #include "Event.hpp"
-#include "Atlas.hpp"
 
 class MouseEvent : public Event {
 public:

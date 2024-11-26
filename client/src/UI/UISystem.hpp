@@ -1,11 +1,10 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <Atlas.hpp>
+
 #include "UI/UIComponent.hpp"
-#include "core/Mouse.hpp"
 #include "renderer/Camera.hpp"
-#include "component/Components.hpp"
-#include "scene/Entity.hpp"
 #include "Button.hpp"
 
 // Assuming Actor = entt::entity and that entt::null is used to represent an invalid Actor
