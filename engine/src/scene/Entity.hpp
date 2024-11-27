@@ -4,12 +4,13 @@
 
 #include "Components.hpp"
 
-
 using Registry = entt::registry;
 using Actor = entt::entity;
 
 class Actors {
+public:
     static Actor createStaticProp(Registry& registry, TransformComponent transform, RenderComponent render);
     static Actor createPawn(Registry& registry, TransformComponent transform, RenderComponent render, PawnComponent pawn);
-    // static Actor createLight(Registry& registry, LightComponent light);
+
+    static void mapToStaticProps(Registry& registry, const std::vector<std::vector<int>> &map);
 };

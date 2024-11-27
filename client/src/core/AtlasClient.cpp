@@ -1,6 +1,6 @@
 #include "AtlasClient.hpp"
 
-#include "levels/LoadingScene.hpp"
+#include "levels/LevelScene.hpp"
 #include "levels/MenuScene.hpp"
 #include "renderer/ImGuiLayer.h"
 #include "renderer/RenderManager.hpp"
@@ -32,8 +32,6 @@ void AtlasClient::run() {
     float deltaTime = -1.0f;
 
     while (isRunning) {
-
-
         //EventManager::pollEvents();
 
         if(deltaTime >= 0 && this->currentScene != nullptr) {

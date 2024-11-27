@@ -15,11 +15,11 @@ public:
 
             switch (shape) {
                 case QUAD:
-                    RenderManager::drawRotatedQuad(position, scale, rotation, color, ResourceManager::get<Texture>(textureKey));
+                    RenderManager::drawRotatedQuad(position, scale, rotation, color, ResourceManager::get<Texture>(textureKey), true);
                     break;
 
                 case TEXT:
-                    RenderManager::drawText(position, text, ResourceManager::get<Font>(fontKey), scale.x, color);
+                    RenderManager::drawText(position, text, ResourceManager::get<Font>(fontKey), scale.x, color, true);
                     break;
 
                 case CIRCLE: // ignore for now
