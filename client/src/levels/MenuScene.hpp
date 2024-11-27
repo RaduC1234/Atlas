@@ -6,102 +6,83 @@
 #include "renderer/Font.hpp"
 #include "system/PawnSystem.hpp"
 #include "system/RenderSystem.hpp"
-#include "system/AnimationSystem.hpp"
 #include "UI/Button.hpp"
-#include "UI/UISystem.hpp"
 
 class MenuScene : public Scene {
 public:
     void onCreate() override {
-        this->camera = Camera({0, 0}, 2.0f); // Initialize the camera with zoom level 2.0f
+        constexpr int TILE_NUMBER = 41;
 
-        loadResources(); // Load assets required by the scene
-        createPlayer();  // Create the player entity
+        //===============================Load Resources=========================================
 
-        // Initialize ECS systems
-        renderSystem = CreateRef<RenderSystem>();
-        pawnSystem = CreateRef<PawnSystem>(200.0f, 0.1f); // Movement speed: 200, Camera smoothing: 0.1
-        animationSystem = CreateRef<AnimationSystem>();
+        // tiles
+        ResourceManager::load<Texture>("default", "assets/textures/default.png");
 
-        // Validate all animations (for debugging purposes)
-        animationSystem->validateAllAnimations(registry);
+        for (int i = 0; i <= TILE_NUMBER; i++) {
+            if (i == 11 or i == 24)
+                continue;
+
+            std::string tileID = std::string("tile") + (i < 10 ? "00" : (i < 100 ? "0" : "")) + std::to_string(i);
+            std::string filePath = "assets/textures/tiles/" + tileID + ".png";
+            ResourceManager::load<Texture>(tileID, filePath);
+        }
+
+        // pawns
+        ResourceManager::load<Texture>("back1", "assets/textures/pawns/back1.png");
+        ResourceManager::load<Texture>("back2", "assets/textures/pawns/back2.png");
+
+        ResourceManager::load<Texture>("front1", "assets/textures/pawns/front1.png");
+        ResourceManager::load<Texture>("front2", "assets/textures/pawns/front1.png");
+
+        ResourceManager::load<Texture>("left1", "assets/textures/pawns/left1.png");
+        ResourceManager::load<Texture>("left2", "assets/textures/pawns/left1.png");
+
+        ResourceManager::load<Texture>("right1", "assets/textures/pawns/right1.png");
+        ResourceManager::load<Texture>("right2", "assets/textures/pawns/right1.png");
+
+        // =========================================================================================
+
+        TransformComponent transform{{0.0f, 0.0f, 0.0f}, 0.0f, {100.0f, 100.0f}};
+        RenderComponent pawnRender{"default", Sprite::defaultTexCoords(), {1.0f, 1.0f, 1.0f, 1.0f}};
+        PawnComponent pawn;
+        Actor actor = registry.create();
+        registry.emplace<TransformComponent>(actor, transform);
+        registry.emplace<RenderComponent>(actor, pawnRender);
+        registry.emplace<PawnComponent>(actor, pawn);
+
+        //Actors::createPawn(this->registry, transform, pawnRender, PawnComponent());
+        //Actors::createStaticProp(this->registry, transform, {"default", Sprite::defaultTexCoords(), {1.0f, 1.0f, 1.0f, 1.0f}});
     }
 
-    void onStart() override {}
+    void onStart() override {
+    }
 
     void onUpdate(float deltaTime) override {
-        // Debug window using ImGui
-        debugWindow();
-
-        // Update ECS systems
-        pawnSystem->update(deltaTime, registry, camera); // Handle player movement
-        animationSystem->update(deltaTime, registry);    // Update animations
-        renderSystem->update(deltaTime, registry);       // Handle rendering
-    }
-
-    void onRender(int screenWidth, int screenHeight) override {
-        RenderManager::flush(screenWidth, screenHeight, camera); // Flush render queue
-    }
-
-    void onDestroy() override {}
-
-protected:
-    void loadResources() {
-        // Load assets such as fonts and animations
-        ResourceManager::load<Font>("font", "assets/fonts/Roboto-Light.ttf");
-        ResourceManager::loadAnimations("assets/animations/animations.json");
-    }
-
-    void createPlayer() {
-        auto playerEntity = registry.create();
-
-        // Add TransformComponent
-        registry.emplace<TransformComponent>(playerEntity,glm::vec3(0.0f, 0.0f, 0.0f),0.0f,glm::vec2(100.0f, 100.0f));
-
-        // Add RenderComponent with default texture
-        registry.emplace<RenderComponent>(playerEntity,"front1.png",TextureCoords(),glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-
-        // Add PawnComponent for movement handling
-        registry.emplace<PawnComponent>(playerEntity);
-
-        // Add and configure AnimationComponent
-        auto& animation = registry.emplace<AnimationComponent>(playerEntity);
-
-        // Load animations from the ResourceManager
-        animation.animations = ResourceManager::loadAnimations("assets/animations/animations.json");
-
-        // Set default animation
-        animation.setAnimation("walk_down");
-
-        // Validate animations to ensure proper setup
-        animation.validateAnimations();
-
-        // Store reference to the player entity
-        this->playerEntity = playerEntity;
-    }
-
-    void debugWindow() {
         ImGui::Begin("Debug Window");
-
-        // Display FPS
-        ImGuiIO& io = ImGui::GetIO();
+        ImGuiIO &io = ImGui::GetIO();
         ImGui::Text("FPS: %.1f", io.Framerate);
-
-        // Display mouse position on screen and world
         ImGui::Text("Mouse Screen: (%.1f, %.1f)", Mouse::getX(), Mouse::getY());
         auto coords = this->camera.screenToWorld({Mouse::getX(), Mouse::getY()});
         ImGui::Text("Mouse World: (%.1f, %.1f)", coords.x, coords.y);
-
         ImGui::End();
+
+        pawnSystem.update(deltaTime, registry, 0);
+        renderSystem.update(deltaTime, registry);
+    }
+
+
+    void onRender(int screenWidth, int screenHeight) override {
+        RenderManager::flush(screenWidth, screenHeight, camera);
+    }
+
+    void onDestroy() override {
+        ResourceManager::clearAll();
     }
 
 private:
-    Camera camera;
+    Camera camera{{0.0f, 0.0f}, 1.0f};
     Registry registry;
-    Actor playerEntity;
 
-    // ECS Systems
-    Ref<RenderSystem> renderSystem;
-    Ref<PawnSystem> pawnSystem;
-    Ref<AnimationSystem> animationSystem;
+    RenderSystem renderSystem;
+    PawnSystem pawnSystem;
 };

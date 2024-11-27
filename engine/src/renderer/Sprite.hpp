@@ -23,7 +23,7 @@ struct Sprite {
     TextureCoords texCoords = defaultTexCoords();
 
 
-    static TextureCoords defaultTexCoords() {
+    constexpr static TextureCoords defaultTexCoords() {
         return {
             glm::vec2(0, 1),
             glm::vec2(1, 1),

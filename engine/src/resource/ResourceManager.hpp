@@ -32,32 +32,6 @@ public:
         cacheMap().clear();
     }
 
-    // New loadAnimations method
-    static std::unordered_map<std::string, std::shared_ptr<Animation>> loadAnimations(const std::string& filePath) {
-        std::unordered_map<std::string, std::shared_ptr<Animation>> animations;
-
-        try {
-            // Open the JSON file
-            std::ifstream file(filePath);
-            if (!file.is_open()) {
-                throw std::runtime_error("Failed to open animation file: " + filePath);
-            }
-
-            // Parse the JSON
-            nlohmann::json jsonData;
-            file >> jsonData;
-
-            // Load animations
-            for (const auto& [key, value] : jsonData.items()) {
-                animations[key] = std::make_shared<Animation>(key, jsonData);
-            }
-        } catch (const std::exception& e) {
-            std::cerr << "Error loading animations: " << e.what() << "\n";
-        }
-
-        return animations;
-    }
-
 private:
     template<typename T>
     static ResourceCache<T>& getResourceCache() {
