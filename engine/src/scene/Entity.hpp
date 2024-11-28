@@ -1,5 +1,4 @@
 #pragma once
-
 #include <entt/entt.hpp>
 
 #include "Components.hpp"
@@ -13,7 +12,9 @@ public:
     static Actor createPawn(Registry& registry, TransformComponent transform, RenderComponent render, PawnComponent pawn);
 
     static void mapToStaticProps(Registry& registry, const std::vector<std::vector<int>> &map);
+
 };
+
 
 enum class RegistryOperation {
     CREATE_ENTITY,

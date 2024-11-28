@@ -6,7 +6,7 @@
 
 class PawnSystem {
 public:
-    PawnSystem(float moveSpeed = 200.0f)
+    PawnSystem(float moveSpeed = 1000.0f)
         : moveSpeed(moveSpeed) {
     }
 

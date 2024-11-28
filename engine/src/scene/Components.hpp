@@ -6,7 +6,6 @@
 #include "renderer/Shapes.hpp"
 #include "resource/Animation.hpp"
 
-
 struct TransformComponent {
     glm::vec3 position;
     float rotation;
