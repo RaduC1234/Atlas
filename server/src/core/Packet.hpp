@@ -4,3 +4,7 @@
 #include "core/Core.hpp"
 
 
+
+struct Packet {
+
+};

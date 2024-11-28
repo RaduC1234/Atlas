@@ -32,5 +32,8 @@
   }, {
     "name" : "crow",
     "version>=" : "1.2.0"
+  }, {
+    "name" : "cpr",
+    "version>=" : "1.11.0"
   } ]
 }

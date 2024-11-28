@@ -22,52 +22,12 @@ void ServerNetworkManager::start(uint32_t port) {
     const auto logger = CreateRef<CrowLogger>();
     crow::logger::setHandler(logger.get());
 
-    CROW_WEBSOCKET_ROUTE(serverApp, "/")
-            .onopen([](crow::websocket::connection &conn) {
-                std::lock_guard lock(classMutex);
-                const Client newClient(&conn);
-                users.insert(newClient);
-                AT_INFO("New client connected with remote ip: {0}", conn.get_remote_ip());
-            })
-            .onclose([](crow::websocket::connection &conn, const std::string &reason) {
-                std::lock_guard lock(classMutex);
-                const auto it = std::ranges::find_if(users, [&conn](const Client &client) {
-                    return client.getConnection() == &conn;
-                });
-
-                AT_INFO("Client {0} disconnected. Reason {1}",
-                        ((*it).getConnection() == nullptr ? "" : "[" + (*it).getConnection()->get_remote_ip() + "]"),
-                        reason);
+    CROW_ROUTE(serverApp, "/")([&](const crow::request& request) {
+        return "<h1>Hello World</h1>";
+    });
 
 
-                if (it != users.end()) {
-                    users.erase(it);
-                }
-            })
-            .onerror([&](crow::websocket::connection &conn, const std::string &error_message) {
-                std::lock_guard lock(classMutex);
-                const auto it = std::ranges::find_if(users, [&conn](const Client &client) {
-                    return client.getConnection() == &conn;
-                });
-
-                AT_INFO("Client {0} disconnected. Reason {1}",
-                        ((*it).getConnection() == nullptr ? "" : "[" + (*it).getConnection()->get_remote_ip() + "]"),
-                        error_message);
-
-
-                if (it != users.end()) {
-                    users.erase(it);
-                }
-            })
-            .onmessage([](crow::websocket::connection &conn, const std::string &data, bool is_binary) {
-                if (is_binary) {
-                    conn.send_binary(data);
-                } else {
-                    conn.send_text(data);
-                }
-            });
-
-    serverApp.port(port).run();
+    serverApp.multithreaded().port(8080).run();
 }
 
 

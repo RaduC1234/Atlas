@@ -6,12 +6,6 @@
 
 #include <crow/app.h>
 
-struct Packet {
-    uint32_t id = 0;
-    JsonData payload;
-    Client client;
-};
-
 using TickAction = std::function<void()>;
 
 class ServerNetworkManager {

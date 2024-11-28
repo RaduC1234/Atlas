@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/Core.hpp"
+#include "renderer/Camera.hpp"
 #include "scene/Scene.hpp"
 
 class LevelScene : public Scene {
@@ -25,4 +26,8 @@ public:
     void onDestroy() override {
 
     }
+
+private:
+    Camera camera{{0.0f, 0.0f}, 1.0f};
+    Registry registry;
 };

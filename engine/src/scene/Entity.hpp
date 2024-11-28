@@ -14,3 +14,17 @@ public:
 
     static void mapToStaticProps(Registry& registry, const std::vector<std::vector<int>> &map);
 };
+
+enum class RegistryOperation {
+    CREATE_ENTITY,
+    DESTROY_ENTITY,
+    ADD_COMPONENT,
+    REMOVE_COMPONENT
+};
+
+struct RegistryModification {
+    RegistryOperation operation;
+    Actor actor;
+    std::string componentType;
+    std::vector<JsonData> data;
+};

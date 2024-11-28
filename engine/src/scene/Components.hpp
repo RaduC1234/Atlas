@@ -47,6 +47,10 @@ struct PawnComponent {
     uint32_t playerId{0};
 };
 
+struct RigidBodyComponent {
+    bool useIncremental{true};
+};
+
 struct AnimationComponent {
     std::shared_ptr<Animation> currentAnimation;
     std::unordered_map<std::string, std::shared_ptr<Animation>> animations;

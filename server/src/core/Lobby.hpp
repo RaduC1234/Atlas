@@ -7,9 +7,11 @@
 
 class Lobby {
 public:
+    void start() {
+
+    }
 
 private:
-
 
     static uint32_t generateId() {
         std::random_device rd;

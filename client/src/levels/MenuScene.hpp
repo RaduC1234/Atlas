@@ -42,15 +42,12 @@ public:
 
         // =========================================================================================
 
-
-
-        TransformComponent transform{{0.0f, 0.0f, 0.0f}, 0.0f, {100.0f, 100.0f}};
-        RenderComponent render{"default", Sprite::defaultTexCoords(), {1.0f, 1.0f, 1.0f, 1.0f}};
-
-        Actors::createStaticProp(this->registry, transform, render);
-
-        render.textureKey = "front1";
-        Actors::createPawn(this->registry, transform, render, PawnComponent());
+        Actors::createPawn(
+            this->registry,
+            {{0.0f, 0.0f, 0.0f}, 0.0f, {100.0f, 100.0f}},
+            {"front1", Sprite::defaultTexCoords(), {1.0f, 1.0f, 1.0f, 1.0f}},
+            PawnComponent()
+        );
     }
 
     void onStart() override {

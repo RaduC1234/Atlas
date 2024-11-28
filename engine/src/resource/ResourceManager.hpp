@@ -1,9 +1,6 @@
 #pragma once
 
-#include <nlohmann/json.hpp>
-
 #include "ResourceCache.hpp"
-#include "Animation.hpp"
 
 class ResourceManager {
 public:

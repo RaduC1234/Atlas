@@ -39,6 +39,10 @@ target_link_libraries(engine PUBLIC nlohmann_json::nlohmann_json)
 find_package(Crow CONFIG REQUIRED)
 target_link_libraries(engine PUBLIC Crow::Crow)
 
+# Curl
+find_package(Cpr CONFIG REQUIRED)
+target_link_libraries(engine PUBLIC cpr::cpr)
+
 # Add ImGui as a STATIC library with source files
 add_library(imgui STATIC
         ${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/imgui/imgui.cpp
