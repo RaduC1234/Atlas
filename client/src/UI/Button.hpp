@@ -62,7 +62,7 @@ public:
             glm::vec2{textScale});
 
         // Create text render component
-        auto textRender = RenderComponent(text, "minecraft");
+        auto textRender = RenderComponent("minecraft", text, {1.0f, 1.0f, 1.0f, 1.0f});
         textRender.shape = Shape::TEXT;
         textRender.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
         registry.emplace<RenderComponent>(textEntity, textRender);

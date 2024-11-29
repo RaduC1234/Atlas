@@ -7,3 +7,4 @@ enum Shape : uint32_t {
     CIRCLE,
     TEXT
 };
+

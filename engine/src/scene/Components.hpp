@@ -16,6 +16,8 @@ struct TransformComponent {
           rotation(rotation),
           scale(scale) {
     }
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(TransformComponent, position, rotation, scale);
 };
 
 struct RenderComponent {
@@ -35,15 +37,25 @@ struct RenderComponent {
           shape(Shape::QUAD) {
     }
 
-    RenderComponent(const std::string &text, std::string font_key)
+    RenderComponent(std::string font_key, const std::string &text, const glm::vec4 &color)
         : shape(Shape::TEXT),
           text(text),
-          fontKey(std::move(font_key)){
+          color(color),
+          fontKey(std::move(font_key)) {
     }
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(RenderComponent, textureKey, coords, color, shape, text, fontKey);
 };
 
 struct PawnComponent {
     uint32_t playerId{0};
+    bool moveForward{false};
+    bool moveBackwards{false};
+    bool moveLeft{false};
+    bool moveRight{false};
+    float aimRotation{0};
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(PawnComponent, playerId);
 };
 
 struct RigidBodyComponent {
@@ -52,7 +64,7 @@ struct RigidBodyComponent {
 
 struct AnimationComponent {
     std::shared_ptr<Animation> currentAnimation;
-    std::unordered_map<std::string, std::shared_ptr<Animation>> animations;
+    std::unordered_map<std::string, std::shared_ptr<Animation> > animations;
     float animationTimer = 0.0f;
     size_t currentFrame = 0;
     bool paused = false;
@@ -72,7 +84,7 @@ struct AnimationComponent {
             std::cerr << "Warning: No current animation is set.\n";
             return "";
         }
-        const auto& frames = currentAnimation->getFrames();
+        const auto &frames = currentAnimation->getFrames();
         if (frames.empty()) {
             std::cerr << "Warning: Current animation '" << currentAnimation->getName() << "' has no frames.\n";
             return "";
@@ -80,7 +92,7 @@ struct AnimationComponent {
         return frames[currentFrame];
     }
 
-    void setAnimation(const std::string& animationKey) {
+    void setAnimation(const std::string &animationKey) {
         if (animations.find(animationKey) != animations.end()) {
             currentAnimation = animations[animationKey];
             animationTimer = 0.0f;
@@ -94,7 +106,7 @@ struct AnimationComponent {
     void resume() { paused = false; }
 
     void validateAnimations() const {
-        for (const auto& [key, anim] : animations) {
+        for (const auto &[key, anim]: animations) {
             if (!anim) {
                 std::cerr << "Error: Animation '" << key << "' is null.\n";
             } else if (anim->getFrames().empty()) {

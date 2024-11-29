@@ -3,6 +3,7 @@
 #include <imgui.h>
 #include <Atlas.hpp>
 
+#include "renderer/Color.hpp"
 #include "renderer/Font.hpp"
 #include "system/PawnSystem.hpp"
 #include "system/RenderSystem.hpp"
@@ -18,7 +19,7 @@ public:
 
         ResourceManager::load<Font>("pixelify", "assets/fonts/PixelifySans-Medium.ttf");
         ResourceManager::load<Font>("roboto", "assets/fonts/Roboto-Light.ttf");
-        font = ResourceManager::load<Font>("minecraft", "assets/fonts/Minecraft.ttf");
+        ResourceManager::load<Font>("minecraft", "assets/fonts/Minecraft.ttf");
         ResourceManager::load<Font>("inter", "assets/fonts/InterVariable.ttf");
         // tiles
         ResourceManager::load<Texture>("button", "assets/textures/button.png");
@@ -47,18 +48,82 @@ public:
 
         // =========================================================================================
 
-        Actors::createPawn(
-            this->registry,
-            {{0.0f, 0.0f, 0.0f}, 0.0f, {100.0f, 100.0f}},
-            {"front1", Sprite::defaultTexCoords(), {1.0f, 1.0f, 1.0f, 1.0f}},
-            PawnComponent()
+        // background
+        Actors::mapToStaticProps(this->registry, map);
+
+
+        // title
+        Actors::createStaticProp(registry,
+                                 {{-75.0f, 500.0f, 0.0f}, 0.0f, {30.0f, 0.0f}},
+                                 {"minecraft", "Hexes & Chaos", Color(0, 0, 0, 255)}
         );
 
-        map.resize(52);
-        for (int i = 0; i < map.size(); i++)
-            map[i].resize(60);
+        Button::create(registry,
+                       glm::vec3{0.0f, 200.0f, 1.0f}, // Top button
+                       glm::vec2{800.0f, 300.0f},
+                       "button",
+                       glm::vec4{1.0f, 1.0f, 1.0f, 1.0f},
+                       "Play",
+                       [this]() { std::cout << "Play button clicked!" << std::endl; }
+        );
 
-        map = {
+        // Options button
+        Button::create(registry,
+                       glm::vec3{0.0f, -150.0f, 1.0f}, // Middle button
+                       glm::vec2{800.0f, 300.0f},
+                       "button",
+                       glm::vec4{1.0f, 1.0f, 1.0f, 1.0f},
+                       "Options",
+                       [this]() { std::cout << "Options button clicked!" << std::endl; }
+        );
+
+        // Quit button
+        Button::create(registry,
+                       glm::vec3{0.0f, -500.0f, 1.0f}, // Bottom button
+                       glm::vec2{800.0f, 300.0f},
+                       "button",
+                       glm::vec4{1.0f, 1.0f, 1.0f, 1.0f},
+                       "Quit",
+                       [this]() { std::cout << "Quit button clicked!" << std::endl; }
+        );
+    }
+
+    void onStart() override {
+    }
+
+    void onUpdate(float deltaTime) override {
+        ImGui::Begin("Debug Window");
+        ImGuiIO &io = ImGui::GetIO();
+        ImGui::Text("FPS: %.1f", io.Framerate);
+        ImGui::Text("Mouse Screen: (%.1f, %.1f)", Mouse::getX(), Mouse::getY());
+        auto coords = this->camera.screenToWorld({Mouse::getX(), Mouse::getY()});
+        ImGui::Text("Mouse World: (%.1f, %.1f)", coords.x, coords.y);
+        ImGui::End();
+
+        renderSystem.update(deltaTime, registry);
+
+        Button::update(registry, camera);
+        Button::updateVisuals(registry);
+    }
+
+
+    void onRender(int screenWidth, int screenHeight) override {
+        RenderManager::flush(screenWidth, screenHeight, camera);
+    }
+
+    void onDestroy() override {
+        ResourceManager::clearAll();
+    }
+
+private:
+    Camera camera{{0.0f, 0.0f}, 0.5f};
+    Registry registry;
+
+    RenderSystem renderSystem;
+    PawnSystem pawnSystem;
+
+    std::vector<std::vector<int> > map = {
+        {
             {13, 13, 12, 12, 12, 12, 13, 12, 13, 13, 13, 12, 12, 13, 13, 12, 13, 12, 12, 12, 12, 12, 12, 13, 13, 12, 13, 12, 12, 12, 13, 12, 12, 13, 12, 13, 12, 13, 13, 12, 13, 13, 13, 13, 13, 13, 12, 12, 13, 13, 12, 13, 13, 13, 12, 13, 13, 12, 12, 13},
             {13, 13, 12, 12, 12, 12, 12, 13, 13, 12, 12, 12, 12, 13, 12, 13, 13, 13, 13, 13, 13, 12, 13, 13, 13, 12, 13, 13, 13, 13, 13, 12, 12, 12, 12, 12, 12, 12, 12, 13, 13, 13, 12, 12, 13, 13, 13, 13, 13, 13, 12, 13, 13, 12, 13, 13, 12, 12, 13, 12},
             {13, 13, 13, 13, 12, 13, 12, 13, 13, 13, 13, 13, 13, 12, 13, 13, 12, 12, 12, 12, 12, 13, 13, 13, 12, 12, 13, 12, 12, 13, 12, 13, 13, 12, 12, 13, 12, 12, 13, 12, 13, 12, 13, 12, 12, 13, 12, 13, 12, 12, 13, 13, 12, 13, 12, 13, 13, 12, 12, 13},
@@ -111,97 +176,6 @@ public:
             {13, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 13, 13, 12, 12, 12, 13, 12, 13, 13, 12, 13, 13, 13, 13, 13, 12, 13, 12, 12, 13, 13, 13, 12, 12, 12, 12, 13, 12, 13, 12, 13, 12, 12, 13, 12, 12, 12, 12, 12, 12, 13, 12, 13, 12, 12, 12, 13, 12},
             {13, 13, 12, 13, 12, 13, 13, 12, 12, 13, 12, 12, 12, 13, 13, 12, 13, 12, 12, 13, 12, 13, 13, 13, 13, 13, 13, 12, 12, 13, 12, 13, 12, 12, 12, 13, 13, 12, 12, 12, 12, 13, 12, 13, 12, 13, 13, 12, 13, 13, 13, 12, 12, 12, 13, 12, 12, 13, 12, 12},
             {13, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 13, 13, 12, 12, 12, 13, 12, 13, 13, 12, 13, 13, 13, 13, 13, 12, 13, 12, 12, 13, 13, 13, 12, 12, 12, 12, 13, 12, 13, 12, 13, 12, 12, 13, 12, 12, 12, 12, 12, 12, 13, 12, 13, 12, 12, 12, 13, 12}
-        };
-
-        Actors::mapToStaticProps(this->registry, map);
-
-
-        Button::create(registry,
-            glm::vec3{0.0f, 200.0f, 1.0f},  // Top button
-            glm::vec2{800.0f, 300.0f},
-            "button",
-            glm::vec4{1.0f, 1.0f, 1.0f, 1.0f},
-            "Play",
-            [this]() { handlePlayButton(); }
-        );
-
-        // Options button
-        Button::create(registry,
-            glm::vec3{0.0f, -150.0f, 1.0f},  // Middle button
-            glm::vec2{800.0f, 300.0f},
-            "button",
-            glm::vec4{1.0f, 1.0f, 1.0f, 1.0f},
-            "Options",
-            [this]() { handleOptionsButton(); }
-        );
-
-        // Quit button
-        Button::create(registry,
-            glm::vec3{0.0f, -500.0f, 1.0f},  // Bottom button
-            glm::vec2{800.0f, 300.0f},
-            "button",
-            glm::vec4{1.0f, 1.0f, 1.0f, 1.0f},
-            "Quit",
-            [this]() { handleQuitButton(); }
-        );
-
-    }
-
-    void onStart() override {
-    }
-
-    void onUpdate(float deltaTime) override {
-        ImGui::Begin("Debug Window");
-        ImGuiIO &io = ImGui::GetIO();
-        ImGui::Text("FPS: %.1f", io.Framerate);
-        ImGui::Text("Mouse Screen: (%.1f, %.1f)", Mouse::getX(), Mouse::getY());
-        auto coords = this->camera.screenToWorld({Mouse::getX(), Mouse::getY()});
-        ImGui::Text("Mouse World: (%.1f, %.1f)", coords.x, coords.y);
-        ImGui::End();
-
-        RenderManager::drawText({-1313.0f,500.0f,0.0f},"Hexes & Chaos",font,30.0f,{0.0f,0.0f,0.0f,1.0f});
-
-        pawnSystem.update(deltaTime, registry, 0);
-        renderSystem.update(deltaTime, registry);
-
-        Button::update(registry, camera);
-        Button::updateVisuals(registry);
-
-    }
-
-
-    void onRender(int screenWidth, int screenHeight) override {
-        RenderManager::flush(screenWidth, screenHeight, camera);
-    }
-
-    void onDestroy() override {
-        ResourceManager::clearAll();
-    }
-
-private:
-    //handlers of the button
-    void handlePlayButton() {
-        // Handle button click
-        std::cout << "Play button clicked!" << std::endl;
-    }
-
-    void handleOptionsButton() {
-        std::cout << "Options button clicked!" << std::endl;
-    }
-
-    void handleQuitButton() {
-        std::cout << "Quit button clicked!" << std::endl;
-    }
-
-    void handleLogInButton() {
-        std::cout << "Log in button clicked!" << std::endl;
-    }
-
-    Camera camera{{0.0f, 0.0f}, 0.5f};
-    Registry registry;
-
-    RenderSystem renderSystem;
-    PawnSystem pawnSystem;
-    std::vector<std::vector<int>> map;
-    Ref<Font> font;
+        }
+    };
 };

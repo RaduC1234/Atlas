@@ -1,6 +1,9 @@
 #pragma once
 
 #include <Atlas.hpp>
+#include <crow.h>
+
+#include "ServerNetworkService.hpp"
 
 class AtlasServer {
 public:
@@ -8,4 +11,5 @@ public:
 private:
     Config serverConfig;
     std::atomic_bool isRunning{true};
+    ServerNetworkService serverManager;
 };
