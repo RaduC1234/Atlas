@@ -11,7 +11,6 @@
 #include "system/RenderSystem.hpp"
 
 class LevelScene : public Scene {
-
 public:
     void onCreate() override {
         constexpr int TILE_NUMBER = 41;
@@ -44,6 +43,13 @@ public:
         ResourceManager::load<Texture>("right2", "assets/textures/pawns/right1.png");
 
         // =========================================================================================
+
+        Actors::createPawn(
+            this->registry,
+            {{0.0f, 0.0f, 0.0f}, 0.0f, {100.0f, 100.0f}},
+            {"front1", Sprite::defaultTexCoords(), {1.0f, 1.0f, 1.0f, 1.0f}},
+            PawnComponent()
+        );
     }
 
     void onStart() override {
@@ -57,10 +63,10 @@ public:
         auto coords = this->camera.screenToWorld({Mouse::getX(), Mouse::getY()});
         ImGui::Text("Mouse World: (%.1f, %.1f)", coords.x, coords.y);
 
-
         pawnSystem.update(deltaTime, registry, 0, camera);
         renderSystem.update(deltaTime, registry);
         networkSystem.update(deltaTime, registry);
+
         ImGui::End();
     }
 
@@ -70,7 +76,6 @@ public:
     }
 
     void onDestroy() override {
-
     }
 
 private:
