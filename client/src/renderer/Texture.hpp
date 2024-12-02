@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/Core.hpp"
+#include <Atlas.hpp>
 
 class Texture {
 public:

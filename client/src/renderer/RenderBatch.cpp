@@ -1,6 +1,7 @@
 #include "RenderBatch.hpp"
 
-#include "utils/PlatformUtils.hpp"
+#include <Atlas.hpp>
+#include <glad/glad.h>
 
 RenderBatch::RenderBatch(int32_t maxBatchSize, Ref<Shader> quadShader, float_t zIndex) : maxBatchSize(maxBatchSize),
     shader(std::move(quadShader)), zIndex(zIndex) {

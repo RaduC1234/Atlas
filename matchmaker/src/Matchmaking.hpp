@@ -1,7 +1,6 @@
 #pragma once
-#include <cmath>
-#include <vector>
-#include "core/Core.hpp"
+
+#include <Atlas.hpp>
 
 
 constexpr double TAU = 0.5;

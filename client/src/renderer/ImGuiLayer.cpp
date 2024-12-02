@@ -1,6 +1,6 @@
 #include "ImGuiLayer.h"
 
-#include "core/Core.hpp"
+#include <Atlas.hpp>
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>

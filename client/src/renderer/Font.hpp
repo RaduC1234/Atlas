@@ -1,8 +1,7 @@
 #pragma once
 
-#include "core/Core.hpp"
+#include <Atlas.hpp>
 
-#include <glad/glad.h>
 #include <freetype/freetype.h>
 #include <glm/glm.hpp>
 
@@ -46,6 +45,6 @@ private:
     std::string filePath;
     std::map<char, Character> characters;
 
-    inline static FT_Library ft;
-    inline static bool isLoaded = false;
+    static FT_Library ft;
+    static bool isLoaded;
 };

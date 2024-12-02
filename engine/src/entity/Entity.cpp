@@ -1,5 +1,7 @@
 #include "Entity.hpp"
 
+#include <imgui.h>
+
 Actor Actors::createStaticProp(Registry &registry, TransformComponent transform, RenderComponent render) {
     auto actor = registry.create();
     registry.emplace<TransformComponent>(actor, transform);
@@ -41,7 +43,7 @@ void Actors::mapToStaticProps(Registry &registry, const std::vector<std::vector<
 
 
             TransformComponent transform(glm::vec3(posX, posY, 2.0f), 0.0f, {tileSize.x, tileSize.y});
-            RenderComponent render(tileID, Sprite::defaultTexCoords(), {1.0f, 1.0f, 1.0f, 1.0f});
+            RenderComponent render(tileID, RenderComponent::defaultTexCoords(), {1.0f, 1.0f, 1.0f, 1.0f});
 
             createStaticProp(registry, transform, render);
         }

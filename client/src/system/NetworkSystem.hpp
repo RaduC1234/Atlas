@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Atlas.hpp>
-#include <cpr/cpr.h>
+//#include <cpr/cpr.h>
 
 class NetworkSystem {
 public:
@@ -12,7 +12,6 @@ public:
             auto &transform = view.get<TransformComponent>(entity);
             auto &pawn = view.get<PawnComponent>(entity);
 
-            // Launch the network request on a separate thread
             std::thread([deltaTime, pawn, &transform, &registry, entity]() {
                 try {
                     // Serialize input data to JSON
@@ -25,7 +24,7 @@ public:
                         {"moveRight", pawn.moveRight}
                     };
 
-                    cpr::Response response = cpr::Post(
+                    /*cpr::Response response = cpr::Post(
                         cpr::Url{"http://localhost:8080/"},
                         cpr::Header{{"Content-Type", "application/json"}},
                         cpr::Body{inputJson.dump()}
@@ -37,7 +36,6 @@ public:
                     }
 
                     if (response.status_code == 200) {
-                        // Parse the server response
                         auto responseJson = nlohmann::json::parse(response.text);
                         glm::vec3 newPosition = {
                             responseJson["x"].get<float>(),
@@ -45,16 +43,15 @@ public:
                             responseJson["z"].get<float>()
                         };
 
-                        // Update the TransformComponent with the new position
                         registry.get<TransformComponent>(entity).position = newPosition;
                     } else {
                         std::cerr << "Server error: " << response.status_code << "\n";
                         std::cerr << "Response: " << response.text << "\n";
-                    }
+                    }*/
                 } catch (const std::exception &e) {
                     std::cerr << "Exception in network thread: " << e.what() << "\n";
                 }
-            }).detach(); // Detach the thread to run independently
+            }).detach();
         }
     }
 };

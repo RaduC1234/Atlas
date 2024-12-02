@@ -24,9 +24,6 @@
 #include <variant>
 #include <vector>
 
-#include "Keyboard.hpp"
-#include "Mouse.hpp"
-
 #include "Log.hpp"
 
 #include <nlohmann/json.hpp>
@@ -71,6 +68,7 @@ using JsonData = nlohmann::json;
 
 #define BIT(x) (1 << x)
 
+using TextureCoords = std::array<glm::vec2, 4>;
 
 template<typename T>
 using Scope = std::unique_ptr<T>;

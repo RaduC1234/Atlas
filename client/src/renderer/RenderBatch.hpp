@@ -69,7 +69,7 @@ private:
     float_t zIndex{};
     bool full = false;
 
-    GLuint VAO{}, VBO{}, EBO{};
+    uint32_t VAO{}, VBO{}, EBO{};
 
     std::vector<Vertex> vertices;
     uint32_t vertexIndex = 0; // holds the drawing index in the element array

@@ -53,12 +53,12 @@ target_link_libraries(engine PUBLIC nlohmann_json::nlohmann_json)
 find_package(Crow CONFIG REQUIRED)
 target_link_libraries(engine PUBLIC Crow::Crow)
 
-# CPR (Curl-based HTTP library)
+#[[# CPR (Curl-based HTTP library)
 include(FetchContent)
 FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git) # Replace with your desired git commit from: https://github.com/libcpr/cpr/releases
 FetchContent_MakeAvailable(cpr)
 
-target_link_libraries(engine PUBLIC cpr::cpr)
+target_link_libraries(engine PUBLIC cpr::cpr)]]
 
 # ===========================
 # ImGui Configuration
@@ -109,4 +109,4 @@ target_link_libraries(engine PUBLIC imgui)
 
 
 
-list(APPEND ENGINE_SOURCES src/scene/Actors.cpp)
+list(APPEND ENGINE_SOURCES src/entity/Actors.cpp)

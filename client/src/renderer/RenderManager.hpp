@@ -16,7 +16,7 @@ public:
     * @param size size of the quad
     * @param rotation rotation of the quad in degrees
     * @param color color of the quad
-    * @param sprite leave null for opaque quad
+    * @param sprite leave default for opaque quad
     */
     static void drawRotatedQuad(const glm::vec3 &position, const glm::vec2 &size, float rotation, const glm::vec4 &color, const Sprite& sprite = Sprite(), bool centered = false);
 
@@ -24,7 +24,7 @@ public:
     * Draws a quad on the screen.
     * @param position x and y represent the position of the quad on the screen, z is the z-index of the quad
     * @param color color of the quad
-    * @param sprite leave null for opaque quad
+    * @param sprite leave default for opaque quad
     */
     static void drawQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, const Sprite& sprite = Sprite(), bool centered = false);
 
@@ -43,9 +43,8 @@ public:
      * @param position x and y represent the position of the line on the screen, z is the z-index of the circle
      * @param radius radius of the circle
      * @param color color of the circle
-     * @param sprite leave null for opaque circle
+     * @param sprite leave default for opaque circle
      */
-
     static void drawCircle(const glm::vec3 &position, float radius, const glm::vec4 &color, const Sprite &sprite);
 
     static void flush(uint32_t screenWidth, uint32_t screenHeight, Camera &camera);

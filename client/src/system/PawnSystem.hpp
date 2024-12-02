@@ -3,6 +3,9 @@
 #include <Atlas.hpp>
 #include <glm/glm.hpp>
 
+#include "window/Keyboard.hpp"
+#include "window/Mouse.hpp"
+
 class PawnSystem {
 public:
     explicit PawnSystem(float moveSpeed = 200.0f)

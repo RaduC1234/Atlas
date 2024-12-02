@@ -2,8 +2,6 @@
 
 #include <glm/glm.hpp>
 
-#include "renderer/Sprite.hpp"
-#include "renderer/Shapes.hpp"
 #include "resource/Animation.hpp"
 
 struct TransformComponent {
@@ -21,10 +19,13 @@ struct TransformComponent {
 };
 
 struct RenderComponent {
+
+    using TextureCoords = std::array<glm::vec2, 4>;
+
     std::string textureKey;
     TextureCoords coords;
     glm::vec4 color;
-    Shape shape; // 0 for quads, 1 for circles, 2 for text
+    uint32_t shape; // 0 for quads, 1 for circles, 2 for text
 
     // if text
     std::string text;
@@ -34,14 +35,23 @@ struct RenderComponent {
         : textureKey(texture_key),
           coords(coords),
           color(color),
-          shape(Shape::QUAD) {
+          shape(0) {
     }
 
     RenderComponent(std::string font_key, const std::string &text, const glm::vec4 &color)
-        : shape(Shape::TEXT),
+        : shape(1),
           text(text),
           color(color),
           fontKey(std::move(font_key)) {
+    }
+
+    constexpr static TextureCoords defaultTexCoords() {
+        return {
+            glm::vec2(0, 1),
+            glm::vec2(1, 1),
+            glm::vec2(1, 0),
+            glm::vec2(0, 0)
+        };
     }
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(RenderComponent, textureKey, coords, color, shape, text, fontKey);
@@ -62,6 +72,8 @@ struct RigidBodyComponent {
     bool useIncremental{true};
 };
 
+
+//=========================================================================================
 struct AnimationComponent {
     std::shared_ptr<Animation> currentAnimation;
     std::unordered_map<std::string, std::shared_ptr<Animation> > animations;

@@ -1,5 +1,7 @@
 #include "Camera.hpp"
 
+#include <glad/glad.h>
+
 Camera::Camera(const glm::vec2 &worldPosition, float zoom) : worldPosition(worldPosition), zoomFactor(zoom) {}
 
 void Camera::applyViewport(int windowWidth, int windowHeight, float desiredAspectRatio) {

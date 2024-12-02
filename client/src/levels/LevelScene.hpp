@@ -2,10 +2,8 @@
 
 #include <imgui.h>
 
-#include "core/Core.hpp"
 #include "renderer/Camera.hpp"
 #include "renderer/RenderManager.hpp"
-#include "scene/Scene.hpp"
 #include "system/NetworkSystem.hpp"
 #include "system/PawnSystem.hpp"
 #include "system/RenderSystem.hpp"

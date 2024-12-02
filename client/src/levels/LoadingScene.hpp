@@ -1,6 +1,6 @@
 #pragma once
 
-#include "scene/Scene.hpp"
+#include "entity/Scene.hpp"
 #include "renderer/Camera.hpp"
 #include "renderer/Color.hpp"
 #include "renderer/RenderManager.hpp"

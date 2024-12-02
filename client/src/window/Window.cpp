@@ -2,6 +2,9 @@
 
 #include <stb_image.h>
 
+#include "Keyboard.hpp"
+#include "Mouse.hpp"
+
 Window::Window(std::string title, int width, int height, bool vSync) : title(std::move(title)), width(width), height(height), vSync(vSync) {
 
     glfwInit();

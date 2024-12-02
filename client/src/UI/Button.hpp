@@ -2,8 +2,8 @@
 #include <functional>
 #include <string>
 #include <glm/glm.hpp>
-#include "scene/Entity.hpp"
-#include "core/Mouse.hpp"
+#include "entity/Entity.hpp"
+#include "window/Mouse.hpp"
 
 struct ButtonComponent {
     std::function<void()> onClick;

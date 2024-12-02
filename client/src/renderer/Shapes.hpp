@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <Atlas.hpp>
 
 enum Shape : uint32_t {
     QUAD,

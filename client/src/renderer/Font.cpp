@@ -1,5 +1,7 @@
 #include "Font.hpp"
 
+#include <glad/glad.h>
+
 Font::Font(const std::string &filePath) : filePath(filePath) {
 
     if(!isLoaded) {
@@ -77,3 +79,5 @@ void Font::loadLibs() {
     }
 }
 
+FT_Library Font::ft;
+bool Font::isLoaded = false;

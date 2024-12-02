@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/Core.hpp"
+#include <Atlas.hpp>
 #include <glm/glm.hpp>
 
 

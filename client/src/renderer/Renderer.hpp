@@ -4,10 +4,12 @@
 #include "Framebuffer.hpp"
 #include "RenderBatch.hpp"
 #include "Sprite.hpp"
-
+#include <glad/glad.h>
 #include <GLFW/glfw3.h> // make this the last include
 
 #include "Shapes.hpp"
+
+
 
 class Renderer {
 public:

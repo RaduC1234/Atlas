@@ -1,5 +1,7 @@
 #include "Framebuffer.hpp"
 
+#include <glad/glad.h>
+
 Framebuffer::Framebuffer(int width, int height, bool useDepth) : width(width), height(height) {
 
     glGenFramebuffers(1, &framebufferObject);
