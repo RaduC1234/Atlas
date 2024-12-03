@@ -53,6 +53,9 @@ target_link_libraries(engine PUBLIC nlohmann_json::nlohmann_json)
 find_package(Crow CONFIG REQUIRED)
 target_link_libraries(engine PUBLIC Crow::Crow)
 
+add_subdirectory(../dependencies/cpr ${CMAKE_BINARY_DIR}/cpr)
+target_link_libraries(engine PUBLIC cpr::cpr)
+
 #[[# CPR (Curl-based HTTP library)
 include(FetchContent)
 FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git) # Replace with your desired git commit from: https://github.com/libcpr/cpr/releases

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Atlas.hpp>
-//#include <cpr/cpr.h>
+#include <cpr/cpr.h>
 
 class NetworkSystem {
 public:
@@ -24,7 +24,7 @@ public:
                         {"moveRight", pawn.moveRight}
                     };
 
-                    /*cpr::Response response = cpr::Post(
+                    cpr::Response response = cpr::Post(
                         cpr::Url{"http://localhost:8080/"},
                         cpr::Header{{"Content-Type", "application/json"}},
                         cpr::Body{inputJson.dump()}
@@ -47,7 +47,7 @@ public:
                     } else {
                         std::cerr << "Server error: " << response.status_code << "\n";
                         std::cerr << "Response: " << response.text << "\n";
-                    }*/
+                    }
                 } catch (const std::exception &e) {
                     std::cerr << "Exception in network thread: " << e.what() << "\n";
                 }
