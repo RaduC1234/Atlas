@@ -4,8 +4,7 @@
 
 using Matrix = std::vector<std::vector<int>>;
 
-class MapGenerator
-{
+class MapGenerator {
 private:
     int rows, cols;
     Matrix map;
@@ -67,12 +66,82 @@ private:
             }
         }
     }
+    void clearWideEntrance(int row, int col, int dirRow, int dirCol) {
+        for (int offset = -1; offset <= 1; ++offset) {
+            int newRow = row + (dirCol == 0 ? offset : 0);
+            int newCol = col + (dirRow == 0 ? offset : 0);
+            if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
+                map[newRow][newCol] = 0;
+            }
+        }
+    }
+
+    void addGrassMarginsToEntrance(int row, int col, int dirRow, int dirCol) {
+        for (int offset = -2; offset <= 2; ++offset) {
+            int newRow = row + (dirCol == 0 ? offset : 0);
+            int newCol = col + (dirRow == 0 ? offset : 0);
+
+            if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && map[newRow][newCol] == 1) {
+                map[newRow][newCol] = randomValue(1, 2);
+            }
+        }
+    }
+
+    void clearEntrancePath(int row, int col, int dirRow, int dirCol) {
+        for (int i = 1; i <= 5; ++i) {
+            int newRow = row + dirRow * i;
+            int newCol = col + dirCol * i;
+            if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
+                map[newRow][newCol] = 0;
+            }
+            else {
+                break;
+            }
+        }
+    }
+
+    void createEntrance(int row, int col, int dirRow, int dirCol) {
+        clearWideEntrance(row, col, dirRow, dirCol);
+        addGrassMarginsToEntrance(row, col, dirRow, dirCol);
+        clearEntrancePath(row, col, dirRow, dirCol);
+    }
+
+    void breakEdgeWalls() {
+        const int entrancesPerSide = randomValue(4, 7);
+
+        for (int i = 0; i < entrancesPerSide; ++i) {
+            createEntrance(0, randomValue(1, cols - 3), 1, 0);
+            createEntrance(rows - 1, randomValue(1, cols - 3), -1, 0);
+            createEntrance(randomValue(1, rows - 3), 0, 0, 1);
+            createEntrance(randomValue(1, rows - 3), cols - 1, 0, -1);
+        }
+    }
+
+    void retouchBorder(int row, int col) {
+        if (map[row][col] == 1 && randomValue(0, 100) < 60) {
+            map[row][col] = randomValue(1, 2);
+        }
+    }
+
+    void retouchBorders() {
+        for (int row = 0; row < rows; ++row) {
+            retouchBorder(row, 0);
+            retouchBorder(row, cols - 1);
+        }
+        for (int col = 0; col < cols; ++col) {
+            retouchBorder(0, col);
+            retouchBorder(rows - 1, col);
+        }
+    }
+
 
 public:
     MapGenerator(int rows, int cols) : rows(rows), cols(cols), rng(rd()) {
         initializeMap();
         generateWalls();
         generatePaths();
+        breakEdgeWalls();
+        retouchBorders();
     }
 
     const Matrix& getMap() const {
