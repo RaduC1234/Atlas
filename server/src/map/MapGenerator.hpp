@@ -134,6 +134,40 @@ private:
         }
     }
 
+    void addGrassOrBush(int row, int col) {
+        if (map[row - 1][col] == 1 && randomValue(0, 100) < 40) map[row - 1][col] = randomValue(1, 2);
+        if (map[row + 1][col] == 1 && randomValue(0, 100) < 40) map[row + 1][col] = randomValue(1, 2);
+        if (map[row][col - 1] == 1 && randomValue(0, 100) < 40) map[row][col - 1] = randomValue(1, 2);
+        if (map[row][col + 1] == 1 && randomValue(0, 100) < 40) map[row][col + 1] = randomValue(1, 2);
+    }
+
+    void addPathMargins() {
+        for (int row = 1; row < rows - 1; ++row) {
+            for (int col = 1; col < cols - 1; ++col) {
+                if (map[row][col] == 0) {
+                    addGrassOrBush(row, col);
+                }
+            }
+        }
+    }
+
+    void addFeature(int type, int count, std::function<bool(int, int)> condition) {
+        while (count > 0) {
+            int row = randomValue(0, rows - 1);
+            int col = randomValue(0, cols - 1);
+            if (condition(row, col)) {
+                map[row][col] = type;
+                --count;
+            }
+        }
+    }
+
+    void addSpecialFeatures() {
+        addFeature(5, randomValue(3, 6), [&](int row, int col) { return map[row][col] == 0; });
+        addFeature(6, randomValue(2, 4), [&](int row, int col) { return map[row][col] == 0; });
+        addFeature(7, randomValue(2, 4), [&](int row, int col) { return map[row][col] == 3; });
+    }
+
 
 public:
     MapGenerator(int rows, int cols) : rows(rows), cols(cols), rng(rd()) {
@@ -142,6 +176,8 @@ public:
         generatePaths();
         breakEdgeWalls();
         retouchBorders();
+        addPathMargins();
+        addSpecialFeatures();
     }
 
     const Matrix& getMap() const {
