@@ -12,7 +12,8 @@
 
 class ServerNetworkService {
 public:
-    ServerNetworkService() : running(false) {}
+    ServerNetworkService() : running(false) {
+    }
 
     ~ServerNetworkService() {
         stop();
@@ -25,7 +26,12 @@ public:
         serverThread = std::thread([this, port]() {
             crow::SimpleApp app;
 
-            CROW_ROUTE(app, "/").methods(crow::HTTPMethod::GET, crow::HTTPMethod::POST)([this](const crow::request& req) {
+            CROW_ROUTE(app, "/sync")([]() {
+                const Time time = Time::now();
+                return crow::response(std::to_string(time.toMilliseconds()));
+            });
+
+            CROW_ROUTE(app, "/").methods(crow::HTTPMethod::GET, crow::HTTPMethod::POST)([this](const crow::request &req) {
                 try {
                     auto requestBody = nlohmann::json::parse(req.body);
 
@@ -50,8 +56,7 @@ public:
                     };
 
                     return crow::response(responseJson.dump());
-
-                } catch (const std::exception& e) {
+                } catch (const std::exception &e) {
                     return crow::response(400, std::string("Error: ") + e.what());
                 }
             });
@@ -71,10 +76,10 @@ public:
 
 private:
     // Custom logic to process requests
-    crow::response processRequest(const crow::request& req) {
+    crow::response processRequest(const crow::request &req) {
         crow::response res;
-        res.code = 200;  // HTTP OK
-        res.body = "Processed request: " + req.body;  // Example response
+        res.code = 200; // HTTP OK
+        res.body = "Processed request: " + req.body; // Example response
         return res;
     }
 
@@ -82,9 +87,9 @@ private:
     std::thread serverThread;
 
     std::mutex queueMutex;
-    std::queue<std::pair<std::shared_ptr<crow::request>, std::function<void(crow::response)>>> requestQueue;
+    std::queue<std::pair<std::shared_ptr<crow::request>, std::function<void(crow::response)> > > requestQueue;
 
     std::mutex handlerMutex;
-    std::unordered_map<std::string, std::function<JsonData(const JsonData&)>> handlers;
+    std::unordered_map<std::string, std::function<JsonData(const JsonData &)> > handlers;
     glm::vec3 playerPosition{0.0f};
 };

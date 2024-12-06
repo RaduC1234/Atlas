@@ -40,7 +40,11 @@ Window::Window(std::string title, int width, int height, bool vSync) : title(std
     });
 
     glfwSetWindowCloseCallback(glfwWindow, [](GLFWwindow *window) {
-        //Window &data = *static_cast<Window *>(glfwGetWindowUserPointer(window));
+        Window &data = *static_cast<Window *>(glfwGetWindowUserPointer(window));
+
+        if (data.closeCallback) {
+            data.closeCallback();
+        }
 
         glfwTerminate();
         exit(0);

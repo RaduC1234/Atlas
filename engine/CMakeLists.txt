@@ -89,27 +89,3 @@ target_link_libraries(imgui PUBLIC glfw glad)
 
 # Link ImGui to engine
 target_link_libraries(engine PUBLIC imgui)
-
-# ===========================
-# Runtime Dependency Management
-# ===========================
-
-# Automatically copy DLL dependencies for dynamic linking (only for vcpkg-managed libraries)
-#[[add_custom_command(
-        TARGET engine POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${VCPKG_INSTALLED_DIR}/x64-windows/bin $<TARGET_FILE_DIR:engine>
-)]]
-
-# ===========================
-# Optional Static Linking
-# ===========================
-
-# If you want to force static linkage:
-# Uncomment the following line to enforce static linking with vcpkg
-# set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-
-
-
-
-list(APPEND ENGINE_SOURCES src/entity/Actors.cpp)

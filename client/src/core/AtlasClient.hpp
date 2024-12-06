@@ -9,6 +9,7 @@ class AtlasClient {
 public:
     void run();
     void changeScene(Scope<Scene> scene);
+    void shutdown();
 private:
     Scope<Window> window;
     Scope<Scene> currentScene;
