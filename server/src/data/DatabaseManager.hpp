@@ -17,7 +17,6 @@ inline auto CreateStorage(const std::string &dbFile) {
             sql::make_column("username", &Player::getUsername, &Player::setUsername),
             sql::make_column("password", &Player::getPassword, &Player::setPassword),
             sql::make_column("mmr", &Player::getMmr, &Player::setMmr),
-            sql::make_column("profilePicture", &Player::getProfilePicture, &Player::setProfilePicture),
             sql::make_column("glickoRating", &Player::getGlickoRating, &Player::setGlickoRating),
             sql::make_column("ratingDeviation", &Player::getRatingDeviation, &Player::setRatingDeviation),
             sql::make_column("volatility", &Player::getVolatility, &Player::setVolatility),

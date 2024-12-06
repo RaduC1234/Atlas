@@ -11,8 +11,8 @@ class Match {
 public:
     Match() : m_id(0), m_timestamp(static_cast<uint32_t>(std::time(nullptr))), m_glickoMatchWeight(1.0) {}
 
-    explicit Match(int id, uint32_t timestamp, std::vector<int> playerIds, const int winnerId, double glickoMatchWeight = 1.0)
-        : m_id(id), m_timestamp(timestamp), m_playerIds(std::move(playerIds)),
+    explicit Match(uint32_t timestamp, std::vector<int> playerIds, const int winnerId, double glickoMatchWeight = 1.0)
+        : m_timestamp(timestamp), m_playerIds(std::move(playerIds)),
           m_winnerId(winnerId), m_glickoMatchWeight(glickoMatchWeight) {}
 
     ~Match() = default;
@@ -32,7 +32,7 @@ public:
 private:
     int m_id;
     uint32_t m_timestamp;
-    std::vector<int> m_playerIds; // Store player IDs to refer to players in the match.
-    int m_winnerId; // Store the winner's player ID
+    std::vector<int> m_playerIds;
+    int m_winnerId;
     double m_glickoMatchWeight;
 };
