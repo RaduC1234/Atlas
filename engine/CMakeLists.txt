@@ -21,9 +21,8 @@ target_include_directories(engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 # Dependencies and Libraries
 # ===========================
 
-# SQLite
-find_package(SQLiteCpp CONFIG REQUIRED)
-target_link_libraries(engine PUBLIC SQLiteCpp)
+find_package(SqliteOrm REQUIRED)
+target_link_libraries(engine PUBLIC sqlite_orm::sqlite_orm)
 
 # EnTT
 find_package(EnTT CONFIG REQUIRED)

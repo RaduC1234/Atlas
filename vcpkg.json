@@ -24,9 +24,6 @@
     "name" : "imgui",
     "version>=" : "1.91.0"
   }, {
-    "name" : "sqlitecpp",
-    "version>=" : "3.3.2"
-  }, {
     "name" : "sqlite-orm",
     "version>=" : "1.9"
   }, {
