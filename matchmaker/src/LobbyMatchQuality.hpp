@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Atlas.hpp>
+#include <vector>
 #include "Player.hpp"
 
 struct LobbyMatchQuality {

@@ -2,6 +2,7 @@
 
 #include "levels/LevelScene.hpp"
 #include "levels/MenuScene.hpp"
+#include "network/ClientNetworkManager.hpp"
 #include "renderer/ImGuiLayer.h"
 #include "renderer/RenderManager.hpp"
 
@@ -18,10 +19,17 @@ void AtlasClient::run() {
     AT_INFO("Config file read successfully");
 
     this->window = CreateScope<Window>(this->clientConfig["window_title"].toString());
+    this->window->setCloseCallback([this]() {
+        this->shutdown(); // cleanup resources
+    });
+
+    auto serverUrl = "http://" + this->clientConfig["server_host"].toString() + ":" + this->clientConfig["server_port"].toString();
+    AT_INFO("Server URL is: {0}", serverUrl);
 
     EventManager::init();
     RenderManager::init();
     ImGuiLayer::init();
+    //ClientNetworkManager::init(serverUrl);
 
     AT_INFO("Client finished loading");
 
@@ -49,9 +57,7 @@ void AtlasClient::run() {
         beginTime = endTime;
     }
 
-    ResourceManager::clearAll();
-    ImGuiLayer::shutdown();
-    RenderManager::shutdown();
+    shutdown();
 }
 
 void AtlasClient::changeScene(Scope<Scene> scene) {
@@ -61,4 +67,11 @@ void AtlasClient::changeScene(Scope<Scene> scene) {
     this->currentScene = std::move(scene);
     currentScene->onCreate();
     currentScene->onStart();
+}
+
+void AtlasClient::shutdown() {
+    //ClientNetworkManager::shutdown();
+    ResourceManager::clearAll();
+    ImGuiLayer::shutdown();
+    RenderManager::shutdown();
 }

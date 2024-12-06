@@ -3,11 +3,14 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <utility>
+
 
 #include "core/Core.hpp"
 
 class Window {
 public:
+    using CloseCallback = std::function<void()>;
 
     Window(std::string title = "Atlas Window", int width = 1920, int height = 1080, bool vSync = true);
 
@@ -21,6 +24,10 @@ public:
 
     int getHeight() const {
         return height;
+    }
+
+    void setCloseCallback(const CloseCallback &callback) {
+        this->closeCallback = callback;
     }
 
     GLFWwindow *getNativeWindow() const {
@@ -37,6 +44,7 @@ private:
     int width;
     int height;
     bool vSync;
+    CloseCallback closeCallback = nullptr;
 
     GLFWwindow *glfwWindow = nullptr;
 

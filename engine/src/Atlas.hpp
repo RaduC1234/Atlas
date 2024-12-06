@@ -13,6 +13,7 @@
 #include "entity/Entity.hpp"
 
 // utils
+#include "utils/Time.hpp"
 #include "utils/Config.hpp"
 #include "utils/ExecutorService.hpp"
 #include "utils/PlatformUtils.hpp"
