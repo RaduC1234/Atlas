@@ -3,13 +3,16 @@
 #include <any>
 #include <array>
 #include <chrono>
+#include <condition_variable>
 #include <filesystem>
 #include <fstream>
 #include <functional>
+#include <future>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <queue>
+#include <random>
 #include <set>
 #include <sstream>
 #include <string>
@@ -21,11 +24,16 @@
 #include <variant>
 #include <vector>
 
-
-#include "Keyboard.hpp"
-#include "Mouse.hpp"
-
 #include "Log.hpp"
+
+#include <nlohmann/json.hpp>
+using JsonData = nlohmann::json;
+
+#include <glm/glm.hpp>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 #ifdef __cplusplus
 #define EXTERN_C extern "C"
@@ -56,8 +64,11 @@
         CATCH_CODE;                      \
     }
 
+#define SYNCHRONIZED(mutex) if (std::unique_lock<std::mutex> lockGuard{mutex}; true)
+
 #define BIT(x) (1 << x)
 
+using TextureCoords = std::array<glm::vec2, 4>;
 
 template<typename T>
 using Scope = std::unique_ptr<T>;
@@ -78,6 +89,48 @@ constexpr Ref<T> CreateRef(Args &&... args) {
 template<typename T>
 using WeakRef = std::weak_ptr<T>;
 
+namespace nlohmann {
+
+    template <>
+    struct adl_serializer<glm::vec2> {
+        static void to_json(json& j, const glm::vec2& v) {
+            j = json{{"x", v.x}, {"y", v.y}};
+        }
+
+        static void from_json(const json& j, glm::vec2& v) {
+            j.at("x").get_to(v.x);
+            j.at("y").get_to(v.y);
+        }
+    };
+
+    template <>
+    struct adl_serializer<glm::vec3> {
+        static void to_json(json& j, const glm::vec3& v) {
+            j = json{{"x", v.x}, {"y", v.y}, {"z", v.z}};
+        }
+
+        static void from_json(const json& j, glm::vec3& v) {
+            j.at("x").get_to(v.x);
+            j.at("y").get_to(v.y);
+            j.at("z").get_to(v.z);
+        }
+    };
+
+    template <>
+    struct adl_serializer<glm::vec4> {
+        static void to_json(json& j, const glm::vec4& v) {
+            j = json{{"x", v.x}, {"y", v.y}, {"z", v.z}, {"w", v.w}};
+        }
+
+        static void from_json(const json& j, glm::vec4& v) {
+            j.at("x").get_to(v.x);
+            j.at("y").get_to(v.y);
+            j.at("z").get_to(v.z);
+            j.at("w").get_to(v.w);
+        }
+    };
+
+}
 
 
 inline std::vector<std::string> split(const std::string& str, char delimiter = ' ') {

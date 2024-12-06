@@ -1,5 +1,6 @@
 #pragma once
-#include "Atlas.hpp"
+
+#include "core/Core.hpp"
 
 // Event types enum
 enum class EventType {

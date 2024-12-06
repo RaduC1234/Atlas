@@ -1,11 +1,10 @@
 #include "AtlasClient.hpp"
 
-#include "event/EventManager.hpp"
-#include "levels/LoadingScene.hpp"
+#include "levels/LevelScene.hpp"
 #include "levels/MenuScene.hpp"
+#include "network/ClientNetworkManager.hpp"
+#include "renderer/ImGuiLayer.h"
 #include "renderer/RenderManager.hpp"
-#include "utils/PlatformUtils.hpp"
-
 
 void AtlasClient::run() {
 
@@ -20,22 +19,28 @@ void AtlasClient::run() {
     AT_INFO("Config file read successfully");
 
     this->window = CreateScope<Window>(this->clientConfig["window_title"].toString());
+    this->window->setCloseCallback([this]() {
+        this->shutdown(); // cleanup resources
+    });
+
+    auto serverUrl = "http://" + this->clientConfig["server_host"].toString() + ":" + this->clientConfig["server_port"].toString();
+    AT_INFO("Server URL is: {0}", serverUrl);
 
     EventManager::init();
     RenderManager::init();
     ImGuiLayer::init();
+    //ClientNetworkManager::init(serverUrl);
 
     AT_INFO("Client finished loading");
 
-    this->changeScene(CreateScope<MenuScene>());
+    this->changeScene(CreateScope<LevelScene>());
+    //this->changeScene(CreateScope<MenuScene>());
 
     float beginTime = Time::now().toSeconds();
     float endTime;
     float deltaTime = -1.0f;
 
     while (isRunning) {
-
-        this->window->onUpdate();
         //EventManager::pollEvents();
 
         if(deltaTime >= 0 && this->currentScene != nullptr) {
@@ -45,14 +50,14 @@ void AtlasClient::run() {
             ImGuiLayer::onImGuiRender();
         }
 
+        this->window->onUpdate();
 
         endTime = Time::now().toSeconds();
         deltaTime = endTime - beginTime;
         beginTime = endTime;
     }
 
-    ImGuiLayer::shutdown();
-    RenderManager::shutdown();
+    shutdown();
 }
 
 void AtlasClient::changeScene(Scope<Scene> scene) {
@@ -62,4 +67,11 @@ void AtlasClient::changeScene(Scope<Scene> scene) {
     this->currentScene = std::move(scene);
     currentScene->onCreate();
     currentScene->onStart();
+}
+
+void AtlasClient::shutdown() {
+    //ClientNetworkManager::shutdown();
+    ResourceManager::clearAll();
+    ImGuiLayer::shutdown();
+    RenderManager::shutdown();
 }

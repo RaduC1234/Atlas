@@ -1,0 +1,5 @@
+{
+  "frames": ["back1", "back2"],
+  "frameDuration": 0.2,
+  "loop": true
+}
