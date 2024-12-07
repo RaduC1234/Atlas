@@ -1,158 +1,245 @@
 #pragma once
-#include <functional>
-#include <string>
-#include <glm/glm.hpp>
-#include "entity/Entity.hpp"
-#include "window/Mouse.hpp"
+#include "UIElement.hpp"
+#include "UI/UIStyle.hpp"
 
-struct ButtonComponent {
-    std::function<void()> onClick;
-    bool isHovered{false};
-    bool isPressed{false};
-    Actor textEntity{entt::null};
-    float textWidth;  // Store the width of the text for dynamic centering
+struct ButtonSprite {
+    std::string textureKey;  // Texture resource ID
+    TextureCoords coords;    // Texture coordinates for different states
+    bool useSprite{false};   // Whether to use sprite or solid color
 
-    ButtonComponent() = default;
-    explicit ButtonComponent(std::function<void()> clickHandler, Actor textEnt = entt::null, float tWidth = 0.0f)
-        : onClick(std::move(clickHandler)), textEntity(textEnt), textWidth(tWidth) {}
+    ButtonSprite() = default;
+
+    ButtonSprite(const std::string& texture, const TextureCoords& texCoords = Sprite::defaultTexCoords())
+        : textureKey(texture), coords(texCoords), useSprite(true) {}
 };
 
-class Button {
+class Button : public UIElement {
 public:
-    // Helper function to calculate approximate text width based on font metrics
-    static float calculateTextWidth(const std::string& text, float fontSize) {
-        // These values should be adjusted based on your font metrics
-        const float CHAR_WIDTH_RATIO = 0.6f;  // Width of character relative to font size
-        const float SPACE_WIDTH_RATIO = 0.3f;  // Width of space relative to font size
-
-        float totalWidth = 0.0f;
-        for (char c : text) {
-            if (c == ' ') {
-                totalWidth += fontSize * SPACE_WIDTH_RATIO;
-            } else {
-                totalWidth += fontSize * CHAR_WIDTH_RATIO;
-            }
-        }
-        return totalWidth;
-    }
 
     static Actor create(Registry& registry,
                        const glm::vec3& position,
                        const glm::vec2& size,
-                       const std::string& textureKey,
-                       const glm::vec4& color,
                        const std::string& text,
-                       std::function<void()> onClick) {
+                       std::function<void()> onClick,
+                       const UIStyle& style = UIStyle{},
+                       const ButtonSprite& sprite = ButtonSprite()) {
 
-        // Create the button background
-        auto buttonEntity = registry.create();
-        registry.emplace<TransformComponent>(buttonEntity, position, 0.0f, size);
-        registry.emplace<RenderComponent>(buttonEntity, textureKey, Sprite::defaultTexCoords(), color);
+        // Create base UI element with style
+        auto buttonEntity = UIElement::create(registry, position, size, style);
 
-        // Create text entity
-        auto textEntity = registry.create();
+        // Configure render component for sprite if provided
+        auto& render = registry.get<RenderComponent>(buttonEntity);
+        if (sprite.useSprite) {
+            render.textureKey = sprite.textureKey;
+            render.coords = sprite.coords;
+        }
 
-        // Calculate initial text scale based on button height
-        float textScale = size.y * 0.6f;  // Initial scale relative to button height
-        float textWidth = calculateTextWidth(text, textScale);
+        // Add UI component and configure it
+        auto& ui = registry.get<UIComponent>(buttonEntity);
+        ui.text = text;
+        ui.size = size;
+        ui.position = glm::vec2(position);
+        ui.style = style;
+        ui.onClick = std::move(onClick);
+        ui.isEnabled = true;
+        ui.isVisible = true;
 
-        registry.emplace<TransformComponent>(textEntity,
-            position,
-            0.0f,
-            glm::vec2{textScale});
-
-        // Create text render component
-        auto textRender = RenderComponent("minecraft", text, {1.0f, 1.0f, 1.0f, 1.0f});
-        textRender.shape = Shape::TEXT;
-        textRender.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        registry.emplace<RenderComponent>(textEntity, textRender);
-
-        // Store text width for dynamic centering
-        registry.emplace<ButtonComponent>(buttonEntity, std::move(onClick), textEntity, textWidth);
+        // Add button component
+        auto& button = registry.emplace<ButtonComponent>(buttonEntity);
+        button.onClick = ui.onClick;
+        button.textEntity = createTextElement(registry, buttonEntity, text, style);
 
         return buttonEntity;
     }
 
-    static void updateVisuals(Registry& registry) {
-        auto view = registry.view<TransformComponent, RenderComponent, ButtonComponent>();
+private:
+    static Actor createTextElement(Registry& registry,
+                                 Actor buttonEntity,
+                                 const std::string& text,
+                                 const UIStyle& style) {
+        if (text.empty()) return entt::null;
+
+        auto& buttonTransform = registry.get<TransformComponent>(buttonEntity);
+
+        auto textEntity = registry.create();
+
+        // Calculate text position and scale
+        float textScale = style.fontSize * (buttonTransform.scale.y / 100.0f);
+
+        // Position text centered on button
+        glm::vec3 textPos = buttonTransform.position;
+        textPos.z = buttonTransform.position.z - 0.1f;
+
+        // Create text transform
+        registry.emplace<TransformComponent>(textEntity,
+            textPos,
+            0.0f,
+            glm::vec2(textScale)
+        );
+
+        // Create text render component
+        auto& textRender = registry.emplace<RenderComponent>(textEntity,
+            style.fontKey,
+            text,
+            style.textColor
+        );
+        textRender.shape = Shape::TEXT;
+
+        // Add UI component for text styling
+        auto& textUI = registry.emplace<UIComponent>(textEntity);
+        textUI.style = style;
+        textUI.text = text;
+        textUI.isEnabled = false;
+        textUI.isVisible = true;
+
+        return textEntity;
+    }
+
+    static void updateButtons(Registry& registry) {
+        auto view = registry.view<ButtonComponent, UIComponent, TransformComponent, RenderComponent>();
 
         for (auto entity : view) {
-            auto& render = view.get<RenderComponent>(entity);
             auto& button = view.get<ButtonComponent>(entity);
+            auto& ui = view.get<UIComponent>(entity);
+            auto& transform = view.get<TransformComponent>(entity);
+            auto& render = view.get<RenderComponent>(entity);
 
+            // Update color/alpha based on state while preserving texture
+            glm::vec4 stateColor;
+            switch (ui.state) {
+                case UIState::Normal:
+                    stateColor = ui.style.normalColor;
+                    break;
+                case UIState::Hovered:
+                    stateColor = ui.style.hoverColor;
+                    break;
+                case UIState::Pressed:
+                    stateColor = ui.style.pressedColor;
+                    break;
+                case UIState::Disabled:
+                    stateColor = ui.style.disabledColor;
+                    break;
+            }
+
+            // Blend the state color with existing color
+            render.color = stateColor * glm::vec4(1.0f, 1.0f, 1.0f, render.color.a);
+
+            // Update text if it exists
             if (button.textEntity != entt::null && registry.valid(button.textEntity)) {
-                auto& buttonTransform = registry.get<TransformComponent>(entity);
                 auto& textTransform = registry.get<TransformComponent>(button.textEntity);
                 auto& textRender = registry.get<RenderComponent>(button.textEntity);
 
-                // Calculate text scale based on button size
-                float baseTextScale = buttonTransform.scale.y * 0.05f;
-                float textWidth = calculateTextWidth(textRender.text, baseTextScale);
+                // Calculate text dimensions
+                float charWidth = ui.style.fontSize * 0.5f;
+                float textWidth = ui.text.length() * charWidth;
+                float textHeight = ui.style.fontSize;
 
-                // Adjust scale if text is too wide for button
-                float maxWidth = buttonTransform.scale.x * 0.9f; // Leave some padding
-                if (textWidth > maxWidth) {
-                    baseTextScale *= maxWidth / textWidth;
-                    textWidth = maxWidth;
-                }
+                // Center text within button
+                textTransform.position.x = transform.position.x - (textWidth * 0.5f);
+                textTransform.position.y = transform.position.y - (textHeight * 0.25f);
+                textTransform.position.z = transform.position.z - 0.1f;
 
-                // Calculate centering offset based on actual text width
-                float xOffset = (buttonTransform.scale.x - textWidth) / 2.0f;
+                // Update text color based on button state
+                textRender.color = ui.state == UIState::Disabled ?
+                    ui.style.disabledColor : ui.style.textColor;
 
-                // Update text position and scale
-                textTransform.position = {
-                    buttonTransform.position.x + (textWidth / 2.0f) - 65.0f,  // Center considering actual text width
-                    buttonTransform.position.y - 53.0f,  // Vertical center
-                    buttonTransform.position.z - 0.1f  // Slightly in front
-                };
-                textTransform.scale = glm::vec2(baseTextScale);
+                // Handle text visibility
+                textRender.color.a = ui.isVisible ? textRender.color.a : 0.0f;
             }
 
-            // Update button visuals based on state
-            if (button.isPressed) {
-                render.color.a = 0.5f;
-            } else if (button.isHovered) {
-                render.color.a = 0.8f;
-            } else {
-                render.color.a = 1.0f;
-            }
+            // Store button state
+            button.isHovered = ui.state == UIState::Hovered;
+            button.isPressed = ui.state == UIState::Pressed;
         }
     }
 
+public:
     static void update(Registry& registry, const Camera& camera) {
-        auto view = registry.view<TransformComponent, RenderComponent, ButtonComponent>();
+        UIElement::update(registry, camera);
+        updateButtons(registry);
+    }
 
-        glm::vec2 mousePos = camera.screenToWorld({Mouse::getX(), Mouse::getY()});
+    static void setSprite(Registry& registry, Actor buttonEntity, const ButtonSprite& sprite) {
+        if (auto* render = registry.try_get<RenderComponent>(buttonEntity)) {
+            render->textureKey = sprite.textureKey;
+            render->coords = sprite.coords;
+        }
+    }
 
-        for (auto entity : view) {
-            auto& [position, rotation, size] = view.get<TransformComponent>(entity);
-            auto& button = view.get<ButtonComponent>(entity);
-
-            float halfWidth = size.x / 2.0f;
-            float halfHeight = size.y / 2.0f;
-
-            bool isInBounds = mousePos.x >= position.x - halfWidth &&
-                             mousePos.x <= position.x + halfWidth &&
-                             mousePos.y >= position.y - halfHeight &&
-                             mousePos.y <= position.y + halfHeight;
-
-            button.isHovered = isInBounds;
-
-            if (isInBounds) {
-                if (Mouse::isButtonPressed(Mouse::ButtonLeft)) {
-                    if (!button.isPressed) {
-                        button.isPressed = true;
+    // Configuration methods
+    static void setText(Registry& registry, Actor buttonEntity, const std::string& newText) {
+        if (auto* button = registry.try_get<ButtonComponent>(buttonEntity)) {
+            if (auto* ui = registry.try_get<UIComponent>(buttonEntity)) {
+                ui->text = newText;
+                if (button->textEntity != entt::null && registry.valid(button->textEntity)) {
+                    if (auto* textRender = registry.try_get<RenderComponent>(button->textEntity)) {
+                        textRender->text = newText;
                     }
-                } else if (button.isPressed) {
-                    button.isPressed = false;
-                    if (button.onClick) {
-                        button.onClick();
+                    if (auto* textUI = registry.try_get<UIComponent>(button->textEntity)) {
+                        textUI->text = newText;
                     }
                 }
-            } else {
-                button.isPressed = false;
             }
         }
     }
 
+    static void setEnabled(Registry& registry, Actor buttonEntity, bool enabled) {
+        if (auto* ui = registry.try_get<UIComponent>(buttonEntity)) {
+            ui->isEnabled = enabled;
+            ui->state = enabled ? UIState::Normal : UIState::Disabled;
+        }
+    }
+
+    static void setVisible(Registry& registry, Actor buttonEntity, bool visible) {
+        if (auto* ui = registry.try_get<UIComponent>(buttonEntity)) {
+            ui->isVisible = visible;
+            if (auto* button = registry.try_get<ButtonComponent>(buttonEntity)) {
+                if (button->textEntity != entt::null && registry.valid(button->textEntity)) {
+                    if (auto* textUI = registry.try_get<UIComponent>(button->textEntity)) {
+                        textUI->isVisible = visible;
+                    }
+                }
+            }
+        }
+    }
+
+    static void setStyle(Registry& registry, Actor buttonEntity, const UIStyle& style) {
+        if (auto* ui = registry.try_get<UIComponent>(buttonEntity)) {
+            ui->style = style;
+            if (auto* button = registry.try_get<ButtonComponent>(buttonEntity)) {
+                if (button->textEntity != entt::null && registry.valid(button->textEntity)) {
+                    if (auto* textUI = registry.try_get<UIComponent>(button->textEntity)) {
+                        textUI->style = style;
+                    }
+                }
+            }
+        }
+    }
+
+    static void setOnClick(Registry& registry, Actor buttonEntity, std::function<void()> onClick) {
+        if (auto* ui = registry.try_get<UIComponent>(buttonEntity)) {
+            ui->onClick = onClick;
+            if (auto* button = registry.try_get<ButtonComponent>(buttonEntity)) {
+                button->onClick = onClick;
+            }
+        }
+    }
+
+    static void setPosition(Registry& registry, Actor buttonEntity, const glm::vec3& position) {
+        if (auto* transform = registry.try_get<TransformComponent>(buttonEntity)) {
+            transform->position = position;
+            if (auto* ui = registry.try_get<UIComponent>(buttonEntity)) {
+                ui->position = glm::vec2(position);
+            }
+        }
+    }
+
+    static void setSize(Registry& registry, Actor buttonEntity, const glm::vec2& size) {
+        if (auto* transform = registry.try_get<TransformComponent>(buttonEntity)) {
+            transform->scale = size;
+            if (auto* ui = registry.try_get<UIComponent>(buttonEntity)) {
+                ui->size = size;
+            }
+        }
+    }
 };

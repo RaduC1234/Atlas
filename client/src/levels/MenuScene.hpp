@@ -8,6 +8,7 @@
 #include "system/PawnSystem.hpp"
 #include "system/RenderSystem.hpp"
 #include "UI/Button.hpp"
+#include "UI/TextBox.hpp"
 
 
 class MenuScene : public Scene {
@@ -51,40 +52,56 @@ public:
         // background
         Actors::mapToStaticProps(this->registry, map);
 
+        // Button style
+        UIStyle buttonStyle;
+        buttonStyle.setColors(
+            {1.0f, 1.0f, 1.0f, 1.0f},  // Normal
+            {1.0f, 1.0f, 1.0f, 0.9f},  // Hover
+            {1.0f, 1.0f, 1.0f, 0.8f},  // Pressed
+            {0.7f, 0.7f, 0.7f, 0.5f}   // Disabled
+        )
+        .setTextColor({0.1f, 0.1f, 0.1f, 1.0f})  // Dark text
+        .setFont("minecraft")
+        .setFontSize(3.0f)
+        .setPadding(10.0f);
 
-        // title
-        Actors::createStaticProp(registry,
-                                 {{-75.0f, 500.0f, 0.0f}, 0.0f, {30.0f, 0.0f}},
-                                 {"minecraft", "Hexes & Chaos", Color(0, 0, 0, 255)}
+        // Create button sprites
+        ButtonSprite defaultSprite("button");
+
+        float centerX = 0.0f;
+        float startY = 100.0f;
+        float buttonSpacing = 300.0f;
+        glm::vec2 buttonSize{800.0f, 250.0f};
+
+        // Create buttons
+        auto playButton = Button::create(
+            registry,
+            {centerX, startY, 0},
+            buttonSize,
+            "Play",
+            [this]() {},
+            buttonStyle,
+            defaultSprite
         );
 
-        Button::create(registry,
-                       glm::vec3{0.0f, 200.0f, 1.0f}, // Top button
-                       glm::vec2{800.0f, 300.0f},
-                       "button",
-                       glm::vec4{1.0f, 1.0f, 1.0f, 1.0f},
-                       "Play",
-                       [this]() { std::cout << "Play button clicked!" << std::endl; }
+        auto optionsButton = Button::create(
+            registry,
+            {centerX, startY - buttonSpacing, 0},
+            buttonSize,
+            "Options",
+            [this]() {},
+            buttonStyle,
+            defaultSprite
         );
 
-        // Options button
-        Button::create(registry,
-                       glm::vec3{0.0f, -150.0f, 1.0f}, // Middle button
-                       glm::vec2{800.0f, 300.0f},
-                       "button",
-                       glm::vec4{1.0f, 1.0f, 1.0f, 1.0f},
-                       "Options",
-                       [this]() { std::cout << "Options button clicked!" << std::endl; }
-        );
-
-        // Quit button
-        Button::create(registry,
-                       glm::vec3{0.0f, -500.0f, 1.0f}, // Bottom button
-                       glm::vec2{800.0f, 300.0f},
-                       "button",
-                       glm::vec4{1.0f, 1.0f, 1.0f, 1.0f},
-                       "Quit",
-                       [this]() { std::cout << "Quit button clicked!" << std::endl; }
+        auto exitButton = Button::create(
+            registry,
+            {centerX, startY - buttonSpacing * 2, 0},
+            buttonSize,
+            "Exit",
+            [this]() {},
+            buttonStyle,
+            defaultSprite
         );
     }
 
@@ -100,10 +117,8 @@ public:
         ImGui::Text("Mouse World: (%.1f, %.1f)", coords.x, coords.y);
         ImGui::End();
 
-        renderSystem.update(deltaTime, registry);
-
         Button::update(registry, camera);
-        Button::updateVisuals(registry);
+        renderSystem.update(deltaTime, registry);
     }
 
 
