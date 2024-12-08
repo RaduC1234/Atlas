@@ -47,26 +47,18 @@ public:
             const auto &transform = textboxView.get<TransformComponent>(entity);
             const auto &textbox = textboxView.get<TextboxComponent>(entity);
 
-            drawTextbox(transform, textbox);
+            glm::vec3 textPosition = transform.position;
+            textPosition.x -= transform.scale.x * 0.4f;
+            textPosition.y -= transform.scale.y * 0.125f;
+
+            RenderManager::drawText(
+                glm::vec3(textPosition.x, textPosition.y, transform.position.z - 1),
+                textbox.text,
+                ResourceManager::get<Font>(textbox.font),
+                transform.scale.y / 20,
+                textbox.textColor,
+                false
+            );
         }
-    }
-
-private:
-    void drawTextbox(const TransformComponent &transform, const TextboxComponent &textbox) {
-
-        // Calculate text position (left-aligned)
-        glm::vec3 textPosition = transform.position;
-        textPosition.x -= transform.scale.x * 0.4f;
-        textPosition.y -= transform.scale.y * 0.125f;
-
-        // Draw the textbox text
-        RenderManager::drawText(
-            glm::vec3(textPosition.x, textPosition.y, transform.position.z - 1),
-            textbox.text,
-            ResourceManager::get<Font>(textbox.font),
-            transform.scale.y / 20,
-            glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
-            false
-        );
     }
 };

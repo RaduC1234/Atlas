@@ -56,13 +56,13 @@ public:
         Actors::createTextbox(this->registry,
                               {glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 100.0f)},
                               {"", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0, 1.0f), true},
-                              {text, "pixelify"}
+                              {text, "pixelify", glm::vec4(0.0f, 0.0f, 1.0, 1.0f)}
         );
 
         Actors::createTextbox(this->registry,
                               {glm::vec3(0.0f, -200.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 100.0f)},
                               {"", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0, 1.0f), true},
-                              {text, "pixelify"}
+                              {text, "pixelify", glm::vec4(1.0f, 0.0f, 1.0, 1.0f)}
         );
 
         /*// Button style

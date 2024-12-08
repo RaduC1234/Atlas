@@ -26,10 +26,7 @@ void AtlasServer::run() {
         }
     );
 
-    const double ticksPerSec = this->serverConfig["server_ticks_per_sec"].toDouble();
-    const double millisecondsPerTick = 1000 / ticksPerSec;
-
-    AT_INFO("Starting Atlas Dedicated Server on port {0}. Running at {1} ticks per second.", this->serverConfig["server_port"].toString(), ticksPerSec);
+    AT_INFO("Starting Atlas Dedicated Server on port {0}.",this->serverConfig["server_port"].toString());
 
     this->serverManager.start(this->serverConfig["server_port"].toInt());
 
