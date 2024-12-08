@@ -34,27 +34,27 @@ void RenderBatch::start() {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
 
     // bind position on location 0
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *) offsetof(Vertex, position));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, position)));
     glEnableVertexAttribArray(0);
 
     // bind color on location 1
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *) offsetof(Vertex, color));
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, color)));
     glEnableVertexAttribArray(1);
 
     // bind texture coordinates on location 2
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *) offsetof(Vertex, texCoords));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, texCoords)));
     glEnableVertexAttribArray(2);
 
     // bind texID on location 3
-    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *) offsetof(Vertex, texID));
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, texID)));
     glEnableVertexAttribArray(3);
 
     // bind shape on location 4
-    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *) offsetof(Vertex, shape));
+    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, shape)));
     glEnableVertexAttribArray(4);
 
     // bind circle radius on location 5
-    glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *) offsetof(Vertex, radius));
+    glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, radius)));
     glEnableVertexAttribArray(5);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind the VBO
@@ -124,7 +124,6 @@ void RenderBatch::render(int screenWidth, int screenHeight, Camera &camera) {
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wireframe mode
     shader->bind(); // use shader
 
-    camera.applyViewport(screenWidth, screenHeight);
     shader->uploadMat4f("uWorldProjection", camera.getProjectionMatrix()); // upload uniforms to the gpu
     shader->uploadMat4f("uView", camera.getViewMatrix());
     shader->uploadFloat("uTime", Time::now().toSeconds());

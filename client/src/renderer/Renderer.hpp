@@ -123,6 +123,9 @@ public:
 
     void flush(uint32_t screenWidth, uint32_t screenHeight, Camera &camera) {
         // sort the batches by their z-index so the transparency is applied correctly
+
+        camera.applyViewport(screenWidth, screenHeight);
+
         std::ranges::sort(batches,
                           [](const RenderBatch &a, const RenderBatch &b) {
                               return a.getZIndex() > b.getZIndex();
