@@ -88,6 +88,7 @@ struct RigidBodyComponent {
 struct TextboxComponent {
     std::string text; // Reference to the current text in the textbox
     std::string font;
+    glm::vec4 textColor;
     size_t cursorPosition; // Current position of the cursor
     bool isFocused; // Whether the textbox is active
     bool multiline; // Support for multiline text
@@ -95,11 +96,13 @@ struct TextboxComponent {
     // Constructor to initialize the reference
     TextboxComponent(std::string textRef,
                      std::string font,
+                     glm::vec4 textColor,
                      size_t cursorPos = 0,
                      bool focused = false,
                      bool multiline = false)
         : text(textRef),
           font(font),
+          textColor(textColor),
           cursorPosition(cursorPos),
           isFocused(focused),
           multiline(multiline) {

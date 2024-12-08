@@ -106,7 +106,7 @@ private:
             uint32_t typedChar = Keyboard::keyTyped.front();
             Keyboard::keyTyped.pop();
 
-            if (typedChar < 0 || typedChar > 127) {
+            if (typedChar > 127) {
                 continue;
             }
 
@@ -133,7 +133,7 @@ private:
         }
     }
 
-    void updateCursorBlink(double deltaTime, TextboxComponent &textbox) {
+    constexpr void updateCursorBlink(double deltaTime, TextboxComponent &textbox) {
         timeSinceLastBlink += deltaTime;
 
         if (timeSinceLastBlink >= cursorBlinkTime) {
