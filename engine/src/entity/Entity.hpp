@@ -8,8 +8,12 @@ using Actor = entt::entity;
 
 class Actors {
 public:
+    // basic
     static Actor createStaticProp(Registry& registry, TransformComponent transform, RenderComponent render);
     static Actor createPawn(Registry& registry, TransformComponent transform, RenderComponent render, PawnComponent pawn);
+
+    // ui
+    static Actor createTextbox(Registry& registry, TransformComponent transform, RenderComponent render, TextboxComponent textBox);
 
     static void mapToStaticProps(Registry& registry, const std::vector<std::vector<int>> &map);
 

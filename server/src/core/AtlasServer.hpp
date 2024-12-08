@@ -3,7 +3,7 @@
 #include <Atlas.hpp>
 #include <crow.h>
 
-#include "ServerNetworkService.hpp"
+#include "network/ServerNetworkService.hpp"
 
 class AtlasServer {
 public:

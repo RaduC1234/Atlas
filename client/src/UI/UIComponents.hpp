@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 #include "UIStyle.hpp"
 #include "UIForward.hpp"
 #include <string>
@@ -41,4 +41,4 @@ struct ButtonComponent {
     ButtonComponent() = default;
     explicit ButtonComponent(std::function<void()> clickHandler, Actor textEnt = entt::null)
         : onClick(std::move(clickHandler)), textEntity(textEnt) {}
-};
+};*/

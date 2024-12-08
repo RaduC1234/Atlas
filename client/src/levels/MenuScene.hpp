@@ -7,8 +7,8 @@
 #include "renderer/Font.hpp"
 #include "system/PawnSystem.hpp"
 #include "system/RenderSystem.hpp"
+#include "system/UISystem.hpp"
 #include "UI/Button.hpp"
-#include "UI/TextBox.hpp"
 
 
 class MenuScene : public Scene {
@@ -52,7 +52,20 @@ public:
         // background
         Actors::mapToStaticProps(this->registry, map);
 
-        // Button style
+        std::string text = "";
+        Actors::createTextbox(this->registry,
+                              {glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 100.0f)},
+                              {"", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0, 1.0f), true},
+                              {text, "pixelify"}
+        );
+
+        Actors::createTextbox(this->registry,
+                              {glm::vec3(0.0f, -200.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 100.0f)},
+                              {"", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0, 1.0f), true},
+                              {text, "pixelify"}
+        );
+
+        /*// Button style
         UIStyle buttonStyle;
         buttonStyle.setColors(
             {1.0f, 1.0f, 1.0f, 1.0f},  // Normal
@@ -102,7 +115,7 @@ public:
             [this]() {},
             buttonStyle,
             defaultSprite
-        );
+        );*/
     }
 
     void onStart() override {
@@ -117,7 +130,8 @@ public:
         ImGui::Text("Mouse World: (%.1f, %.1f)", coords.x, coords.y);
         ImGui::End();
 
-        Button::update(registry, camera);
+        //Button::update(registry, camera);
+        uiSystem.update(deltaTime, registry, camera);
         renderSystem.update(deltaTime, registry);
     }
 
@@ -136,6 +150,7 @@ private:
 
     RenderSystem renderSystem;
     PawnSystem pawnSystem;
+    UISystem uiSystem;
 
     std::vector<std::vector<int> > map = {
         {

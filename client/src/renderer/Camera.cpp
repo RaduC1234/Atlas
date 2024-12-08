@@ -66,8 +66,8 @@ glm::vec2 Camera::worldToScreen(const glm::vec2 &worldCoords) const {
 }
 
 glm::mat4 Camera::getViewMatrix() {
-    glm::vec3 cameraFront(0.0f, 0.0f, -1.0f);
-    glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);
+    constexpr glm::vec3 cameraFront(0.0f, 0.0f, -1.0f);
+    constexpr glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);
     viewMatrix = glm::lookAt(
             glm::vec3(worldPosition.x, worldPosition.y, 20.0f),
             cameraFront + glm::vec3(worldPosition.x, worldPosition.y, 0.0f),
