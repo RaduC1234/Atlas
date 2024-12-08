@@ -11,6 +11,10 @@ target_include_directories(client PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_compile_features(client PRIVATE cxx_std_20)
 
+# Cpr
+add_subdirectory(../dependencies/cpr ${CMAKE_BINARY_DIR}/cpr)
+target_link_libraries(client PUBLIC cpr::cpr)
+
 add_custom_command(
         TARGET client POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different

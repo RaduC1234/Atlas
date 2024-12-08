@@ -2,7 +2,6 @@
 
 #include <Atlas.hpp>
 
-
 constexpr double TAU = 0.5;
 constexpr double EPSILON = 0.000001;
 constexpr int MAX_ITERATIONS = 100;

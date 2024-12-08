@@ -17,6 +17,13 @@ Actor Actors::createPawn(Registry &registry, TransformComponent transform, Rende
     return actor;
 }
 
+Actor Actors::createTextbox(Registry &registry, TransformComponent transform, RenderComponent render, TextboxComponent textBox) {
+    auto actor = createStaticProp(registry, transform, render);
+    registry.emplace<TextboxComponent>(actor, textBox);
+
+    return actor;
+}
+
 void Actors::mapToStaticProps(Registry &registry, const std::vector<std::vector<int>> &map){
     constexpr glm::vec2 tileSize = {100.0f, 100.0f};
 

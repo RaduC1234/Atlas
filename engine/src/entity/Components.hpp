@@ -19,30 +19,43 @@ struct TransformComponent {
 };
 
 struct RenderComponent {
-
     using TextureCoords = std::array<glm::vec2, 4>;
 
-    std::string textureKey;
-    TextureCoords coords;
-    glm::vec4 color;
+    bool isCentered; // Origin is centered or starts from the left side
     uint32_t shape; // 0 for quads, 1 for circles, 2 for text
+    std::string textureKey; // Background texture for quads
+    glm::vec4 color; // Primary color for quads or text
+    glm::vec4 borderColor; // Border color (optional)
+    float borderWidth; // Border width (optional)
+    std::string text; // Rendered text (if shape == 2)
+    std::string fontKey; // Font key for text rendering
+    TextureCoords coords; // Texture coordinates for quads
 
-    // if text
-    std::string text;
-    std::string fontKey;
-
-    RenderComponent(const std::string &texture_key, const TextureCoords &coords, const glm::vec4 &color)
+    // Constructor for quad rendering
+    RenderComponent(const std::string &texture_key,
+                    const TextureCoords coords = defaultTexCoords(),
+                    const glm::vec4 &color = glm::vec4(1.0f),
+                    bool centered = false,
+                    const glm::vec4 &borderColor = glm::vec4(0.0f),
+                    float borderWidth = 0.0f)
         : textureKey(texture_key),
           coords(coords),
           color(color),
-          shape(0) {
+          shape(0), // Quad shape
+          isCentered(centered) {
     }
 
-    RenderComponent(std::string font_key, const std::string &text, const glm::vec4 &color)
-        : shape(1),
+    // Constructor for text rendering
+    RenderComponent(const std::string &font_key,
+                    const std::string &text,
+                    bool centered = false,
+                    const glm::vec4 &color = glm::vec4(1.0f)
+    )
+        : fontKey(font_key),
           text(text),
           color(color),
-          fontKey(std::move(font_key)) {
+          shape(2), // Text shape
+          isCentered(centered) {
     }
 
     constexpr static TextureCoords defaultTexCoords() {
@@ -54,7 +67,7 @@ struct RenderComponent {
         };
     }
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(RenderComponent, textureKey, coords, color, shape, text, fontKey);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(RenderComponent, textureKey, coords, color, borderColor, borderWidth, shape, text, fontKey, isCentered);
 };
 
 struct PawnComponent {
@@ -70,6 +83,31 @@ struct PawnComponent {
 
 struct RigidBodyComponent {
     bool useIncremental{true};
+};
+
+struct TextboxComponent {
+    std::string text; // Reference to the current text in the textbox
+    std::string font;
+    size_t cursorPosition; // Current position of the cursor
+    bool isFocused; // Whether the textbox is active
+    bool multiline; // Support for multiline text
+
+    // Constructor to initialize the reference
+    TextboxComponent(std::string textRef,
+                     std::string font,
+                     size_t cursorPos = 0,
+                     bool focused = false,
+                     bool multiline = false)
+        : text(textRef),
+          font(font),
+          cursorPosition(cursorPos),
+          isFocused(focused),
+          multiline(multiline) {
+    }
+
+    // No default constructor because `text` must be initialized as a reference
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(TextboxComponent, cursorPosition, isFocused, multiline);
 };
 
 

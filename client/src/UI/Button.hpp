@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 #include "UIElement.hpp"
 #include "UI/UIStyle.hpp"
 
@@ -242,4 +242,4 @@ public:
             }
         }
     }
-};
+};*/

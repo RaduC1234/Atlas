@@ -2,9 +2,9 @@
 #include "event/Event.hpp"
 
 using MouseCode = uint16_t;
+using Cursor = uint16_t;
 
-class Mouse
-{
+class Mouse {
 public:
     /**
     * @brief Checks if a mouse button is currently pressed.
@@ -44,22 +44,32 @@ public:
      */
     static bool isDragging();
 
-    enum : MouseCode
-    {
-        // From glfw3.h
-        Button0                = 0,
-        Button1                = 1,
-        Button2                = 2,
-        Button3                = 3,
-        Button4                = 4,
-        Button5                = 5,
-        Button6                = 6,
-        Button7                = 7,
+    /**
+     *
+     * @param cursor
+     */
+    static void setCursor(Cursor cursor);
 
-        ButtonLast             = Button7,
-        ButtonLeft             = Button0,
-        ButtonRight            = Button1,
-        ButtonMiddle           = Button2
+    enum Cursors : Cursor {
+        DEFAULT,
+        TEXT
+    };
+
+    enum : MouseCode {
+        // From glfw3.h
+        Button0 = 0,
+        Button1 = 1,
+        Button2 = 2,
+        Button3 = 3,
+        Button4 = 4,
+        Button5 = 5,
+        Button6 = 6,
+        Button7 = 7,
+
+        ButtonLast = Button7,
+        ButtonLeft = Button0,
+        ButtonRight = Button1,
+        ButtonMiddle = Button2
     };
 
 private:
@@ -67,6 +77,7 @@ private:
     static double xPos, yPos;
     static double scrollXOffset, scrollYOffset;
     static bool dragging;
+    static Cursor currentCursor;
 
     friend class Window;
 };

@@ -6,14 +6,13 @@
 #include "Mouse.hpp"
 
 Window::Window(std::string title, int width, int height, bool vSync) : title(std::move(title)), width(width), height(height), vSync(vSync) {
-
     glfwInit();
     glfwDefaultWindowHints();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
     glfwWindowHint(GLFW_MAXIMIZED, GLFW_FALSE); // make window maximized
-    glfwWindowHint(GLFW_SAMPLES, 4);  // Request 4x MSAA for Anti-Aliasing
+    glfwWindowHint(GLFW_SAMPLES, 4); // Request 4x MSAA for Anti-Aliasing
 
     this->glfwWindow = glfwCreateWindow(this->width, this->height, this->title.c_str(), nullptr, nullptr);
 
@@ -26,6 +25,13 @@ Window::Window(std::string title, int width, int height, bool vSync) : title(std
     glfwMakeContextCurrent(this->glfwWindow);
 
     glfwSetWindowUserPointer(this->glfwWindow, this);
+
+    this->defaultCursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+    this->textCursor = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
+
+    if (!defaultCursor || !textCursor) {
+        AT_ERROR("Error loading cursors");
+    }
 
     //https://www.glfw.org/docs/3.3/input_guide.html#input_key
 
@@ -51,18 +57,16 @@ Window::Window(std::string title, int width, int height, bool vSync) : title(std
     });
 
 
-
     /**
      *  ===================================Keyboard Callbacks=====================================
      */
     glfwSetKeyCallback(glfwWindow, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
-
         if (key > Keyboard::keyPressed.size()) {
             AT_ERROR("Key out of bounds");
             return;
         }
 
-        if (action == GLFW_PRESS) {
+        if (action == GLFW_PRESS || action == GLFW_REPEAT) {
             Keyboard::keyPressed[key] = true;
         } else if (action == GLFW_RELEASE) {
             Keyboard::keyPressed[key] = false;
@@ -70,14 +74,17 @@ Window::Window(std::string title, int width, int height, bool vSync) : title(std
     });
 
     glfwSetCharCallback(glfwWindow, [](GLFWwindow *window, unsigned int codepoint) {
-        //Keyboard::keyTyped.emplace(codepoint);
+        if (!Keyboard::nativeInput) {
+            return;
+        }
+
+        Keyboard::keyTyped.push(codepoint);
     });
 
     /**
      *  ===================================Mouse Callbacks=====================================
      */
     glfwSetMouseButtonCallback(glfwWindow, [](GLFWwindow *window, int button, int action, int mods) {
-
         switch (action) {
             case GLFW_PRESS: {
                 if (button < Mouse::buttonPressed.size()) {
@@ -110,7 +117,6 @@ Window::Window(std::string title, int width, int height, bool vSync) : title(std
 
     glfwShowWindow(glfwWindow);
     glfwMaximizeWindow(glfwWindow); // this fixes the wrong scaling issues in Camera
-
 }
 
 Window::~Window() {
@@ -120,6 +126,13 @@ Window::~Window() {
 }
 
 void Window::onUpdate() const {
+    if (Mouse::currentCursor == Mouse::Cursors::DEFAULT) {
+        glfwSetCursor(this->glfwWindow, this->defaultCursor);
+
+    } else if (Mouse::currentCursor == Mouse::Cursors::TEXT) {
+        glfwSetCursor(this->glfwWindow, this->textCursor);
+    }
+
     glfwPollEvents();
     glfwSwapBuffers(glfwWindow);
 }

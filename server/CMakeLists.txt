@@ -8,3 +8,7 @@ add_executable(server ${SERVER_SOURCES})
 target_include_directories(server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_link_libraries(server PRIVATE engine)
+
+# Crow
+find_package(Crow CONFIG REQUIRED)
+target_link_libraries(server PUBLIC Crow::Crow)

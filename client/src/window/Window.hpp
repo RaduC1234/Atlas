@@ -8,8 +8,10 @@
 
 #include "core/Core.hpp"
 
+
 class Window {
 public:
+
     using CloseCallback = std::function<void()>;
 
     Window(std::string title = "Atlas Window", int width = 1920, int height = 1080, bool vSync = true);
@@ -47,6 +49,10 @@ private:
     CloseCallback closeCallback = nullptr;
 
     GLFWwindow *glfwWindow = nullptr;
+
+    GLFWcursor* defaultCursor;
+    GLFWcursor* textCursor;
+    uint8_t currentCursor;
 
     inline static int glfw_windowCount = 0;
 };

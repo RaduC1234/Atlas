@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 #include "UI/UIComponents.hpp"
 
 class UIElement {
@@ -101,4 +101,4 @@ protected:
 
         wasPressed = isMousePressed;
     }
-};
+};*/
