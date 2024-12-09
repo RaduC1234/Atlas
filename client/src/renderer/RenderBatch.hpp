@@ -4,6 +4,8 @@
 #include "Shader.hpp"
 #include "Camera.hpp"
 
+#define RENDERER_NINE_SLICE BIT(0)
+
 /**
  * The RenderBatch class manages a collection of 2D shapes, textures, and rendering data,
  * and it organizes them into a single batch for efficient rendering. By batching multiple
@@ -33,7 +35,7 @@ public:
     void start();
 
 
-    void addShape(const glm::vec2 &position, const glm::vec2 &scale, float rotation, uint32_t shape, const glm::vec4 &color, const Ref<Texture> &texture, const std::array<glm::vec2, 4> &texCoords, bool centered = true);
+    void addShape(const glm::vec2 &position, const glm::vec2 &scale, float rotation, uint32_t shape, const glm::vec4 &color, const Ref<Texture> &texture, const std::array<glm::vec2, 4> &texCoords, bool centered = true, int32_t properties = 0);
 
 
     void render(int screenWidth, int screenHeight, Camera &camera);
@@ -62,7 +64,6 @@ private:
         glm::vec2 texCoords;
         float_t texID;
         float_t shape;
-        float_t radius;
     };
 
     uint32_t maxBatchSize = 0;

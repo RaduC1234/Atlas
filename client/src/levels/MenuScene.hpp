@@ -30,22 +30,22 @@ public:
         // =========================================================================================
 
         // background
-       this->background = Actors::createStaticProp(this->registry, // here
-                                              {glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 500.0f)},
+       /*this->background = Actors::createStaticProp(this->registry, // here
+                                              {glm::vec3(0.0f, 0.0f, 1.0f), 0.0f, glm::vec2(1000.0f, 500.0f)},
                                               {"background01", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), true}
-        );
+        );*/
 
         std::string text = "";
         Actors::createTextbox(this->registry,
-                              {glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 100.0f)},
-                              {"", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0, 1.0f), true},
-                              {text, "pixelify", glm::vec4(0.0f, 0.0f, 1.0, 1.0f)}
+                              {glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 250.0f)},
+                              {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::gray(), true, RENDERER_NINE_SLICE},
+                              {text, "roboto", Color::white()}
         );
 
         Actors::createTextbox(this->registry,
                               {glm::vec3(0.0f, -200.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 100.0f)},
-                              {"", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0, 1.0f), true},
-                              {text, "pixelify", glm::vec4(1.0f, 0.0f, 1.0, 1.0f)}
+                              {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
+                              {text, "roboto", Color::black()}
         );
 
         /*// Button style
@@ -111,6 +111,14 @@ public:
         ImGui::Text("Mouse Screen: (%.1f, %.1f)", Mouse::getX(), Mouse::getY());
         auto coords = this->camera.screenToWorld({Mouse::getX(), Mouse::getY()});
         ImGui::Text("Mouse World: (%.1f, %.1f)", coords.x, coords.y);
+        static bool wireFrame = false;
+        ImGui::Checkbox("Wireframe", &wireFrame);
+
+        if (wireFrame) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
         ImGui::End();
 
         //Button::update(registry, camera);
@@ -120,17 +128,14 @@ public:
 
 
     void onRender(int screenWidth, int screenHeight) override {
-        // Convert the screen dimensions to world coordinates using the camera
-        glm::vec2 topLeft = camera.screenToWorld({0.0f, 0.0f}); // Top-left corner
-        glm::vec2 bottomRight = camera.screenToWorld({(float)screenWidth, (float)screenHeight}); // Bottom-right corner
+        /*const glm::vec2 topLeft = camera.screenToWorld({0.0f, 0.0f});
+        const glm::vec2 bottomRight = camera.screenToWorld({static_cast<float>(screenWidth), static_cast<float>(screenHeight)});
 
-        // Calculate the width and height in world coordinates
-        float worldWidth = bottomRight.x - topLeft.x;
-        float worldHeight = topLeft.y - bottomRight.y; // Negative because of coordinate system
+        const float worldWidth = bottomRight.x - topLeft.x;
+        const float worldHeight = topLeft.y - bottomRight.y;
 
-        // Access and update the background's TransformComponent
         auto &backgroundTransform = registry.get<TransformComponent>(this->background);
-        backgroundTransform.scale = glm::vec2(worldWidth, worldHeight); // Set the scale to match the world size
+        backgroundTransform.scale = glm::vec2(worldWidth, worldHeight);*/
 
         RenderManager::flush(screenWidth, screenHeight, camera);
     }

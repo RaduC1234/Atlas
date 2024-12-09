@@ -42,7 +42,7 @@ public:
      * @param texture the texture associated with the shape, used for batch matching
      * @param centered specifies if the texture is to be drawn from centered if true, of from left bottom corner otherwise
      */
-    void drawPrimitive(const glm::vec3 &position, const glm::vec2 &scale, float rotation, Shape shape, const glm::vec4 &color, const Ref<Texture> &texture, const TextureCoords &texCoords, bool centered) {
+    void drawPrimitive(const glm::vec3 &position, const glm::vec2 &scale, float rotation, Shape shape, const glm::vec4 &color, const Ref<Texture> &texture, const TextureCoords &texCoords, bool centered, int32_t properties) {
         float zIndex = position.z;
 
         bool added = false;
@@ -50,7 +50,7 @@ public:
             if (!x.isFull() && x.getZIndex() == zIndex) {
                 // if quad has no texture
                 if (texture == nullptr || (x.hasTexture(texture) || x.hasTextureRoom())) {
-                    x.addShape(position, scale, rotation, shape, color, texture, texCoords, centered);
+                    x.addShape(position, scale, rotation, shape, color, texture, texCoords, centered, properties);
                     added = true;
                     break;
                 }
@@ -59,7 +59,7 @@ public:
 
         if (!added) {
             batches.emplace_back(maxBatchSize, renderShader, zIndex);
-            batches.back().addShape(position, scale, rotation, shape, color, texture, texCoords, centered);
+            batches.back().addShape(position, scale, rotation, shape, color, texture, texCoords, centered, properties);
         }
     }
 
@@ -112,7 +112,8 @@ public:
                 color,
                 sprite.texture,
                 sprite.texCoords,
-                false
+                false,
+                0x0
             );
 
             // Advance the position for the next character
@@ -173,7 +174,7 @@ public:
         }
 
         renderShader = CreateRef<Shader>("assets/shaders/render.glsl");
-        postprocessingShader = CreateRef<Shader>("assets/shaders/postprocess.glsl");
+        postprocessingShader = CreateRef<Shader>("assets/shaders/fragment_full.glsl");
     }
 
 private:

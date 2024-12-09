@@ -21,7 +21,8 @@ public:
                         transform.rotation,
                         render.color,
                         ResourceManager::get<Texture>(render.textureKey),
-                        render.isCentered
+                        render.isCentered,
+                        render.renderFlags
                     );
                     break;
 
@@ -30,9 +31,9 @@ public:
                         transform.position,
                         render.text,
                         ResourceManager::get<Font>(render.fontKey),
-                        transform.scale.x, // Scale (width)
-                        render.color, // Text color
-                        render.isCentered // Alignment
+                        transform.scale.x,
+                        render.color,
+                        render.isCentered
                     );
 
                 default:
@@ -40,7 +41,6 @@ public:
             }
         }
 
-        // Handle textboxes separately
         auto textboxView = registry.view<TransformComponent, TextboxComponent>();
 
         for (const auto &entity: textboxView) {

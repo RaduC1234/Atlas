@@ -3,6 +3,8 @@
 
 #include "Renderer.hpp"
 
+
+
 class RenderManager {
 public:
     static void init(uint32_t maxBatchSize = 1000);
@@ -18,7 +20,7 @@ public:
     * @param color color of the quad
     * @param sprite leave default for opaque quad
     */
-    static void drawRotatedQuad(const glm::vec3 &position, const glm::vec2 &size, float rotation, const glm::vec4 &color, const Sprite& sprite = Sprite(), bool centered = false);
+    static void drawRotatedQuad(const glm::vec3 &position, const glm::vec2 &size, float rotation, const glm::vec4 &color, const Sprite& sprite = Sprite(), bool centered = false, int32_t specialProperties = 0x00);
 
     /**
     * Draws a quad on the screen.
@@ -26,7 +28,7 @@ public:
     * @param color color of the quad
     * @param sprite leave default for opaque quad
     */
-    static void drawQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, const Sprite& sprite = Sprite(), bool centered = false);
+    static void drawQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, const Sprite& sprite = Sprite(), bool centered = false, int32_t specialProperties = 0x00);
 
     /**
     * Draws a text on the screen.

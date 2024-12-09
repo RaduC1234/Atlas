@@ -30,19 +30,20 @@ struct RenderComponent {
     std::string text; // Rendered text (if shape == 2)
     std::string fontKey; // Font key for text rendering
     TextureCoords coords; // Texture coordinates for quads
+    int32_t renderFlags;
 
     // Constructor for quad rendering
     RenderComponent(const std::string &texture_key,
                     const TextureCoords coords = defaultTexCoords(),
                     const glm::vec4 &color = glm::vec4(1.0f),
                     bool centered = false,
-                    const glm::vec4 &borderColor = glm::vec4(0.0f),
-                    float borderWidth = 0.0f)
+                    int32_t renderFlags = 0)
         : textureKey(texture_key),
           coords(coords),
           color(color),
           shape(0), // Quad shape
-          isCentered(centered) {
+          isCentered(centered),
+          renderFlags(renderFlags) {
     }
 
     // Constructor for text rendering
