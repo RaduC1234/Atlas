@@ -2,8 +2,8 @@
 
 #include <imgui.h>
 #include <Atlas.hpp>
-#include <sqlite_orm/sqlite_orm.h>
 
+#include "network/ClientNetworkService.hpp"
 #include "renderer/Color.hpp"
 #include "renderer/Font.hpp"
 #include "system/PawnSystem.hpp"
@@ -15,7 +15,6 @@
 class MenuScene : public Scene {
 public:
     void onCreate() override {
-        constexpr int TILE_NUMBER = 42;
 
         //===============================Load Resources=========================================
 
@@ -35,17 +34,16 @@ public:
                                               {"background01", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), true}
         );*/
 
-        std::string text = "";
         Actors::createTextbox(this->registry,
                               {glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 250.0f)},
-                              {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::gray(), true, RENDERER_NINE_SLICE},
-                              {text, "roboto", Color::white()}
+                              {"panel-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
+                              {"", "roboto", Color::white()}
         );
 
         Actors::createTextbox(this->registry,
                               {glm::vec3(0.0f, -200.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 100.0f)},
                               {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                              {text, "roboto", Color::black()}
+                              {"", "roboto", Color::black()}
         );
 
         /*// Button style

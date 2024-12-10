@@ -8,6 +8,9 @@ using Actor = entt::entity;
 
 class Actors {
 public:
+
+    static uint32_t getActorId(Actor actor);
+
     // basic
     static Actor createStaticProp(Registry& registry, TransformComponent transform, RenderComponent render);
     static Actor createPawn(Registry& registry, TransformComponent transform, RenderComponent render, PawnComponent pawn);

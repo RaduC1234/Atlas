@@ -38,7 +38,9 @@ public:
         try {
             for (const auto &entry: fs::recursive_directory_iterator(directoryPath)) {
                 // Skip directories named "old" (case-insensitive)
-                if (entry.is_directory() && fs::path(entry).filename().string() == "old") {
+                if (entry.is_directory() &&
+                    fs::path(entry).filename().string() == "old" &&
+                    fs::path(entry).filename().string() == "cursors") {
                     continue; // Skip this directory
                 }
 
@@ -55,7 +57,7 @@ public:
                 }
             }
         } catch (const std::exception &e) {
-           AT_ERROR("Error while loading resources from directory: {0}", e.what());
+            AT_ERROR("Error while loading resources from directory: {0}", e.what());
         }
     }
 

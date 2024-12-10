@@ -77,16 +77,17 @@ enum HttpStatus : uint32_t {
 };
 
 enum RequestType : uint32_t {
-
 };
 
 struct Packet {
 
     uint64_t authToken;
     uint64_t UUID;
-    uint64_t timestamp;
-    RequestType type;
+    uint64_t timestamp{0};
+    RequestType type{0};
     JsonData payload;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(Packet, authToken, UUID, type, payload);
+
+    friend class ClientNetworksService;
 };

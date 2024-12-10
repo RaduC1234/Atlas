@@ -4,9 +4,9 @@
 
 #include "Packet.hpp"
 
-class ServerRouteHandler {
+class ServerRequest {
 public:
-    virtual ~ServerRouteHandler() = default;
+    virtual ~ServerRequest() = default;
 
     virtual crow::response handle(const Packet &request) = 0;
 };

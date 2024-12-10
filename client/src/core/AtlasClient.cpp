@@ -1,8 +1,9 @@
 #include "AtlasClient.hpp"
 
+#include "GameManager.hpp"
 #include "levels/LevelScene.hpp"
 #include "levels/MenuScene.hpp"
-#include "network/ClientNetworkManager.hpp"
+#include "network/ClientNetworkService.hpp"
 #include "renderer/ImGuiLayer.h"
 #include "renderer/RenderManager.hpp"
 
@@ -23,13 +24,13 @@ void AtlasClient::run() {
         this->shutdown(); // cleanup resources
     });
 
-    auto serverUrl = "http://" + this->clientConfig["server_host"].toString() + ":" + this->clientConfig["server_port"].toString();
-    AT_INFO("Server URL is: {0}", serverUrl);
+    const auto serverUrl = "http://" + this->clientConfig["server_host"].toString() + ":" + this->clientConfig["server_port"].toString();
 
     EventManager::init();
     RenderManager::init();
     ImGuiLayer::init();
-    //ClientNetworkManager::init(serverUrl);
+    GameManager::initAndSet(this);
+    ClientNetworkService::init(serverUrl);
 
     AT_INFO("Client finished loading");
 
@@ -70,7 +71,6 @@ void AtlasClient::changeScene(Scope<Scene> scene) {
 }
 
 void AtlasClient::shutdown() {
-    //ClientNetworkManager::shutdown();
     ResourceManager::clearAll();
     ImGuiLayer::shutdown();
     RenderManager::shutdown();

@@ -173,22 +173,19 @@ void RenderBatch::addShape(const glm::vec2 &position, const glm::vec2 &scale, fl
             }
         };
 
-        for (size_t i = 0; i < slices.size(); ++i) {
-            const auto &slice = slices[i];
-
-
+        for (const auto &[pos1, pos2, uv1, uv2] : slices) {
             const glm::vec2 verticesPos[4] = {
-                rotationMatrix * (slice.pos1 - originOffset),                              // Bottom-left
-                rotationMatrix * (glm::vec2(slice.pos2.x, slice.pos1.y) - originOffset),  // Bottom-right
-                rotationMatrix * (slice.pos2 - originOffset),                             // Top-right
-                rotationMatrix * (glm::vec2(slice.pos1.x, slice.pos2.y) - originOffset)   // Top-left
+                rotationMatrix * (pos1 - originOffset), // Bottom-left
+                rotationMatrix * (glm::vec2(pos2.x, pos1.y) - originOffset), // Bottom-right
+                rotationMatrix * (pos2 - originOffset), // Top-right
+                rotationMatrix * (glm::vec2(pos1.x, pos2.y) - originOffset) // Top-left
             };
 
             const glm::vec2 verticesUV[4] = {
-                slice.uv1,                                        // Bottom-left UV
-                glm::vec2(slice.uv2.x, slice.uv1.y),             // Bottom-right UV
-                slice.uv2,                                       // Top-right UV
-                glm::vec2(slice.uv1.x, slice.uv2.y)              // Top-left UV
+                uv1, // Bottom-left UV
+                glm::vec2(uv2.x, uv1.y), // Bottom-right UV
+                uv2, // Top-right UV
+                glm::vec2(uv1.x, uv2.y) // Top-left UV
             };
 
             // Add vertices
@@ -204,16 +201,13 @@ void RenderBatch::addShape(const glm::vec2 &position, const glm::vec2 &scale, fl
 
             // Add indices for the quad
             indices.insert(indices.end(), {
-                vertexIndex, vertexIndex + 1, vertexIndex + 2, // First triangle
-                vertexIndex, vertexIndex + 2, vertexIndex + 3  // Second triangle
-            });
+                               vertexIndex, vertexIndex + 1, vertexIndex + 2, // First triangle
+                               vertexIndex, vertexIndex + 2, vertexIndex + 3 // Second triangle
+                           });
 
             vertexIndex += 4; // Move to the next set of vertices
         }
-
-
     } else {
-        // Regular quad rendering (non-9-slice)
         const glm::vec2 verticesPos[4] = {
             rotationMatrix * (glm::vec2(0.0f, 0.0f) - originOffset), // Bottom-left
             rotationMatrix * (glm::vec2(scale.x, 0.0f) - originOffset), // Bottom-right

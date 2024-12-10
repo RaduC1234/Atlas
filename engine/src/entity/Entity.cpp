@@ -2,6 +2,10 @@
 
 #include <imgui.h>
 
+uint32_t Actors::getActorId(Actor actor) {
+    return entt::to_integral(actor);
+}
+
 Actor Actors::createStaticProp(Registry &registry, TransformComponent transform, RenderComponent render) {
     auto actor = registry.create();
     registry.emplace<TransformComponent>(actor, transform);

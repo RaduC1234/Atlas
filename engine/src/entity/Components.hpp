@@ -87,7 +87,7 @@ struct RigidBodyComponent {
 };
 
 struct TextboxComponent {
-    std::string text; // Reference to the current text in the textbox
+    std::string text; // Reference to external string
     std::string font;
     glm::vec4 textColor;
     size_t cursorPosition; // Current position of the cursor
@@ -109,10 +109,9 @@ struct TextboxComponent {
           multiline(multiline) {
     }
 
-    // No default constructor because `text` must be initialized as a reference
-
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(TextboxComponent, cursorPosition, isFocused, multiline);
 };
+
 
 
 //=========================================================================================

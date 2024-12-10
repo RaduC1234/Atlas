@@ -4,7 +4,7 @@
 #include <crow.h>
 
 #include "Packet.hpp"
-#include "ServerRouteHandler.hpp"
+#include "ServerRequest.hpp"
 #include "data/DatabaseManager.hpp"
 
 struct Lobby {
@@ -21,8 +21,7 @@ public:
         stop();
     }
 
-    // Start the server
-    void start(unsigned int port) {
+    void start(const uint32_t port) {
         running = true;
 
         crow::SimpleApp app;
@@ -115,7 +114,7 @@ private:
     std::unordered_map<uint64_t, Player> players; // token, player
 
     std::mutex handlerMutex;
-    std::unordered_map<uint32_t, Ref<ServerRouteHandler> > handlers;
+    std::unordered_map<uint32_t, Ref<ServerRequest> > handlers;
 
     glm::vec3 playerPosition{0.0f};
 };

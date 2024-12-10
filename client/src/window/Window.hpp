@@ -41,18 +41,19 @@ public:
 private:
 
     static void setWindowIcon(GLFWwindow *window, const char *iconPath);
+    static GLFWcursor* loadCustomCursor(const char* cursorImagePath, int hotspotX, int hotspotY);
 
     std::string title = "Avalon C++";
     int width;
     int height;
     bool vSync;
-    CloseCallback closeCallback = nullptr;
+    CloseCallback closeCallback{nullptr};
 
-    GLFWwindow *glfwWindow = nullptr;
+    GLFWwindow *glfwWindow{nullptr};
 
-    GLFWcursor* defaultCursor;
-    GLFWcursor* textCursor;
-    uint8_t currentCursor;
+    GLFWcursor* defaultCursor{nullptr};
+    GLFWcursor* textCursor{nullptr};
+    uint8_t currentCursor{0};
 
     inline static int glfw_windowCount = 0;
 };

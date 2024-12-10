@@ -26,8 +26,10 @@ Window::Window(std::string title, int width, int height, bool vSync) : title(std
 
     glfwSetWindowUserPointer(this->glfwWindow, this);
 
-    this->defaultCursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
-    this->textCursor = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
+    this->defaultCursor = loadCustomCursor("assets/textures/cursors/pointer_cursor.png", 0, 0);
+    this->textCursor = loadCustomCursor("assets/textures/cursors/text_cursor.png", 16, 16);
+    //this->defaultCursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+    //this->textCursor = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
 
     if (!defaultCursor || !textCursor) {
         AT_ERROR("Error loading cursors");
@@ -125,6 +127,7 @@ Window::~Window() {
     glfw_windowCount--;
 }
 
+// TODO: custom and modular way of loading and setting custom cursors
 void Window::onUpdate() const {
     if (Mouse::currentCursor == Mouse::Cursors::DEFAULT) {
         glfwSetCursor(this->glfwWindow, this->defaultCursor);
@@ -147,3 +150,31 @@ void Window::setWindowIcon(GLFWwindow *window, const char *iconPath) {
         AT_ERROR("Error loading icon {0}", iconPath);
     }
 }
+
+GLFWcursor * Window::loadCustomCursor(const char *cursorImagePath, int hotspotX, int hotspotY) {
+    int width, height, channels;
+    unsigned char* imageData = stbi_load(cursorImagePath, &width, &height, &channels, 4); // Force 4 channels (RGBA)
+
+    if (!imageData) {
+        AT_ERROR("Failed to load cursor image: {0}", cursorImagePath)
+        return nullptr;
+    }
+
+    GLFWimage glfwImage;
+    glfwImage.width = width;
+    glfwImage.height = height;
+    glfwImage.pixels = imageData;
+
+
+    GLFWcursor* cursor = glfwCreateCursor(&glfwImage, hotspotX, hotspotY);
+    if (!cursor) {
+        AT_ERROR("Failed to create custom cursor");
+        stbi_image_free(imageData);
+        return nullptr;
+    }
+
+    stbi_image_free(imageData);
+
+    return cursor;
+}
+
