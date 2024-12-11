@@ -93,23 +93,74 @@ struct TextboxComponent {
     size_t cursorPosition; // Current position of the cursor
     bool isFocused; // Whether the textbox is active
     bool multiline; // Support for multiline text
+    size_t maxLength;
 
     // Constructor to initialize the reference
     TextboxComponent(std::string textRef,
                      std::string font,
                      glm::vec4 textColor,
+                     size_t maxLength = 0,
                      size_t cursorPos = 0,
                      bool focused = false,
                      bool multiline = false)
         : text(textRef),
           font(font),
           textColor(textColor),
+          maxLength(maxLength),
           cursorPosition(cursorPos),
           isFocused(focused),
           multiline(multiline) {
     }
 
+    bool canAddCharacter() const {
+        return maxLength == 0 || text.length() < maxLength;
+    }
+
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(TextboxComponent, cursorPosition, isFocused, multiline);
+};
+
+
+struct ButtonComponent {
+    std::string text;
+    std::string font;
+    glm::vec4 textColor;
+    bool isHovered;
+    bool isPressed;
+    glm::vec4 normalColor;
+    glm::vec4 hoverColor;
+    glm::vec4 pressedColor;
+    std::function<void()> onClick;
+    std::function<void()> onHover;
+    std::function<void()> onPressed;
+
+    // Constructor to initialize the reference
+    ButtonComponent(std::string textRef,
+                   std::string fontRef,
+                   glm::vec4 color,
+                   bool hovered = false,
+                   bool pressed = false,
+                   std::function<void()> clickHandler = nullptr,
+                   std::function<void()> hoverHandler = nullptr,
+                   std::function<void()> pressHandler = nullptr,
+                   glm::vec4 normalColor = glm::vec4(1.0f),
+                   glm::vec4 hoverColor = glm::vec4(0.9f, 0.9f, 0.9f, 1.0f),
+                   glm::vec4 pressedColor = glm::vec4(0.8f, 0.8f, 0.8f, 1.0f))
+        : text(std::move(textRef)),
+          font(std::move(fontRef)),
+          textColor(color),
+          isHovered(hovered),
+          isPressed(pressed),
+          onClick(std::move(clickHandler)),
+          onHover(std::move(hoverHandler)),
+          onPressed(std::move(pressHandler)),
+          normalColor(normalColor),
+          hoverColor(hoverColor),
+          pressedColor(pressedColor){
+    }
+
+    ButtonComponent() = default;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(ButtonComponent, isHovered, isPressed);
 };
 
 

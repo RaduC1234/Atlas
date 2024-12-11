@@ -41,6 +41,29 @@ public:
             }
         }
 
+        auto buttonView = registry.view<TransformComponent, RenderComponent, ButtonComponent>();
+        for (const auto &entity: buttonView) {
+            const auto &transform = buttonView.get<TransformComponent>(entity);
+            const auto &render = buttonView.get<RenderComponent>(entity);
+            const auto &button = buttonView.get<ButtonComponent>(entity);
+
+            // Render button text
+            if (!button.text.empty()) {
+                glm::vec3 textPosition = transform.position;
+                textPosition.x -= transform.scale.x * 0.025f;
+                textPosition.y -= transform.scale.y * 0.22f;
+
+                RenderManager::drawText(
+                    glm::vec3(textPosition.x, textPosition.y, transform.position.z - 1),
+                    button.text,
+                    ResourceManager::get<Font>(button.font),
+                    transform.scale.y / 20,
+                    button.textColor,
+                    true // Center the text
+                );
+            }
+        }
+
         auto textboxView = registry.view<TransformComponent, TextboxComponent>();
 
         for (const auto &entity: textboxView) {
@@ -48,8 +71,8 @@ public:
             const auto &textbox = textboxView.get<TextboxComponent>(entity);
 
             glm::vec3 textPosition = transform.position;
-            textPosition.x -= transform.scale.x * 0.4f;
-            textPosition.y -= transform.scale.y * 0.125f;
+            textPosition.x -= transform.scale.x * 0.42f;
+            textPosition.y -= transform.scale.y * 0.15f;
 
             RenderManager::drawText(
                 glm::vec3(textPosition.x, textPosition.y, transform.position.z - 1),

@@ -29,5 +29,11 @@
   }, {
     "name" : "crow",
     "version>=" : "1.2.0"
+  }, {
+    "name" : "curl",
+    "version>=" : "8.11.0#1"
+  }, {
+    "name" : "libcurl-simple-https",
+    "version>=" : "2022-02-14"
   } ]
 }

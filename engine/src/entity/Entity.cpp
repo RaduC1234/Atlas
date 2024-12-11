@@ -28,6 +28,13 @@ Actor Actors::createTextbox(Registry &registry, TransformComponent transform, Re
     return actor;
 }
 
+Actor Actors::createButton(Registry &registry, TransformComponent transform, RenderComponent render, ButtonComponent button) {
+    auto actor = createStaticProp(registry, transform, render);
+    registry.emplace<ButtonComponent>(actor, button);
+
+    return actor;
+}
+
 void Actors::mapToStaticProps(Registry &registry, const std::vector<std::vector<int>> &map){
     constexpr glm::vec2 tileSize = {100.0f, 100.0f};
 

@@ -9,14 +9,13 @@ public:
     void update(double deltaTime, Registry &registry, const Camera &camera) {
         auto [mouseX, mouseY] = Mouse::getPosition();
         const auto worldCoords = camera.screenToWorld(glm::vec2(mouseX, mouseY));
-
-        auto view = registry.view<TransformComponent, TextboxComponent>();
-
+        //textBox functions
+        auto textBoxView = registry.view<TransformComponent, TextboxComponent>();
         bool anyTextboxClicked = false;
 
-        for (auto entity: view) {
-            auto &transform = view.get<TransformComponent>(entity);
-            auto &textbox = view.get<TextboxComponent>(entity);
+        for (auto entity: textBoxView) {
+            auto &transform = textBoxView.get<TransformComponent>(entity);
+            auto &textbox = textBoxView.get<TextboxComponent>(entity);
 
             if (isMouseOver(worldCoords, transform)) {
                 Mouse::setCursor(Mouse::Cursors::TEXT);
@@ -50,6 +49,48 @@ public:
         if (focusedEntity != entt::null) {
             auto &textbox = registry.get<TextboxComponent>(focusedEntity);
             handleTyping(deltaTime, textbox);
+        }
+
+
+        //button functions
+        auto buttonView = registry.view<TransformComponent, RenderComponent, ButtonComponent>();
+
+        for (auto entity : buttonView) {
+            auto& transform = buttonView.get<TransformComponent>(entity);
+            auto& render = buttonView.get<RenderComponent>(entity);
+            auto& button = buttonView.get<ButtonComponent>(entity);
+
+            if (isMouseOver(worldCoords, transform)) {
+                Mouse::setCursor(Mouse::Cursors::DEFAULT);
+
+                if (!button.isHovered) {
+                    button.isHovered = true;
+                    updateButtonVisuals(render, button);
+                    if (button.onHover) {
+                        button.onHover();
+                    }
+                }
+
+                if (Mouse::isButtonPressed(Mouse::ButtonLeft)) {
+                    if (!button.isPressed) {
+                        button.isPressed = true;
+                        updateButtonVisuals(render, button);
+                        if (button.onPressed) {
+                            button.onPressed();
+                        }
+                    }
+                } else if (button.isPressed) {
+                    button.isPressed = false;
+                    if (button.onClick) {
+                        button.onClick();
+                    }
+                    updateButtonVisuals(render, button);
+                }
+            } else if (button.isHovered) {
+                button.isHovered = false;
+                button.isPressed = false;
+                updateButtonVisuals(render, button);
+            }
         }
     }
 
@@ -110,8 +151,10 @@ private:
                 continue;
             }
 
-            textbox.text.insert(textbox.cursorPosition, 1, static_cast<char>(typedChar));
-            textbox.cursorPosition++;
+            if (textbox.canAddCharacter()) {
+                textbox.text.insert(textbox.cursorPosition, 1, static_cast<char>(typedChar));
+                textbox.cursorPosition++;
+            }
         }
 
         addCursor(textbox);
@@ -145,6 +188,16 @@ private:
             } else {
                 removeCursor(textbox);
             }
+        }
+    }
+
+    void updateButtonVisuals(RenderComponent& render, const ButtonComponent& button) {
+        if (button.isPressed) {
+            render.color = button.pressedColor;
+        } else if (button.isHovered) {
+            render.color = button.hoverColor;
+        } else {
+            render.color = button.normalColor;
         }
     }
 };

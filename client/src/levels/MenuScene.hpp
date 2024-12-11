@@ -9,7 +9,6 @@
 #include "system/PawnSystem.hpp"
 #include "system/RenderSystem.hpp"
 #include "system/UISystem.hpp"
-#include "UI/Button.hpp"
 
 
 class MenuScene : public Scene {
@@ -43,8 +42,15 @@ public:
         Actors::createTextbox(this->registry,
                               {glm::vec3(0.0f, -200.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 100.0f)},
                               {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                              {"", "roboto", Color::black()}
+                              {"", "roboto", Color::black(), 5}
         );
+
+        Actors::createButton(this->registry,
+                                {glm::vec3(0.0f, -400.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 200.0f)},
+                                {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::red(), true, RENDERER_NINE_SLICE},
+                                {"Play", "roboto", Color::black(),false, false, [this]() {
+                                    AT_INFO("Play button clicked!");
+                                }, nullptr, nullptr, Color(255,0,0), Color(199, 2, 2), Color(89, 1, 1)});
 
         /*// Button style
         UIStyle buttonStyle;

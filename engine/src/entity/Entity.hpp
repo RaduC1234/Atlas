@@ -17,7 +17,7 @@ public:
 
     // ui
     static Actor createTextbox(Registry& registry, TransformComponent transform, RenderComponent render, TextboxComponent textBox);
-
+    static Actor createButton(Registry& registry, TransformComponent transform, RenderComponent render, ButtonComponent button);
     static void mapToStaticProps(Registry& registry, const std::vector<std::vector<int>> &map);
 
 };
