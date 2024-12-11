@@ -3,7 +3,6 @@
 #include <imgui.h>
 #include <Atlas.hpp>
 
-#include "network/ClientNetworkService.hpp"
 #include "renderer/Color.hpp"
 #include "renderer/Font.hpp"
 #include "system/PawnSystem.hpp"
@@ -14,7 +13,6 @@
 class MenuScene : public Scene {
 public:
     void onCreate() override {
-
         //===============================Load Resources=========================================
 
         ResourceManager::load<Font>("pixelify", "assets/fonts/PixelifySans-Medium.ttf");
@@ -28,10 +26,10 @@ public:
         // =========================================================================================
 
         // background
-       /*this->background = Actors::createStaticProp(this->registry, // here
-                                              {glm::vec3(0.0f, 0.0f, 1.0f), 0.0f, glm::vec2(1000.0f, 500.0f)},
-                                              {"background01", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), true}
-        );*/
+        /*this->background = Actors::createStaticProp(this->registry, // here
+                                               {glm::vec3(0.0f, 0.0f, 1.0f), 0.0f, glm::vec2(1000.0f, 500.0f)},
+                                               {"background01", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), true}
+         );*/
 
         Actors::createTextbox(this->registry,
                               {glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 250.0f)},
@@ -103,9 +101,15 @@ public:
             buttonStyle,
             defaultSprite
         );*/
+        auto width = GameManager::getWindowRef()->getWidth();
+        auto height = GameManager::getWindowRef()->getHeight();
+
+        GameManager::getWindowRef()->setWindowSize(width * 3/4, height * 2/3);
+        GameManager::getWindowRef()->centerWindow();
     }
 
     void onStart() override {
+
     }
 
     void onUpdate(float deltaTime) override {

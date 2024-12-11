@@ -75,3 +75,7 @@ void AtlasClient::shutdown() {
     ImGuiLayer::shutdown();
     RenderManager::shutdown();
 }
+
+Window * AtlasClient::getWindow() {
+    return this->window.get();
+}

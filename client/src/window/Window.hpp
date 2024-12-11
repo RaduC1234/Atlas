@@ -20,6 +20,10 @@ public:
 
     void onUpdate() const;
 
+    void centerWindow() const;
+
+    void setWindowSize(int newWidth, int newHeight);
+
     int getWidth() const {
         return width;
     }

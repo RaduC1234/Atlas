@@ -119,6 +119,7 @@ Window::Window(std::string title, int width, int height, bool vSync) : title(std
 
     glfwShowWindow(glfwWindow);
     glfwMaximizeWindow(glfwWindow); // this fixes the wrong scaling issues in Camera
+    glfwRestoreWindow(glfwWindow);
 }
 
 Window::~Window() {
@@ -138,6 +139,47 @@ void Window::onUpdate() const {
 
     glfwPollEvents();
     glfwSwapBuffers(glfwWindow);
+}
+
+void Window::centerWindow() const {
+    if (this->glfwWindow == nullptr) {
+        AT_ERROR("GLFW window not initialized");
+        return;
+    }
+
+    // Get the primary monitor and its video mode
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    if (!monitor) {
+        AT_ERROR("Failed to get primary monitor");
+        return;
+    }
+
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    if (!mode) {
+        AT_ERROR("Failed to get video mode of primary monitor");
+        return;
+    }
+
+    // Calculate the position to center the window
+    int xpos = (mode->width - this->width) / 2;
+    int ypos = (mode->height - this->height) / 2;
+
+    // Set the window's position
+    glfwSetWindowPos(this->glfwWindow, xpos, ypos);
+}
+
+void Window::setWindowSize(int newWidth, int newHeight) {
+    if (this->glfwWindow == nullptr) {
+        AT_ERROR("GLFW window not initialized");
+        return;
+    }
+
+    // Update the internal width and height
+    this->width = newWidth;
+    this->height = newHeight;
+
+    // Set the window's size using GLFW
+    glfwSetWindowSize(this->glfwWindow, newWidth, newHeight);
 }
 
 void Window::setWindowIcon(GLFWwindow *window, const char *iconPath) {

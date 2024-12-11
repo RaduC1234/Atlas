@@ -16,6 +16,10 @@ void GameManager::initAndSet(AtlasClient* client) {
     atlasClient = client;
 }
 
+Window * GameManager::getWindowRef() {
+    return atlasClient->getWindow();
+}
+
 template<typename T>
 void GameManager::changeScene() {
     if (atlasClient) {

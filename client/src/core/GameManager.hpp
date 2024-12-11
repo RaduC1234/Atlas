@@ -2,6 +2,7 @@
 #include <Atlas.hpp>
 
 class AtlasClient;
+class Window;
 
 struct SelfUser {
     std::string username;
@@ -18,6 +19,8 @@ public:
     static SelfUser getSelfUser();
 
     static void initAndSet(AtlasClient* client);
+
+    static Window* getWindowRef();
 
 private:
     inline static Scope<SelfUser> selfUser{nullptr};

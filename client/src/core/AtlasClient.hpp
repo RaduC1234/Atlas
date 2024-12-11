@@ -10,6 +10,8 @@ public:
     void run();
     void changeScene(Scope<Scene> scene);
     void shutdown();
+
+    Window* getWindow();
 private:
     Scope<Window> window;
     Scope<Scene> currentScene;
