@@ -59,8 +59,8 @@ public:
                                 {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color(255,255,255), true, RENDERER_NINE_SLICE},
                                 {"Hex in", "thaleah", Color::black(),false, false, [this]() {
                                     if (registry.valid(usernameTextBox) && registry.valid(passwordTextBox)) {
-                                        const std::string& username = registry.get<TextboxComponent>(this->usernameTextBox).getText();
-                                        const std::string& password = registry.get<TextboxComponent>(this->passwordTextBox).getText();
+                                        const std::string& username = registry.get<TextboxComponent>(this->usernameTextBox).text;
+                                        const std::string& password = registry.get<TextboxComponent>(this->passwordTextBox).text;
 
                                         if (ClientNetworkService::login(username, password)) {
                                             std::cout << "Login successful!" << std::endl;
@@ -100,14 +100,26 @@ public:
 
     void onRender(int screenWidth, int screenHeight) override {
 
+        const float baseWidth = 1920.0f;
+        const float baseHeight = 1080.0f;
+        const float baseZoom = 0.5f;
+
+        float aspectRatio = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
+        float baseAspectRatio = baseWidth / baseHeight;
+
+        camera.setZoom(baseZoom * (screenWidth / baseWidth));
+
         const glm::vec2 topLeft = camera.screenToWorld({0.0f, 0.0f});
         const glm::vec2 bottomRight = camera.screenToWorld({static_cast<float>(screenWidth), static_cast<float>(screenHeight)});
 
         const float worldWidth = bottomRight.x - topLeft.x;
         const float worldHeight = topLeft.y - bottomRight.y;
 
-        auto &backgroundTransform = registry.get<TransformComponent>(this->background);
-        backgroundTransform.scale = glm::vec2(worldWidth, worldHeight);
+        if (registry.valid(background)) {
+            auto &backgroundTransform = registry.get<TransformComponent>(this->background);
+            backgroundTransform.scale = glm::vec2(worldWidth, worldHeight);
+        }
+
         RenderManager::flush(screenWidth, screenHeight, camera);
     }
 

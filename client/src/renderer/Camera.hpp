@@ -30,6 +30,10 @@ public:
         worldPosition = position;
     }
 
+    void setZoom(float zoom) {
+        this->zoomFactor = zoom;
+    }
+
     void zoom(float factor) {
         zoomFactor *= factor;
     }
