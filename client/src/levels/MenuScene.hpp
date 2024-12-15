@@ -64,6 +64,13 @@ public:
                          AT_INFO("Quit button clicked!");
                      }, nullptr, nullptr, Color(63, 47, 102), Color(44, 33, 71), Color(38, 28, 61)});
 
+        this->loginButton = Actors::createButton(this->registry,
+             {glm::vec3(-1100.0f, -700.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},  // Positioned in the left half and horizontally centered
+             {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color(63,47,102), true, RENDERER_NINE_SLICE},
+             {"Login", "roboto", Color::black(), false, false, [this]() {
+                 AT_INFO("Login button clicked!");
+             }, nullptr, nullptr, Color(63, 47, 102), Color(44, 33, 71), Color(38, 28, 61)});
+
     }
 
     void onUpdate(float deltaTime) override {
@@ -130,5 +137,6 @@ private:
     Actor playButton;
     Actor optionsButton;
     Actor quitButton;
+    Actor loginButton;
 
 };
