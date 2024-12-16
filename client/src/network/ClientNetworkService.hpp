@@ -2,6 +2,7 @@
 
 #include "ClientRequest.hpp"
 #include "Packet.hpp"
+#include <cpr/cpr.h>
 
 class ClientNetworkService {
 public:
@@ -15,54 +16,10 @@ public:
     }
 
     template<typename T, typename... Args>
-    static void addRequestTemplate(Args &&... args) {
-        static_assert(std::derived_from<T, ClientRequest>, "Class must derive from IRequest");
-        static_assert(std::is_constructible_v<T, Args...>, "Class cannot be constructed with the provided arguments");
-
-        requestInstance<T>() = std::make_shared<T>(std::forward<Args>(args)...);
-    }
+    static void addRequestTemplate(Args &&... args) ;
 
     template<typename T>
-    static void sendRequestAsync(const JsonData &payload) {
-        static_assert(std::derived_from<T, ClientRequest> || std::is_same_v<T, ClientRequest>,
-            "Class must derive from IClientRequest or be IClientRequest itself.");
-
-
-        auto instance = requestInstance<T>();
-        if (!instance) {
-            throw std::invalid_argument("No request template found for the given class type");
-        }
-
-        Packet packet;
-        packet.authToken = loginToken;
-        packet.UUID = Uuid::randomUUID().getMostSignificantBits();
-        packet.payload = payload;
-
-        instance->onNewRequest(packet);
-
-        JsonData serializedPacket = packet;
-
-        std::async(std::launch::async, [instance, serializedPacket]() mutable {
-            try {
-                auto response = cpr::Post(
-                    cpr::Url{"http://localhost:8080/"},
-                    cpr::Header{{"Content-Type", "application/json"}},
-                    cpr::Body{serializedPacket.dump()}
-                );
-
-                if (response.status_code == HttpStatus::OK) {
-                    // Deserialize response JSON into Packet
-                    JsonData responseData = JsonData::parse(response.text);
-                    Packet responsePacket = responseData.get<Packet>(); // Assumes `from_json` is defined
-                    instance->triggerOnReceive(responsePacket); // Trigger the onReceive callback
-                } else {
-                    std::cerr << "HTTP Request failed with status: " << response.status_code << std::endl;
-                }
-            } catch (const std::exception &e) {
-                std::cerr << "Exception in async request: " << e.what() << std::endl;
-            }
-        });
-    }
+    static void sendRequestAsync();
 
 
     static bool reg(const std::string &username, const std::string &password) {

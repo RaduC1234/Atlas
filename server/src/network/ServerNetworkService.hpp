@@ -34,25 +34,36 @@ public:
 
         CROW_ROUTE(app, "/register")([this](const crow::request &req) {
             // { username, password } -> { success } or { error: username already used }
-            auto requestBody = nlohmann::json::parse(req.body);
+            try {
+                auto requestBody = nlohmann::json::parse(req.body);
 
-            auto username = requestBody["username"].get<std::string>();
-            auto password = requestBody["password"].get<std::string>();
+                auto username = requestBody["username"].get<std::string>();
+                auto password = requestBody["password"].get<std::string>();
 
-            auto players = DatabaseManager::getAll<Player>();
+                std::regex usernameRegex(R"(^(?=.*\d).{4,}$)");
 
-            bool usernameExists = std::ranges::find_if(players, [&username](const Player &player) {
-                return player.getUsername() == username;
-            }) != players.end();
+                if (!std::regex_match(username, usernameRegex)) {
+                    return crow::response(HttpStatus::BAD_REQUEST, std::string(R"({"requestStatus": 0, "message" : "Invalid username. Must be at least 4 characters long and contain at least one number."})"));
+                }
 
-            if (usernameExists) {
-                return crow::response(HttpStatus::BAD_REQUEST, std::string(R"({"requestStatus": 0, "message" : "Username already exists"})"));
+                auto players = DatabaseManager::getAll<Player>();
+
+                bool usernameExists = std::ranges::find_if(players, [&username](const Player &player) {
+                    return player.getUsername() == username;
+                }) != players.end();
+
+                if (usernameExists) {
+                    return crow::response(HttpStatus::BAD_REQUEST, std::string(R"({"requestStatus": 0, "message" : "Username already exists"})"));
+                }
+
+                DatabaseManager::emplace_create<Player>(username, password, 0);
+                AT_INFO("New user registered with the username {0} from remote host {1}.", username, req.remote_ip_address);
+                return crow::response(HttpStatus::OK, std::string(R"({"requestStatus": 1, "message" : "Success"})"));
+            } catch (const std::exception &e) {
+                return crow::response(HttpStatus::BAD_REQUEST, std::string(R"({"requestStatus": 0, "message" : "Invalid request format"})"));
             }
-
-            DatabaseManager::emplace_create<Player>(username, password, 0);
-            AT_INFO("New user registered with the username {0} from remote host {1}.", username, req.remote_ip_address);
-            return crow::response(HttpStatus::OK, std::string(R"({"requestStatus": 1, "message" : "Success"})"));
         });
+
 
         CROW_ROUTE(app, "/login")([this](const crow::request &req) {
             auto requestBody = nlohmann::json::parse(req.body);
@@ -67,12 +78,12 @@ public:
             });
 
             if (it == players.end() || it->getPassword() != password) {
-                return crow::response(HttpStatus::BAD_REQUEST, std::string(R"({"requestStatus": 0, "message" : "Wrong username or password"})"));
+                return crow::response(HttpStatus::BAD_REQUEST, std::string(R"({"requestStatus": false, "message" : "Wrong username or password"})"));
             }
 
-            for (const auto& [existingToken, loggedPlayer] : this->players) {
+            for (const auto &[existingToken, loggedPlayer]: this->players) {
                 if (loggedPlayer.getUsername() == username) {
-                    return crow::response(HttpStatus::OK, std::format(R"({{"requestStatus": 1, "authToken": "{0}"}})", existingToken));
+                    return crow::response(HttpStatus::OK, std::format(R"({{"requestStatus": true, "authToken": {0}}})", existingToken));
                 }
             }
 
@@ -80,6 +91,14 @@ public:
             this->players[authToken] = *it;
 
             return crow::response(HttpStatus::OK, std::format(R"({{"requestStatus": 1, "authToken": "{0}"}})", authToken));
+        });
+
+        CROW_ROUTE(app, "/matchmaking")([this](const crow::request &req) {
+            try {
+
+            } catch (const std::exception &e) {
+              return crow::response(400, std::string("Error: ") + e.what());
+          }
         });
 
         CROW_ROUTE(app, "/").methods(crow::HTTPMethod::GET, crow::HTTPMethod::POST)([this](const crow::request &req) {
@@ -109,6 +128,7 @@ public:
     }
 
 private:
+    std::vector<uint64_t> waintingPlayers;
     std::atomic_bool running;
     std::vector<Lobby> lobbies;
     std::unordered_map<uint64_t, Player> players; // token, player

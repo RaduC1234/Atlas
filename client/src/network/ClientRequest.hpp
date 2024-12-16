@@ -18,27 +18,18 @@ public:
 
     virtual ~ClientRequest() = default;
 
-    /**
-     * Override this method to handle the new request initialization.
-     * This is called by default if no callback is set.
-     */
     virtual void onNewRequest(Packet &packet) {
         if (onNewRequestCallback) {
             onNewRequestCallback(packet);
         }
     }
 
-    /**
-     * Override this method to handle received responses.
-     * This is called by default if no callback is set.
-     */
     virtual void onReceive(Packet &packet) {
         if (onReceiveCallback) {
             onReceiveCallback(packet);
         }
     }
 
-    // Setters for callbacks
     void setOnNewRequestCallback(RequestCallback callback) {
         onNewRequestCallback = std::move(callback);
     }

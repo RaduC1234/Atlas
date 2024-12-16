@@ -6,6 +6,7 @@
 #include "system/RenderSystem.hpp"
 #include "system/UISystem.hpp"
 #include "network/ClientNetworkService.hpp"
+#include "renderer/Color.hpp"
 
 class LoginScene : public Scene {
 public:
@@ -28,17 +29,17 @@ public:
 
     void onStart() override {
         this->sideRect = Actors::createStaticProp(this->registry,
-                                              {glm::vec3(-1100.0f, 0.0f, 1.0f), 0.0f, glm::vec2(1600.0f, 2030.0f)},
+                                              {glm::vec3(-1100.0f, 0.0f, 4.0f), 0.0f, glm::vec2(1600.0f, 2030.0f)},
                                               {"", RenderComponent::defaultTexCoords(), Color(22,22,22), true}
         );
 
         this->background = Actors::createStaticProp(this->registry, // here
-                                                    {glm::vec3(0.0f, 0.0f, 1.0f), 0.0f, glm::vec2(1000.0f, 500.0f)},
+                                                    {glm::vec3(0.0f, 0.0f, 4.0f), 0.0f, glm::vec2(1000.0f, 500.0f)},
                                                     {"background01", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), true}
         );
 
         this->title = Actors::createStaticProp(this->registry,
-                                {glm::vec3(-1120.0f, 350.0f, 0.0f), 0.0f, glm::vec2(30.0f, 10.0f)},
+                                {glm::vec3(-1120.0f, 350.0f, 0.0f), 3.0f, glm::vec2(30.0f, 10.0f)},
                                 {"thaleah", "Sign in",true,Color::white()}
         );
 

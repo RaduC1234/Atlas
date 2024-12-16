@@ -1,13 +1,13 @@
 #pragma once
 
 #include <Atlas.hpp>
-#include "Client.hpp"
 
+#include "data/Player.hpp"
 #include "data/Match.hpp"
 
 class Lobby {
 public:
-    void start() {
+    void startGame() {
 
     }
 
@@ -21,6 +21,6 @@ private:
     }
 
     Registry levelRegistry; // entt registry
-    std::vector<Client> clients;
+    std::array<uint64_t, 4> clients = { 0, 0, 0, 0};
     uint32_t id{generateId()};
 };
