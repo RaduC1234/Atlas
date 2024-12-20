@@ -74,7 +74,7 @@ void RenderBatch::addShape(const glm::vec2 &position, const glm::vec2 &scale, fl
         }
     }
 
-    float radians = glm::radians(rotation);
+    const float radians = glm::radians(rotation);
 
     auto rotationMatrix = glm::mat2(
         glm::cos(radians), -glm::sin(radians),

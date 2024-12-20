@@ -27,7 +27,7 @@ public:
     }
 
     // Cast to glm::vec4 - do not explicit it
-    operator glm::vec4() const {
+    constexpr operator glm::vec4() const {
         return {r, g, b, a};
     }
 

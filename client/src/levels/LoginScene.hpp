@@ -17,12 +17,6 @@ public:
         ResourceManager::load<Font>("thaleah", "assets/fonts/ThaleahFat.ttf");
 
         ResourceManager::loadFromDirectory<Texture>("assets/textures", nullptr, ".png", ".jpg");
-
-        auto width = GameManager::getWindowRef()->getWidth();
-        auto height = GameManager::getWindowRef()->getHeight();
-
-        GameManager::getWindowRef()->setWindowSize(width * 3/4, height * 2/3);
-        GameManager::getWindowRef()->centerWindow();
     }
 
     void onStart() override {

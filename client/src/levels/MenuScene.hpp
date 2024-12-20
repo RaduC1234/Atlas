@@ -18,16 +18,21 @@ public:
         ResourceManager::load<Font>("thaleah", "assets/fonts/ThaleahFat.ttf");
 
         ResourceManager::loadFromDirectory<Texture>("assets/textures", nullptr, ".png", ".jpg");
-        /*
-        auto width = GameManager::getWindowRef()->getWidth();
-        auto height = GameManager::getWindowRef()->getHeight();
-
-        GameManager::getWindowRef()->setWindowSize(width * 3/4, height * 2/3);
-        GameManager::getWindowRef()->centerWindow();
-        */
     }
 
     void onStart() override {
+
+        const auto &windowRef = GameManager::getWindowRef();
+
+        int newHeight = static_cast<int>(windowRef->getHeight() * 0.75);
+        int newWidth = (newHeight * 16) / 9;
+
+        windowRef->setWindowSize(newWidth, newHeight);
+        windowRef->centerWindow();
+        windowRef->setWindowStyle(Window::Style::UNDECORATED);
+
+
+
         this->sideRect = Actors::createStaticProp(this->registry,
                                               {glm::vec3(-1100.0f, 0.0f, 1.0f), 0.0f, glm::vec2(1600.0f, 2030.0f)},
                                               {"", RenderComponent::defaultTexCoords(), Color(22,22,22), true}

@@ -2,15 +2,16 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
-#include <utility>
-
-
-#include "core/Core.hpp"
+#include <Atlas.hpp>
 
 
 class Window {
 public:
+
+    enum Style {
+        DECORATED,
+        UNDECORATED
+    };
 
     using CloseCallback = std::function<void()>;
 
@@ -23,6 +24,8 @@ public:
     void centerWindow() const;
 
     void setWindowSize(int newWidth, int newHeight);
+
+    void setWindowStyle(Style style);
 
     int getWidth() const {
         return width;
@@ -44,6 +47,7 @@ public:
 
 private:
 
+
     static void setWindowIcon(GLFWwindow *window, const char *iconPath);
     static GLFWcursor* loadCustomCursor(const char* cursorImagePath, int hotspotX, int hotspotY);
 
@@ -58,6 +62,12 @@ private:
     GLFWcursor* defaultCursor{nullptr};
     GLFWcursor* textCursor{nullptr};
     uint8_t currentCursor{0};
+
+    bool isDraggingWindow{false};
+    double dragStartMouseX = 0.0, dragStartMouseY = 0.0;
+    int windowStartX = 0, windowStartY = 0;
+    Style currentStyle{DECORATED};
+
 
     inline static int glfw_windowCount = 0;
 };

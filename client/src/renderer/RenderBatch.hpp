@@ -41,7 +41,7 @@ public:
     void render(int screenWidth, int screenHeight, Camera &camera);
 
     bool hasTextureRoom() const {
-        return textures.size() < sizeof(texSlots) / sizeof(int) - 1; // for fuck’s sake, this bug took me 5 days
+        return textures.size() < sizeof(texSlots) / sizeof(int) - 1; // for f**k’s sake, this bug took me 5 days
     }
 
     bool hasTexture(const Ref<Texture> &texture) {
