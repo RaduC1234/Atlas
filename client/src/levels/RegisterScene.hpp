@@ -30,6 +30,22 @@ public:
         windowRef->centerWindow();
         windowRef->setWindowStyle(Window::Style::UNDECORATED);
 
+        auto registerCallback = [this]() {
+            if (registry.valid(usernameTextBox) && registry.valid(passwordTextBox)) {
+                const std::string& username = registry.get<TextboxComponent>(this->usernameTextBox).text;
+                const std::string& password = registry.get<TextboxComponent>(this->passwordTextBox).text;
+
+                try {
+                    if (ClientNetworkService::reg(username, password)) {
+                        AT_INFO("Register successfully");
+                    }
+                } catch (std::runtime_error error) {
+                    // print msj on ui
+                    AT_ERROR("Register failed: {0}", error.what());
+                }
+            }
+        };
+
 
         this->gameTitle = Actors::createStaticProp(this->registry,
                                                  {glm::vec3(-1100.0f, 800.0f, 0.0f), 0.0f, glm::vec2(400.0f, 400.0f)},
@@ -71,18 +87,7 @@ public:
         this->loginButton = Actors::createButton(this->registry,
                                     {glm::vec3(-1090.0f, -550.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 250.0f)},
                                                 {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                                      {"Register", "thaleah", Color::black(), false, false,[this]() {
-                if (registry.valid(usernameTextBox) && registry.valid(passwordTextBox)) {
-                    const std::string& username = registry.get<TextboxComponent>(this->usernameTextBox).text;
-                    const std::string& password = registry.get<TextboxComponent>(this->passwordTextBox).text;
-
-                    if (ClientNetworkService::login(username, password)) {
-                        std::cout << "Login successful!" << std::endl;
-                    } else {
-                        std::cerr << "Login failed! Please check your credentials." << std::endl;
-                    }
-                }
-            }, nullptr, nullptr, Color::white(), Color(109, 52, 133), Color(54, 26, 66)}
+                                      {"Register", "thaleah", Color::black(), false, false, registerCallback, nullptr, nullptr, Color::white(), Color(109, 52, 133), Color(54, 26, 66)}
         );
     }
 
