@@ -36,7 +36,7 @@ void AtlasClient::run() {
     AT_INFO("Client finished loading");
 
     //this->changeScene(CreateScope<LevelScene>());
-    this->changeScene(CreateScope<LoginScene>());
+    this->changeScene(CreateScope<MenuScene>());
 
     float beginTime = Time::now().toSeconds();
     float endTime;

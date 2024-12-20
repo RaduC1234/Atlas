@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Atlas.hpp>
-
 #include "scene/Scene.hpp"
 #include "window/Window.hpp"
 

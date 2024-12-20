@@ -20,7 +20,7 @@ Window::Window(std::string title, int width, int height, bool vSync) : title(std
         AT_FATAL("Error creating glfw window");
     }
 
-    setWindowIcon(this->glfwWindow, "assets/textures/icon.png");
+    setWindowIcon(this->glfwWindow, "assets/textures/iconAndLogo.png");
 
     glfwMakeContextCurrent(this->glfwWindow);
 

@@ -90,12 +90,11 @@ struct TextboxComponent {
     std::string text; // Reference to external string
     std::string font;
     glm::vec4 textColor;
-    size_t cursorPosition; // Current position of the cursor
+    size_t cursorPosition;
     bool isFocused; // Whether the textbox is active
     bool multiline; // Support for multiline text
     size_t maxLength;
 
-    // Constructor to initialize the reference
     TextboxComponent(std::string textRef,
                      std::string font,
                      glm::vec4 textColor,
@@ -133,7 +132,6 @@ struct ButtonComponent {
     std::function<void()> onHover;
     std::function<void()> onPressed;
 
-    // Constructor to initialize the reference
     ButtonComponent(std::string textRef,
                    std::string fontRef,
                    glm::vec4 color,
