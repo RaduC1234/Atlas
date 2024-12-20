@@ -8,7 +8,7 @@
 #include "network/ClientNetworkService.hpp"
 #include "renderer/Color.hpp"
 
-class LoginScene : public Scene {
+class RegisterScene : public Scene {
 public:
     void onCreate() override {
         ResourceManager::load<Font>("pixelify", "assets/fonts/PixelifySans-Medium.ttf");
@@ -50,7 +50,7 @@ public:
         // Title
         this->title = Actors::createStaticProp(this->registry,
                                              {glm::vec3(-1135.0f, 270.0f, 0.0f), 3.0f, glm::vec2(15.0f, 30.0f)},
-                                    {"thaleah", "Sign in", true, Color::white()}
+                                    {"thaleah", "Register", true, Color::white()}
         );
 
         // Username textbox
@@ -67,11 +67,11 @@ public:
                                                     {"", "thaleah", Color::white(), 12}
         );
 
-        // Login button
+        // Register button
         this->loginButton = Actors::createButton(this->registry,
                                     {glm::vec3(-1090.0f, -550.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 250.0f)},
                                                 {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                                      {"Hex in", "thaleah", Color::black(), false, false,[this]() {
+                                      {"Register", "thaleah", Color::black(), false, false,[this]() {
                 if (registry.valid(usernameTextBox) && registry.valid(passwordTextBox)) {
                     const std::string& username = registry.get<TextboxComponent>(this->usernameTextBox).text;
                     const std::string& password = registry.get<TextboxComponent>(this->passwordTextBox).text;
@@ -83,14 +83,6 @@ public:
                     }
                 }
             }, nullptr, nullptr, Color::white(), Color(109, 52, 133), Color(54, 26, 66)}
-        );
-
-        // Register button
-        this->registerButton = Actors::createButton(this->registry,
-            {glm::vec3(-1090.0f, -820.0f, 0.0f), 0.0f, glm::vec2(600.0f, 150.0f)},
-            {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-            {"Register", "thaleah", Color::black(), false, false, [this]() {},
-            nullptr, nullptr, Color::white(), Color(109, 52, 133), Color(54, 26, 66)}
         );
     }
 
