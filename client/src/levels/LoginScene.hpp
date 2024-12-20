@@ -20,6 +20,16 @@ public:
     }
 
     void onStart() override {
+        const auto &windowRef = GameManager::getWindowRef();
+
+        int newHeight = static_cast<int>(windowRef->getHeight() * 0.75);
+        int newWidth = (newHeight * 16) / 9;
+
+        windowRef->setWindowSize(newWidth, newHeight);
+        windowRef->centerWindow();
+        windowRef->setWindowStyle(Window::Style::UNDECORATED);
+
+
         this->gameTitle = Actors::createStaticProp(this->registry,
                                                  {glm::vec3(-890.0f, 700.0f, 0.0f), 0.0f, glm::vec2(500.0f, 500.0f)},
                                         {"logo6", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), true}

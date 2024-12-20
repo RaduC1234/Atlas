@@ -1,7 +1,7 @@
 #include "AtlasClient.hpp"
 
 #include "GameManager.hpp"
-#include "levels/LevelScene.hpp"
+#include "levels/MatchScene.hpp"
 #include "levels/LoginScene.hpp"
 #include "levels/MenuScene.hpp"
 #include "network/ClientNetworkService.hpp"
@@ -35,8 +35,8 @@ void AtlasClient::run() {
 
     AT_INFO("Client finished loading");
 
-    //this->changeScene(CreateScope<LevelScene>());
-    this->changeScene(CreateScope<MenuScene>());
+    this->changeScene(CreateScope<LoginScene>());
+    //this->changeScene(CreateScope<MenuScene>());
 
     float beginTime = Time::now().toSeconds();
     float endTime;

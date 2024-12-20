@@ -63,11 +63,5 @@ private:
     GLFWcursor* textCursor{nullptr};
     uint8_t currentCursor{0};
 
-    bool isDraggingWindow{false};
-    double dragStartMouseX = 0.0, dragStartMouseY = 0.0;
-    int windowStartX = 0, windowStartY = 0;
-    Style currentStyle{DECORATED};
-
-
     inline static int glfw_windowCount = 0;
 };

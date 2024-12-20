@@ -32,7 +32,6 @@ public:
         windowRef->setWindowStyle(Window::Style::UNDECORATED);
 
 
-
         this->sideRect = Actors::createStaticProp(this->registry,
                                               {glm::vec3(-1100.0f, 0.0f, 1.0f), 0.0f, glm::vec2(1600.0f, 2030.0f)},
                                               {"", RenderComponent::defaultTexCoords(), Color(22,22,22), true}

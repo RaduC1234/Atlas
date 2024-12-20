@@ -1,12 +1,11 @@
 #include "Window.hpp"
 
 #include <stb_image.h>
-#include <chrono>
+
 #include "Keyboard.hpp"
 #include "Mouse.hpp"
 
-Window::Window(std::string title, int width, int height, bool vSync)
-    : title(std::move(title)), width(width), height(height), vSync(vSync), isDraggingWindow(false), currentStyle(Window::Style::DECORATED) {
+Window::Window(std::string title, int width, int height, bool vSync) : title(std::move(title)), width(width), height(height), vSync(vSync) {
     glfwInit();
     glfwDefaultWindowHints();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
@@ -24,44 +23,74 @@ Window::Window(std::string title, int width, int height, bool vSync)
     setWindowIcon(this->glfwWindow, "assets/textures/iconAndLogo.png");
 
     glfwMakeContextCurrent(this->glfwWindow);
+
     glfwSetWindowUserPointer(this->glfwWindow, this);
 
     this->defaultCursor = loadCustomCursor("assets/textures/cursors/pointer_cursor.png", 0, 0);
     this->textCursor = loadCustomCursor("assets/textures/cursors/text_cursor.png", 16, 16);
+    //this->defaultCursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+    //this->textCursor = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
 
     if (!defaultCursor || !textCursor) {
         AT_ERROR("Error loading cursors");
     }
 
-    glfwSetWindowSizeCallback(glfwWindow, [](GLFWwindow* window, int width, int height) {
-        Window& data = *static_cast<Window*>(glfwGetWindowUserPointer(window));
+    //https://www.glfw.org/docs/3.3/input_guide.html#input_key
+
+    /**
+    *  ===================================Window Callbacks=====================================
+    */
+    glfwSetWindowSizeCallback(glfwWindow, [](GLFWwindow *window, int width, int height) {
+        Window &data = *static_cast<Window *>(glfwGetWindowUserPointer(window));
+
         data.width = width;
         data.height = height;
     });
 
-    glfwSetWindowCloseCallback(glfwWindow, [](GLFWwindow* window) {
-        Window& data = *static_cast<Window*>(glfwGetWindowUserPointer(window));
+    glfwSetWindowCloseCallback(glfwWindow, [](GLFWwindow *window) {
+        Window &data = *static_cast<Window *>(glfwGetWindowUserPointer(window));
+
         if (data.closeCallback) {
             data.closeCallback();
         }
+
         glfwTerminate();
         exit(0);
     });
 
-    glfwSetMouseButtonCallback(glfwWindow, [](GLFWwindow* window, int button, int action, int mods) {
-        Window& data = *static_cast<Window*>(glfwGetWindowUserPointer(window));
 
+    /**
+     *  ===================================Keyboard Callbacks=====================================
+     */
+    glfwSetKeyCallback(glfwWindow, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
+        if (key > Keyboard::keyPressed.size()) {
+            AT_ERROR("Key out of bounds");
+            return;
+        }
+
+        if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+            Keyboard::keyPressed[key] = true;
+        } else if (action == GLFW_RELEASE) {
+            Keyboard::keyPressed[key] = false;
+        }
+    });
+
+    glfwSetCharCallback(glfwWindow, [](GLFWwindow *window, unsigned int codepoint) {
+        if (!Keyboard::nativeInput) {
+            return;
+        }
+
+        Keyboard::keyTyped.push(codepoint);
+    });
+
+    /**
+     *  ===================================Mouse Callbacks=====================================
+     */
+    glfwSetMouseButtonCallback(glfwWindow, [](GLFWwindow *window, int button, int action, int mods) {
         switch (action) {
             case GLFW_PRESS: {
                 if (button < Mouse::buttonPressed.size()) {
                     Mouse::buttonPressed[button] = true;
-                }
-
-                // Start dragging only if left button is pressed and the window is undecorated
-                if (button == GLFW_MOUSE_BUTTON_LEFT && data.currentStyle == Window::Style::UNDECORATED && Mouse::yPos < 30) {
-                    data.isDraggingWindow = true;
-                    glfwGetCursorPos(window, &data.dragStartMouseX, &data.dragStartMouseY);
-                    glfwGetWindowPos(window, &data.windowStartX, &data.windowStartY);
                 }
                 break;
             }
@@ -69,48 +98,27 @@ Window::Window(std::string title, int width, int height, bool vSync)
                 if (button < Mouse::buttonPressed.size()) {
                     Mouse::buttonPressed[button] = false;
                 }
-
-                // Stop dragging when the left mouse button is released
-                if (button == GLFW_MOUSE_BUTTON_LEFT) {
-                    data.isDraggingWindow = false;
-                }
                 break;
             }
         }
     });
 
+    glfwSetScrollCallback(glfwWindow, [](GLFWwindow *window, double xOffset, double yOffset) {
+        Mouse::scrollXOffset = xOffset;
+        Mouse::scrollYOffset = yOffset;
+    });
 
-    glfwSetCursorPosCallback(glfwWindow, [](GLFWwindow* window, double xPos, double yPos) {
-        Window& data = *static_cast<Window*>(glfwGetWindowUserPointer(window));
-
+    glfwSetCursorPosCallback(glfwWindow, [](GLFWwindow *window, double xPos, double yPos) {
         Mouse::xPos = xPos;
         Mouse::yPos = yPos;
-
-        if (data.isDraggingWindow && data.currentStyle == Window::Style::UNDECORATED) {
-            static auto lastUpdateTime = std::chrono::steady_clock::now();
-            auto now = std::chrono::steady_clock::now();
-            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdateTime);
-
-            if (elapsed.count() < 16) { // ~60 FPS
-                return;
-            }
-            lastUpdateTime = now;
-
-            double deltaX = xPos - data.dragStartMouseX;
-            double deltaY = yPos - data.dragStartMouseY;
-
-            int newPosX = static_cast<int>(data.windowStartX + deltaX);
-            int newPosY = static_cast<int>(data.windowStartY + deltaY);
-
-            glfwSetWindowPos(window, newPosX, newPosY);
-        }
-
         Mouse::dragging = Mouse::buttonPressed[0] || Mouse::buttonPressed[1] || Mouse::buttonPressed[2];
     });
 
-    glfwSwapInterval(1); // Enable VSync
+    // enable v-sync
+    glfwSwapInterval(1);
+
     glfwShowWindow(glfwWindow);
-    glfwMaximizeWindow(glfwWindow);
+    glfwMaximizeWindow(glfwWindow); // this fixes the wrong scaling issues in Camera
     glfwRestoreWindow(glfwWindow);
 }
 
@@ -120,9 +128,11 @@ Window::~Window() {
     glfw_windowCount--;
 }
 
+// TODO: custom and modular way of loading and setting custom cursors
 void Window::onUpdate() const {
     if (Mouse::currentCursor == Mouse::Cursors::DEFAULT) {
         glfwSetCursor(this->glfwWindow, this->defaultCursor);
+
     } else if (Mouse::currentCursor == Mouse::Cursors::TEXT) {
         glfwSetCursor(this->glfwWindow, this->textCursor);
     }
@@ -138,15 +148,20 @@ void Window::centerWindow() const {
     }
 
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    if (!monitor) {
+        AT_ERROR("Failed to get primary monitor");
+        return;
+    }
 
-    if (!monitor || !mode) {
-        AT_ERROR("Failed to get monitor information");
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    if (!mode) {
+        AT_ERROR("Failed to get video mode of primary monitor");
         return;
     }
 
     int xpos = (mode->width - this->width) / 2;
     int ypos = (mode->height - this->height) / 2;
+
     glfwSetWindowPos(this->glfwWindow, xpos, ypos);
 }
 
@@ -158,7 +173,19 @@ void Window::setWindowSize(int newWidth, int newHeight) {
 
     this->width = newWidth;
     this->height = newHeight;
+
     glfwSetWindowSize(this->glfwWindow, newWidth, newHeight);
+}
+
+void Window::setWindowIcon(GLFWwindow *window, const char *iconPath) {
+    GLFWimage images[1];
+    images[0].pixels = stbi_load(iconPath, &images[0].width, &images[0].height, nullptr, 4); //rgba channels
+    if (images[0].pixels) {
+        glfwSetWindowIcon(window, 1, images);
+        stbi_image_free(images[0].pixels);
+    } else {
+        AT_ERROR("Error loading icon {0}", iconPath);
+    }
 }
 
 void Window::setWindowStyle(Style style) {
@@ -170,36 +197,23 @@ void Window::setWindowStyle(Style style) {
     switch (style) {
         case DECORATED:
             glfwSetWindowAttrib(this->glfwWindow, GLFW_DECORATED, GLFW_TRUE);
-            currentStyle = Style::DECORATED;
-            break;
+        break;
         case UNDECORATED:
             glfwSetWindowAttrib(this->glfwWindow, GLFW_DECORATED, GLFW_FALSE);
-            currentStyle = Style::UNDECORATED;
-            break;
+        break;
         default:
             AT_ERROR("Unknown window style");
-            break;
+        break;
     }
     glfwRestoreWindow(this->glfwWindow);
 }
 
-void Window::setWindowIcon(GLFWwindow* window, const char* iconPath) {
-    GLFWimage images[1];
-    images[0].pixels = stbi_load(iconPath, &images[0].width, &images[0].height, nullptr, 4); // RGBA
-    if (images[0].pixels) {
-        glfwSetWindowIcon(window, 1, images);
-        stbi_image_free(images[0].pixels);
-    } else {
-        AT_ERROR("Error loading icon {0}", iconPath);
-    }
-}
-
-GLFWcursor* Window::loadCustomCursor(const char* cursorImagePath, int hotspotX, int hotspotY) {
+GLFWcursor * Window::loadCustomCursor(const char *cursorImagePath, int hotspotX, int hotspotY) {
     int width, height, channels;
     unsigned char* imageData = stbi_load(cursorImagePath, &width, &height, &channels, 4); // Force 4 channels (RGBA)
 
     if (!imageData) {
-        AT_ERROR("Failed to load cursor image: {0}", cursorImagePath);
+        AT_ERROR("Failed to load cursor image: {0}", cursorImagePath)
         return nullptr;
     }
 
@@ -208,7 +222,16 @@ GLFWcursor* Window::loadCustomCursor(const char* cursorImagePath, int hotspotX, 
     glfwImage.height = height;
     glfwImage.pixels = imageData;
 
+
     GLFWcursor* cursor = glfwCreateCursor(&glfwImage, hotspotX, hotspotY);
+    if (!cursor) {
+        AT_ERROR("Failed to create custom cursor");
+        stbi_image_free(imageData);
+        return nullptr;
+    }
+
     stbi_image_free(imageData);
+
     return cursor;
 }
+
