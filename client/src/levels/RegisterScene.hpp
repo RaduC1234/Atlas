@@ -76,11 +76,14 @@ public:
                     const std::string& username = registry.get<TextboxComponent>(this->usernameTextBox).text;
                     const std::string& password = registry.get<TextboxComponent>(this->passwordTextBox).text;
 
-                    if (ClientNetworkService::login(username, password)) {
-                        std::cout << "Login successful!" << std::endl;
-                    } else {
-                        std::cerr << "Login failed! Please check your credentials." << std::endl;
-                    }
+                   try {
+                       if (ClientNetworkService::reg(username, password)) {
+                           AT_INFO("Register successfully");
+                       }
+                   } catch (std::runtime_error error) {
+                       // print msj on ui
+                       AT_ERROR("Register failed: {0}", error.what());
+                   }
                 }
             }, nullptr, nullptr, Color::white(), Color(109, 52, 133), Color(54, 26, 66)}
         );

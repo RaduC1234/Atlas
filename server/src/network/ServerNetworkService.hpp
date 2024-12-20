@@ -43,7 +43,7 @@ public:
                 std::regex usernameRegex(R"(^(?=.*\d).{4,}$)");
 
                 if (!std::regex_match(username, usernameRegex)) {
-                    return crow::response(HttpStatus::BAD_REQUEST, std::string(R"({"requestStatus": 0, "message" : "Invalid username. Must be at least 4 characters long and contain at least one number."})"));
+                    return crow::response(HttpStatus::BAD_REQUEST, std::string(R"({"requestStatus": false, "message" : "Invalid username. Must be at least 4 characters long and contain at least one number."})"));
                 }
 
                 auto players = DatabaseManager::getAll<Player>();
@@ -53,14 +53,14 @@ public:
                 }) != players.end();
 
                 if (usernameExists) {
-                    return crow::response(HttpStatus::BAD_REQUEST, std::string(R"({"requestStatus": 0, "message" : "Username already exists"})"));
+                    return crow::response(HttpStatus::BAD_REQUEST, std::string(R"({"requestStatus": false, "message" : "Username already exists"})"));
                 }
 
                 DatabaseManager::emplace_create<Player>(username, password, 0);
                 AT_INFO("New user registered with the username {0} from remote host {1}.", username, req.remote_ip_address);
-                return crow::response(HttpStatus::OK, std::string(R"({"requestStatus": 1, "message" : "Success"})"));
+                return crow::response(HttpStatus::OK, std::string(R"({"requestStatus": true, "message" : "Success"})"));
             } catch (const std::exception &e) {
-                return crow::response(HttpStatus::BAD_REQUEST, std::string(R"({"requestStatus": 0, "message" : "Invalid request format"})"));
+                return crow::response(HttpStatus::BAD_REQUEST, std::string(R"({"requestStatus": false, "message" : "Invalid request format"})"));
             }
         });
 
