@@ -33,8 +33,8 @@ public:
 
 
         this->sideRect = Actors::createStaticProp(this->registry,
-                                              {glm::vec3(-1100.0f, 0.0f, 1.0f), 0.0f, glm::vec2(1600.0f, 2030.0f)},
-                                              {"", RenderComponent::defaultTexCoords(), Color(22,22,22), true}
+                                              {glm::vec3(-1100.0f, -300.0f, 1.0f), 0.0f, glm::vec2(1060.0f, 1000.0f)},
+                                              {"", RenderComponent::defaultTexCoords(), Color(22,22,22,210), true}
         );
 
         this->background = Actors::createStaticProp(this->registry, // here
@@ -42,39 +42,32 @@ public:
                                                     {"background01", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), true}
         );
 
-        this->title = Actors::createStaticProp(this->registry,
-                                        {glm::vec3(-1150.0f, 600.0f, 0.0f), 0.0f, glm::vec2(25.0f, 15.0f)},
-                                        {"thaleah", "Hex&Chaos",true,Color(63,47, 102)}
-                );
+        this->gameTitle = Actors::createStaticProp(this->registry,
+                                                 {glm::vec3(-1100.0f, 600.0f, 0.0f), 0.0f, glm::vec2(900.0f, 900.0f)},
+                                        {"iconAndLogo", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), true}
+                                        );
+
 
         this->playButton = Actors::createButton(this->registry,
-        {glm::vec3(-1100.0f, 200.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},
-         {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color(63,47,102), true, RENDERER_NINE_SLICE},
-         {"Play", "roboto", Color::black(), false, false, [this]() {
+        {glm::vec3(-1100.0f, 0.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},
+         {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
+         {"Play", "thaleah", Color::black(), false, false, [this]() {
              AT_INFO("Play button clicked!");
-         }, nullptr, nullptr, Color(63, 47, 102), Color(44, 33, 71), Color(38, 28, 61)});
+         }, nullptr, nullptr, Color::white(), Color(74, 58, 112), Color(38, 28, 61)});
 
         this->optionsButton = Actors::createButton(this->registry,
-                     {glm::vec3(-1100.0f, -100.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},  // Positioned in the left half and horizontally centered
-                     {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color(63,47,102), true, RENDERER_NINE_SLICE},
-                     {"Options", "roboto", Color::black(), false, false, [this]() {
+                     {glm::vec3(-1100.0f, -300.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},  // Positioned in the left half and horizontally centered
+                     {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
+                     {"Options", "thaleah", Color::black(), false, false, [this]() {
                          AT_INFO("Options button clicked!");
-                     }, nullptr, nullptr, Color(63, 47, 102), Color(44, 33, 71), Color(38, 28, 61)});
+                     }, nullptr, nullptr, Color::white(), Color(74, 58, 112), Color(38, 28, 61)});
 
         this->quitButton = Actors::createButton(this->registry,
-                     {glm::vec3(-1100.0f, -400.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},  // Positioned in the left half and horizontally centered
-                     {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color(63,47,102), true, RENDERER_NINE_SLICE},
-                     {"Quit", "roboto", Color::black(), false, false, [this]() {
+                     {glm::vec3(-1100.0f, -600.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},  // Positioned in the left half and horizontally centered
+                     {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
+                     {"Quit", "thaleah", Color::black(), false, false, [this]() {
                          AT_INFO("Quit button clicked!");
-                     }, nullptr, nullptr, Color(63, 47, 102), Color(44, 33, 71), Color(38, 28, 61)});
-
-        this->loginButton = Actors::createButton(this->registry,
-             {glm::vec3(-1100.0f, -700.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},  // Positioned in the left half and horizontally centered
-             {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color(63,47,102), true, RENDERER_NINE_SLICE},
-             {"Login", "roboto", Color::black(), false, false, [this]() {
-                 AT_INFO("Login button clicked!");
-             }, nullptr, nullptr, Color(63, 47, 102), Color(44, 33, 71), Color(38, 28, 61)});
-
+                     }, nullptr, nullptr, Color::white(), Color(74,58,112), Color(38, 28, 61)});
     }
 
     void onUpdate(float deltaTime) override {
@@ -137,10 +130,8 @@ private:
 
     Actor background;
     Actor sideRect;
-    Actor title;
+    Actor gameTitle;
     Actor playButton;
     Actor optionsButton;
     Actor quitButton;
-    Actor loginButton;
-
 };
