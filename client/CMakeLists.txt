@@ -3,7 +3,8 @@ project(Client)
 
 file(GLOB_RECURSE SERVER_SOURCES "src/*.cpp" "src/*.hpp")
 
-add_executable(client ${SERVER_SOURCES})
+add_executable(client ${SERVER_SOURCES}
+        src/levels/GameModeScene.hpp)
 
 target_link_libraries(client PRIVATE engine)
 
