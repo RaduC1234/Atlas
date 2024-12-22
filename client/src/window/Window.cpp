@@ -26,10 +26,10 @@ Window::Window(std::string title, int width, int height, bool vSync) : title(std
 
     glfwSetWindowUserPointer(this->glfwWindow, this);
 
-    this->defaultCursor = loadCustomCursor("assets/textures/cursors/pointer_cursor.png", 0, 0);
-    this->textCursor = loadCustomCursor("assets/textures/cursors/text_cursor.png", 16, 16);
-    //this->defaultCursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
-    //this->textCursor = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
+    //this->defaultCursor = loadCustomCursor("assets/textures/cursors/pointer_cursor.png", 0, 0);
+    //this->textCursor = loadCustomCursor("assets/textures/cursors/text_cursor.png", 16, 16);
+    this->defaultCursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+    this->textCursor = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
 
     if (!defaultCursor || !textCursor) {
         AT_ERROR("Error loading cursors");
@@ -87,6 +87,25 @@ Window::Window(std::string title, int width, int height, bool vSync) : title(std
      *  ===================================Mouse Callbacks=====================================
      */
     glfwSetMouseButtonCallback(glfwWindow, [](GLFWwindow *window, int button, int action, int mods) {
+        Window &data = *static_cast<Window *>(glfwGetWindowUserPointer(window));
+
+        if (button == GLFW_MOUSE_BUTTON_LEFT) {
+            if (action == GLFW_PRESS) {
+                // Start dragging: Record initial cursor and window position
+                data.isDragging = true;
+
+                double cursor_x, cursor_y;
+                glfwGetCursorPos(window, &cursor_x, &cursor_y);
+                data.initialCursorX = static_cast<int>(cursor_x);
+                data.initialCursorY = static_cast<int>(cursor_y);
+
+                glfwGetWindowPos(window, &data.initialWindowX, &data.initialWindowY);
+            } else if (action == GLFW_RELEASE) {
+                // Stop dragging: Reset dragging state
+                data.isDragging = false;
+            }
+        }
+
         switch (action) {
             case GLFW_PRESS: {
                 if (button < Mouse::buttonPressed.size()) {
@@ -117,9 +136,10 @@ Window::Window(std::string title, int width, int height, bool vSync) : title(std
     // enable v-sync
     glfwSwapInterval(1);
 
-    glfwShowWindow(glfwWindow);
     glfwMaximizeWindow(glfwWindow); // this fixes the wrong scaling issues in Camera
     glfwRestoreWindow(glfwWindow);
+
+    glfwShowWindow(glfwWindow);
 }
 
 Window::~Window() {
@@ -130,6 +150,7 @@ Window::~Window() {
 
 // TODO: custom and modular way of loading and setting custom cursors
 void Window::onUpdate() const {
+
     if (Mouse::currentCursor == Mouse::Cursors::DEFAULT) {
         glfwSetCursor(this->glfwWindow, this->defaultCursor);
 
@@ -139,6 +160,18 @@ void Window::onUpdate() const {
 
     glfwPollEvents();
     glfwSwapBuffers(glfwWindow);
+
+    if (isDragging) {
+        double cursor_x, cursor_y;
+        glfwGetCursorPos(this->glfwWindow, &cursor_x, &cursor_y);
+
+        // Calculate offsets relative to the initial positions
+        int delta_x = static_cast<int>(cursor_x) - initialCursorX;
+        int delta_y = static_cast<int>(cursor_y) - initialCursorY;
+
+        // Move the window to the new position
+        glfwSetWindowPos(this->glfwWindow, initialWindowX + delta_x, initialWindowY + delta_y);
+    }
 }
 
 void Window::centerWindow() const {
@@ -176,6 +209,46 @@ void Window::setWindowSize(int newWidth, int newHeight) {
 
     glfwSetWindowSize(this->glfwWindow, newWidth, newHeight);
 }
+
+std::pair<int, int> Window::getMonitorSize() {
+    if (!glfwInit()) {
+        throw std::runtime_error("Failed to initialize GLFW");
+    }
+
+    GLFWmonitor* monitor = glfwGetWindowMonitor(this->glfwWindow);
+    if (!monitor) {
+        int windowX, windowY, windowWidth, windowHeight;
+        glfwGetWindowPos(this->glfwWindow, &windowX, &windowY);
+        glfwGetWindowSize(this->glfwWindow, &windowWidth, &windowHeight);
+
+        int monitorCount;
+        GLFWmonitor** monitors = glfwGetMonitors(&monitorCount);
+        if (!monitors) {
+            throw std::runtime_error("Failed to get monitors");
+        }
+
+        for (int i = 0; i < monitorCount; ++i) {
+            int monitorX, monitorY, monitorWidth, monitorHeight;
+            glfwGetMonitorWorkarea(monitors[i], &monitorX, &monitorY, &monitorWidth, &monitorHeight);
+
+            if (windowX >= monitorX && windowX < monitorX + monitorWidth &&
+                windowY >= monitorY && windowY < monitorY + monitorHeight) {
+                monitor = monitors[i];
+                break;
+                }
+        }
+
+        if (!monitor) {
+            throw std::runtime_error("Could not determine the monitor for the window");
+        }
+    }
+
+    int x, y, width, height;
+    glfwGetMonitorWorkarea(monitor, &x, &y, &width, &height);
+
+    return {width, height};
+}
+
 
 void Window::setWindowIcon(GLFWwindow *window, const char *iconPath) {
     GLFWimage images[1];
