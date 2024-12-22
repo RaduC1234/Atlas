@@ -3,6 +3,7 @@
 #include <Atlas.hpp>
 #include <glm/glm.hpp>
 
+#include "renderer/Camera.hpp"
 #include "window/Keyboard.hpp"
 #include "window/Mouse.hpp"
 
@@ -55,7 +56,7 @@ public:
             pawn.aimRotation = angle;
 
             // Debugging rotation (can remove this in production)
-            ImGui::Text(std::to_string(glm::degrees(angle)).c_str());
+            //ImGui::Text(std::to_string(glm::degrees(angle)).c_str());
         });
     }
 

@@ -1,17 +1,14 @@
 #include "AtlasClient.hpp"
 
 #include "GameManager.hpp"
-#include "levels/MatchScene.hpp"
-#include "levels/LevelScene.hpp"
 #include "levels/LoginScene.hpp"
-#include "levels/RegisterScene.hpp"
 #include "levels/MenuScene.hpp"
+#include "levels/RegisterScene.hpp"
 #include "network/ClientNetworkService.hpp"
 #include "renderer/ImGuiLayer.h"
 #include "renderer/RenderManager.hpp"
 
 void AtlasClient::run() {
-
     Log::init();
     AT_INFO("Starting Atlas Client");
 
@@ -37,20 +34,18 @@ void AtlasClient::run() {
 
     AT_INFO("Client finished loading");
 
-    //this->changeScene(CreateScope<LevelScene>());
-    //this->changeScene(CreateScope<LoginScene>());
-    //this->changeScene(CreateScope<MatchScene>());
-    //this->changeScene(CreateScope<MenuScene>());
-    this->changeScene(CreateScope<RegisterScene>());
+    sceneFactories["LoginScene"] = []() { return CreateScope<LoginScene>(); };
+    sceneFactories["MenuScene"] = []() { return CreateScope<MenuScene>(); };
+    sceneFactories["RegisterScene"] = []() { return CreateScope<RegisterScene>(); };
+
+    this->changeScene("MenuScene");
 
     float beginTime = Time::now().toSeconds();
     float endTime;
     float deltaTime = -1.0f;
 
     while (isRunning) {
-        //EventManager::pollEvents();
-
-        if(deltaTime >= 0 && this->currentScene != nullptr) {
+        if (deltaTime >= 0 && this->currentScene != nullptr) {
             ImGuiLayer::onUpdate(deltaTime);
             this->currentScene->onUpdate(deltaTime);
             this->currentScene->onRender(this->window->getWidth(), this->window->getHeight());
@@ -58,6 +53,13 @@ void AtlasClient::run() {
         }
 
         this->window->onUpdate();
+
+
+        if (requestedScene) {
+            this->internalChangeScene(*requestedScene);
+            requestedScene.reset();
+        }
+
 
         endTime = Time::now().toSeconds();
         deltaTime = endTime - beginTime;
@@ -67,21 +69,29 @@ void AtlasClient::run() {
     shutdown();
 }
 
-void AtlasClient::changeScene(Scope<Scene> scene) {
-    if (currentScene != nullptr)
-        this->currentScene->onDestroy();
+void AtlasClient::changeScene(const std::string &sceneName) {
+    requestedScene = sceneName;
+}
 
-    this->currentScene = std::move(scene);
+void AtlasClient::internalChangeScene(const std::string &sceneName) {
+    auto it = sceneFactories.find(sceneName);
+    if (it == sceneFactories.end()) {
+        AT_FATAL("Scene not found: {}", sceneName);
+        return;
+    }
+
+    if (currentScene != nullptr) {
+        this->currentScene->onDestroy();
+    }
+
+    this->currentScene = it->second(); // Create new instance
     currentScene->onCreate();
     currentScene->onStart();
 }
 
-void AtlasClient::shutdown() {
-    ResourceManager::clearAll();
-    ImGuiLayer::shutdown();
-    RenderManager::shutdown();
+Window *AtlasClient::getWindow() {
+    return this->window.get();
 }
 
-Window * AtlasClient::getWindow() {
-    return this->window.get();
+void AtlasClient::shutdown() {
 }

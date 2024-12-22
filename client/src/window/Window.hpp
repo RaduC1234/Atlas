@@ -43,6 +43,8 @@ public:
         return glfwWindow;
     }
 
+    std::pair<int, int> getMonitorSize();
+
     friend class Application;
 
 private:
@@ -62,6 +64,12 @@ private:
     GLFWcursor* defaultCursor{nullptr};
     GLFWcursor* textCursor{nullptr};
     uint8_t currentCursor{0};
+
+    bool isDragging{false};
+    int initialCursorX, initialCursorY;
+    int cursorOffsetX, cursorOffsetY;
+    int initialWindowX, initialWindowY;
+
 
     inline static int glfw_windowCount = 0;
 };
