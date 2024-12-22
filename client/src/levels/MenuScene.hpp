@@ -24,7 +24,7 @@ public:
 
         const auto &windowRef = GameManager::getWindowRef();
 
-        int newHeight = static_cast<int>(windowRef->getHeight() * 0.75);
+        int newHeight = static_cast<int>(windowRef->getMonitorSize().second * 0.75);
         int newWidth = (newHeight * 16) / 9;
 
         windowRef->setWindowSize(newWidth, newHeight);

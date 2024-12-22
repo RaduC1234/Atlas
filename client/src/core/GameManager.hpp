@@ -11,8 +11,7 @@ struct SelfUser {
 
 class GameManager {
 public:
-    template<typename T>
-    static void changeScene();
+    static void changeScene(const std::string& sceneName);
 
     static void setSelfUser(const SelfUser& self);
 

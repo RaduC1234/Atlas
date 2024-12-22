@@ -7,7 +7,7 @@
 class AtlasClient {
 public:
     void run();
-    void changeScene(Scope<Scene> scene);
+    void changeScene(const std::string& sceneName);
     void shutdown();
 
     Window* getWindow();
@@ -17,6 +17,13 @@ private:
 
     std::atomic_bool isRunning{true};
     Config clientConfig;
+
+    std::unordered_map<std::string, std::function<Scope<Scene>()>> sceneFactories;
+    std::optional<std::string> requestedScene;
+    std::mutex sceneChangeMutex;
+
+    void internalChangeScene(const std::string& sceneName);
+
 };
 
 
