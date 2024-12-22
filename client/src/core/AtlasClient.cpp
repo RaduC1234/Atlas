@@ -1,6 +1,7 @@
 #include "AtlasClient.hpp"
 
 #include "GameManager.hpp"
+#include "levels/GameModeScene.hpp"
 #include "levels/LoginScene.hpp"
 #include "levels/MenuScene.hpp"
 #include "levels/RegisterScene.hpp"
@@ -37,6 +38,7 @@ void AtlasClient::run() {
     sceneFactories["LoginScene"] = []() { return CreateScope<LoginScene>(); };
     sceneFactories["MenuScene"] = []() { return CreateScope<MenuScene>(); };
     sceneFactories["RegisterScene"] = []() { return CreateScope<RegisterScene>(); };
+    sceneFactories["GameModeScene"] = []() { return CreateScope<GameModeScene>(); };
 
     this->changeScene("MenuScene");
 
