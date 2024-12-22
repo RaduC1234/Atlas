@@ -30,6 +30,10 @@ void MenuScene::onStart() {
     windowRef->centerWindow();
     windowRef->setWindowStyle(Window::Style::UNDECORATED);
 
+    auto onPlayButtonCallback = []() {
+        GameManager::changeScene("GameModeScene");
+    };
+
 
     this->sideRect = Actors::createStaticProp(this->registry,
                                           {glm::vec3(-1100.0f, -300.0f, 1.0f), 0.0f, glm::vec2(1060.0f, 1000.0f)},
@@ -51,9 +55,7 @@ void MenuScene::onStart() {
     {glm::vec3(-1100.0f, 0.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},
      {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
      {"Play", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),
-                     [this]() {
-                         AT_INFO("Play button clicked!");
-                     }, nullptr, nullptr});
+        onPlayButtonCallback, nullptr, nullptr});
 
     this->optionsButton = Actors::createButton(this->registry,
                  {glm::vec3(-1100.0f, -300.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},  // Positioned in the left half and horizontally centered

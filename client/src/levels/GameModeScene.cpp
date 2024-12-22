@@ -23,12 +23,16 @@ void GameModeScene::onCreate() {
 void GameModeScene::onStart() {
     const auto &windowRef = GameManager::getWindowRef();
 
-    int newHeight = static_cast<int>(windowRef->getHeight() * 0.75);
+    int newHeight = static_cast<int>(windowRef->getMonitorSize().second * 0.75);
     int newWidth = (newHeight * 16) / 9;
 
     windowRef->setWindowSize(newWidth, newHeight);
     windowRef->centerWindow();
     windowRef->setWindowStyle(Window::Style::UNDECORATED);
+
+    auto onBackButtonCallback = []() {
+        GameManager::changeScene("MenuScene");
+    };
 
     this->sideRect = Actors::createStaticProp(this->registry,
                                         {glm::vec3(-1100.0f, 0.0f, 1.0f), 0.0f, glm::vec2(1700.0f, 2400.0f)},
@@ -73,9 +77,7 @@ void GameModeScene::onStart() {
     this->backButton = Actors::createButton(this->registry,
             {glm::vec3(-1500.0f, -800.0f, 0.0f), 0.0f, glm::vec2(500.0f, 150.0f)},
             {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-            {"Back", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),  [this]() {
-                AT_INFO("Returning to Menu Scene!");
-            }, nullptr, nullptr});
+            {"Back", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), onBackButtonCallback, nullptr, nullptr});
 }
 
 void GameModeScene::onUpdate(float deltaTime) {
