@@ -3,6 +3,7 @@
 #include <Atlas.hpp>
 #include <glm/glm.hpp>
 
+#include "renderer/Camera.hpp"
 #include "window/Keyboard.hpp"
 #include "window/Mouse.hpp"
 

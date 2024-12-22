@@ -44,7 +44,7 @@ public:
 
         // Title
         this->title = Actors::createStaticProp(this->registry,
-                                             {glm::vec3(-1135.0f, 470.0f, 0.0f), 3.0f, glm::vec2(15.0f, 30.0f)},
+                                             {glm::vec3(-1135.0f, 470.0f, 0.0f), 0.0f, glm::vec2(15.0f, 30.0f)},
                                     {"thaleah", "Select game mode", true, Color::white()}
         );
 
@@ -56,13 +56,21 @@ public:
                 AT_INFO("Hex Duel selected!");
             }, nullptr, nullptr, Color::white(), Color(74, 58, 112), Color(38, 28, 61)});
 
+        this->hexDuelDescription = Actors::createStaticProp(this->registry,
+                                             {glm::vec3(-1100.0f, -100.0f, 0.0f), 0.0f, glm::vec2(10.0f, 10.0f)},
+                                    {"thaleah", "1v1", true, Color::white()});
+
         // 1v1v1v1 Button
         this->hexArenaButton = Actors::createButton(this->registry,
-            {glm::vec3(-1100.0f, -200.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},
+            {glm::vec3(-1100.0f, -300.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},
             {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
             {"Hex Arena", "thaleah", Color::black(), false, false, [this]() {
                 AT_INFO("Hex Arena selected!");
             }, nullptr, nullptr, Color::white(), Color(74, 58, 112), Color(38, 28, 61)});
+
+        this->hexArenaDescription = Actors::createStaticProp(this->registry,
+                                     {glm::vec3(-1100.0f, -500.0f, 0.0f), 0.0f, glm::vec2(10.0f, 10.0f)},
+                            {"thaleah", "1v1v1v1", true, Color::white()});
 
         // Back Button
         this->backButton = Actors::createButton(this->registry,
@@ -118,6 +126,8 @@ private:
     Actor sideRect;
     Actor title;
     Actor hexDuelButton;
+    Actor hexDuelDescription;
+    Actor hexArenaDescription;
     Actor hexArenaButton;
     Actor backButton;
 };
