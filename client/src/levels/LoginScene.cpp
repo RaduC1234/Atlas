@@ -32,9 +32,25 @@ void LoginScene::onStart() {
         GameManager::changeScene("RegisterScene");
     };
 
+    auto loginCallback = [this]() {
+        if (registry.valid(usernameTextBox) && registry.valid(passwordTextBox)) {
+            const std::string& username = registry.get<TextboxComponent>(this->usernameTextBox).text;
+            const std::string& password = registry.get<TextboxComponent>(this->passwordTextBox).text;
+
+            try {
+                if (ClientNetworkService::login(username, password)) {
+                    AT_INFO("Login successfully");
+                    GameManager::changeScene("MenuScene");
+                }
+            } catch (std::runtime_error error) {
+                // print msj on ui
+                AT_ERROR("Login failed: {0}", error.what());
+            }
+        }
+    };
 
     this->gameTitle = Actors::createStaticProp(this->registry,
-                                               {glm::vec3(-1100.0f, 800.0f, 0.0f), 0.0f, glm::vec2(400.0f, 400.0f)},
+                                               {glm::vec3(-1100.0f, 750.0f, 0.0f), 0.0f, glm::vec2(400.0f, 400.0f)},
                                                {"iconAndLogo", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), true}
     );
 
@@ -51,50 +67,38 @@ void LoginScene::onStart() {
 
     // Title
     this->title = Actors::createStaticProp(this->registry,
-                                           {glm::vec3(-1135.0f, 270.0f, 0.0f), 3.0f, glm::vec2(15.0f, 30.0f)},
+                                           {glm::vec3(-1135.0f, 300.0f, 0.0f), 3.0f, glm::vec2(15.0f, 30.0f)},
                                            {"thaleah", "Sign in", true, Color::white()}
     );
 
     // Username textbox
     this->usernameTextBox = Actors::createTextbox(this->registry,
-                                                  {glm::vec3(-1090.0f, 150.0f, 0.0f), 0.0f, glm::vec2(1300.0f, 200.0f)},
+                                                  {glm::vec3(-1090.0f, 180.0f, 0.0f), 0.0f, glm::vec2(1300.0f, 200.0f)},
                                                   {"panel-border-013", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
                                                   {"", "thaleah", Color::white(), 12}
     );
 
     // Password textbox
     this->passwordTextBox = Actors::createTextbox(this->registry,
-                                                  {glm::vec3(-1090.0f, -200.0f, 0.0f), 0.0f, glm::vec2(1300.0f, 200.0f)},
+                                                  {glm::vec3(-1090.0f, -170.0f, 0.0f), 0.0f, glm::vec2(1300.0f, 200.0f)},
                                                   {"panel-border-013", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                                                  {"", "thaleah", Color::white(), 12}
+                                                  {"", "thaleah", Color::white(), 12, 0, false, false, true}
     );
 
     // Login button
     this->loginButton = Actors::createButton(this->registry,
-                                             {glm::vec3(-1090.0f, -550.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 250.0f)},
+                                             {glm::vec3(-1090.0f, -520.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 250.0f)},
                                              {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                                             {
-                                                 "Hex in", "thaleah", Color::black(), false, false, [this]() {
-                                                     if (registry.valid(usernameTextBox) && registry.valid(passwordTextBox)) {
-                                                         const std::string &username = registry.get<TextboxComponent>(this->usernameTextBox).text;
-                                                         const std::string &password = registry.get<TextboxComponent>(this->passwordTextBox).text;
-
-                                                         if (ClientNetworkService::login(username, password)) {
-                                                             std::cout << "Login successful!" << std::endl;
-                                                         } else {
-                                                             std::cerr << "Login failed! Please check your credentials." << std::endl;
-                                                         }
-                                                     }
-                                                 },
-                                                 nullptr, nullptr, Color::white(), Color(109, 52, 133), Color(54, 26, 66)
-                                             }
+                                             {"Hex in", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),
+                                                 loginCallback, nullptr, nullptr}
     );
 
     // Register button
     this->registerButton = Actors::createButton(this->registry,
-                                                {glm::vec3(-1090.0f, -820.0f, 0.0f), 0.0f, glm::vec2(600.0f, 150.0f)},
+                                                {glm::vec3(-1090.0f, -800.0f, 0.0f), 0.0f, glm::vec2(600.0f, 150.0f)},
                                                 {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                                                {"Register", "thaleah", Color::black(), false, false, onRegisterButtonCallback, nullptr, nullptr, Color::white(), Color(109, 52, 133), Color(54, 26, 66)}
+                                                {"Register", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),
+                                                 onRegisterButtonCallback, nullptr, nullptr}
     );
 }
 

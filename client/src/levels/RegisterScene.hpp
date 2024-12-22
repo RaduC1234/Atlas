@@ -20,20 +20,20 @@ public:
     void onDestroy() override;
 
 private:
-    Camera camera{{0.0f, 0.0f}, 0.25f};
+    Camera camera{{0.0f, 0.0f}, 0.5f};
     Registry registry;
 
     RenderSystem renderSystem;
     PawnSystem pawnSystem;
     UISystem uiSystem;
 
-    Actor gameTitle;
     Actor background;
     Actor sideRect;
+    Actor gamelogo;
+    Actor title;
     Actor usernameTextBox;
     Actor passwordTextBox;
-    Actor loginButton;
     Actor registerButton;
-    Actor title;
+    Actor backButton;
 
 };

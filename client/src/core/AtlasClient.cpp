@@ -40,7 +40,7 @@ void AtlasClient::run() {
     sceneFactories["RegisterScene"] = []() { return CreateScope<RegisterScene>(); };
     sceneFactories["GameModeScene"] = []() { return CreateScope<GameModeScene>(); };
 
-    this->changeScene("MenuScene");
+    this->changeScene("LoginScene");
 
     float beginTime = Time::now().toSeconds();
     float endTime;

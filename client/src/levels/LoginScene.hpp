@@ -20,7 +20,7 @@ public:
     void onDestroy() override;
 
 private:
-    Camera camera{{0.0f, 0.0f}, 0.25f};
+    Camera camera{{0.0f, 0.0f}, 0.5f};
     Registry registry;
 
     RenderSystem renderSystem;

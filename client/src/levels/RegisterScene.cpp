@@ -27,6 +27,10 @@ void RegisterScene::onStart() {
     windowRef->centerWindow();
     windowRef->setWindowStyle(Window::Style::UNDECORATED);
 
+    auto onBackButtonCallback = []() {
+        GameManager::changeScene("LoginScene");
+    };
+
     auto registerCallback = [this]() {
         if (registry.valid(usernameTextBox) && registry.valid(passwordTextBox)) {
             const std::string& username = registry.get<TextboxComponent>(this->usernameTextBox).text;
@@ -36,7 +40,7 @@ void RegisterScene::onStart() {
             try {
                 if (ClientNetworkService::reg(username, password)) {
                     AT_INFO("Register successfully");
-
+                    GameManager::changeScene("MenuScene");
                 }
             } catch (std::runtime_error error) {
                 // print msj on ui
@@ -45,49 +49,55 @@ void RegisterScene::onStart() {
         }
     };
 
-
-    this->gameTitle = Actors::createStaticProp(this->registry,
-                                               {glm::vec3(-1100.0f, 800.0f, 0.0f), 0.0f, glm::vec2(400.0f, 400.0f)},
+    this->gamelogo = Actors::createStaticProp(this->registry,
+                                               {glm::vec3(-1100.0f, 750.0f, 0.0f), 0.0f, glm::vec2(400.0f, 400.0f)},
                                                {"iconAndLogo", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), true}
     );
 
     this->sideRect = Actors::createStaticProp(this->registry,
-                                              {glm::vec3(-1100.0f, 0.0f, 4.0f), 0.0f, glm::vec2(1700.0f, 2400.0f)},
+                                              {glm::vec3(-1100.0f, 0.0f, 1.0f), 0.0f, glm::vec2(1700.0f, 2400.0f)},
                                               {"", RenderComponent::defaultTexCoords(), Color(22,22,22,200), true}
     );
 
     // Main background
     this->background = Actors::createStaticProp(this->registry,
-                                                {glm::vec3(0.0f, 0.0f, 4.0f), 0.0f, glm::vec2(1000.0f, 500.0f)},
+                                                {glm::vec3(0.0f, 0.0f, 2.0f), 0.0f, glm::vec2(1000.0f, 500.0f)},
                                                 {"background01", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), true}
     );
 
     // Title
     this->title = Actors::createStaticProp(this->registry,
-                                           {glm::vec3(-1135.0f, 270.0f, 0.0f), 3.0f, glm::vec2(15.0f, 30.0f)},
+                                           {glm::vec3(-1135.0f, 300.0f, 0.0f), 3.0f, glm::vec2(15.0f, 30.0f)},
                                            {"thaleah", "Register", true, Color::white()}
     );
 
     // Username textbox
     this->usernameTextBox = Actors::createTextbox(this->registry,
-                                                  {glm::vec3(-1090.0f, 150.0f, 0.0f), 0.0f, glm::vec2(1300.0f, 200.0f)},
+                                                  {glm::vec3(-1090.0f, 180.0f, 0.0f), 0.0f, glm::vec2(1300.0f, 200.0f)},
                                                   {"panel-border-013", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
                                                   {"", "thaleah", Color::white(), 12}
     );
 
     // Password textbox
     this->passwordTextBox = Actors::createTextbox(this->registry,
-                                                  {glm::vec3(-1090.0f, -200.0f, 0.0f), 0.0f, glm::vec2(1300.0f, 200.0f)},
+                                                  {glm::vec3(-1090.0f, -170.0f, 0.0f), 0.0f, glm::vec2(1300.0f, 200.0f)},
                                                   {"panel-border-013", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                                                  {"", "thaleah", Color::white(), 12}
+                                                  {"", "thaleah", Color::white(), 12, 0, false,false,true}
     );
 
     // Register button
-    this->loginButton = Actors::createButton(this->registry,
-                                             {glm::vec3(-1090.0f, -550.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 250.0f)},
-                                             {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                                             {"Register", "thaleah", Color::black(), false, false, registerCallback, nullptr, nullptr, Color::white(), Color(109, 52, 133), Color(54, 26, 66)}
+    this->registerButton = Actors::createButton(this->registry,
+        {glm::vec3(-1090.0f, -520.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 250.0f)},
+        {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
+        {"Register", "thaleah", Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),
+            registerCallback, nullptr, nullptr}
     );
+
+    this->backButton = Actors::createButton(this->registry,
+            {glm::vec3(-1500.0f, -800.0f, 0.0f), 0.0f, glm::vec2(500.0f, 150.0f)},
+            {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
+            {"Back", "thaleah", Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),
+                onBackButtonCallback, nullptr, nullptr});
 }
 
 void RegisterScene::onUpdate(float deltaTime) {

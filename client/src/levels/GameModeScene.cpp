@@ -49,9 +49,9 @@ void GameModeScene::onStart() {
     this->hexDuelButton = Actors::createButton(this->registry,
             {glm::vec3(-1100.0f, 100.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},
             {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-            {"Hex Duel", "thaleah", Color::black(), false, false, [this]() {
+            {"Hex Duel", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), [this]() {
                 AT_INFO("Hex Duel selected!");
-            }, nullptr, nullptr, Color::white(), Color(74, 58, 112), Color(38, 28, 61)});
+            }, nullptr, nullptr});
 
     this->hexDuelDescription = Actors::createStaticProp(this->registry,
                                              {glm::vec3(-1100.0f, -100.0f, 0.0f), 0.0f, glm::vec2(10.0f, 10.0f)},
@@ -61,9 +61,9 @@ void GameModeScene::onStart() {
     this->hexArenaButton = Actors::createButton(this->registry,
             {glm::vec3(-1100.0f, -300.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},
             {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-            {"Hex Arena", "thaleah", Color::black(), false, false, [this]() {
+            {"Hex Arena", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), [this]() {
                 AT_INFO("Hex Arena selected!");
-            }, nullptr, nullptr, Color::white(), Color(74, 58, 112), Color(38, 28, 61)});
+            }, nullptr, nullptr});
 
     this->hexArenaDescription = Actors::createStaticProp(this->registry,
                                      {glm::vec3(-1100.0f, -500.0f, 0.0f), 0.0f, glm::vec2(10.0f, 10.0f)},
@@ -73,9 +73,9 @@ void GameModeScene::onStart() {
     this->backButton = Actors::createButton(this->registry,
             {glm::vec3(-1500.0f, -800.0f, 0.0f), 0.0f, glm::vec2(500.0f, 150.0f)},
             {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-            {"Back", "thaleah", Color::black(), false, false, [this]() {
+            {"Back", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),  [this]() {
                 AT_INFO("Returning to Menu Scene!");
-            }, nullptr, nullptr, Color::white(), Color(74, 58, 112), Color(38, 28, 61)});
+            }, nullptr, nullptr});
 }
 
 void GameModeScene::onUpdate(float deltaTime) {
@@ -87,9 +87,6 @@ void GameModeScene::onRender(int screenWidth, int screenHeight) {
     const float baseWidth = 1920.0f;
     const float baseHeight = 1080.0f;
     const float baseZoom = 0.5f;
-
-    float aspectRatio = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
-    float baseAspectRatio = baseWidth / baseHeight;
 
     camera.setZoom(baseZoom * (screenWidth / baseWidth));
 

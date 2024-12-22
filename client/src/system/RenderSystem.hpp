@@ -118,12 +118,17 @@ private:
                 textPosition.y -= transform.scale.y * 0.22f;
                 textPosition.z = transform.position.z - 0.1f;
 
+                glm::vec4 currentTextColor = button.isPressed ? button.pressedTextColor :
+                                      button.isHovered ? button.hoverTextColor :
+                                      button.normalTextColor;
+
+
                 RenderManager::drawText(
                     textPosition,
                     button.text,
                     ResourceManager::get<Font>(button.font),
                     transform.scale.y / 20,
-                    button.textColor,
+                    currentTextColor,
                     true
                 );
             }
@@ -141,7 +146,7 @@ private:
 
             RenderManager::drawText(
                 textPosition,
-                textbox.text,
+                textbox.isPassword ? std::string(textbox.text.length(), '*') : textbox.text,
                 ResourceManager::get<Font>(textbox.font),
                 transform.scale.y / 20,
                 textbox.textColor,

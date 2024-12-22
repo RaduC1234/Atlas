@@ -88,11 +88,13 @@ struct RigidBodyComponent {
 
 struct TextboxComponent {
     std::string text; // Reference to external string
+    std::string displayText;
     std::string font;
     glm::vec4 textColor;
     size_t cursorPosition;
     bool isFocused; // Whether the textbox is active
     bool multiline; // Support for multiline text
+    bool isPassword;
     size_t maxLength;
 
     TextboxComponent(std::string textRef,
@@ -101,28 +103,41 @@ struct TextboxComponent {
                      size_t maxLength = 0,
                      size_t cursorPos = 0,
                      bool focused = false,
-                     bool multiline = false)
+                     bool multiline = false,
+                     bool isPassword = false)
         : text(textRef),
           font(font),
           textColor(textColor),
           maxLength(maxLength),
           cursorPosition(cursorPos),
           isFocused(focused),
-          multiline(multiline) {
+          multiline(multiline),
+          isPassword(isPassword){
+        updateDisplayText();
     }
 
     bool canAddCharacter() const {
         return maxLength == 0 || text.length() < maxLength;
     }
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(TextboxComponent, cursorPosition, isFocused, multiline);
+    void updateDisplayText() {
+        if (isPassword) {
+            displayText = std::string(text.length(), '*');
+        } else {
+            displayText = text;
+        }
+    }
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(TextboxComponent, cursorPosition, isFocused, multiline, isPassword);
 };
 
 
 struct ButtonComponent {
     std::string text;
     std::string font;
-    glm::vec4 textColor;
+    glm::vec4 normalTextColor;
+    glm::vec4 hoverTextColor;
+    glm::vec4 pressedTextColor;
     bool isHovered;
     bool isPressed;
     glm::vec4 normalColor;
@@ -134,18 +149,22 @@ struct ButtonComponent {
 
     ButtonComponent(std::string textRef,
                    std::string fontRef,
-                   glm::vec4 color,
+                   glm::vec4 normalTextColor,
+                   glm::vec4 hoverTextColor = glm::vec4(0.8f),
+                   glm::vec4 pressedTextColor = glm::vec4(0.6f),
                    bool hovered = false,
                    bool pressed = false,
+                   glm::vec4 normalColor = glm::vec4(1.0f),
+                   glm::vec4 hoverColor = glm::vec4(0.9f),
+                   glm::vec4 pressedColor = glm::vec4(0.8f),
                    std::function<void()> clickHandler = nullptr,
                    std::function<void()> hoverHandler = nullptr,
-                   std::function<void()> pressHandler = nullptr,
-                   glm::vec4 normalColor = glm::vec4(1.0f),
-                   glm::vec4 hoverColor = glm::vec4(0.9f, 0.9f, 0.9f, 1.0f),
-                   glm::vec4 pressedColor = glm::vec4(0.8f, 0.8f, 0.8f, 1.0f))
+                   std::function<void()> pressHandler = nullptr)
         : text(std::move(textRef)),
           font(std::move(fontRef)),
-          textColor(color),
+          normalTextColor(normalTextColor),
+          hoverTextColor(hoverTextColor),
+          pressedTextColor(pressedTextColor),
           isHovered(hovered),
           isPressed(pressed),
           onClick(std::move(clickHandler)),
@@ -153,7 +172,7 @@ struct ButtonComponent {
           onPressed(std::move(pressHandler)),
           normalColor(normalColor),
           hoverColor(hoverColor),
-          pressedColor(pressedColor){
+          pressedColor(pressedColor) {
     }
 
     ButtonComponent() = default;

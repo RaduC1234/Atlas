@@ -121,6 +121,7 @@ private:
             if (timeSinceLastKeyAction >= keyRepeatDelay) {
                 if (textbox.cursorPosition > 0) {
                     textbox.text.erase(textbox.cursorPosition - 1, 1);
+                    textbox.updateDisplayText();
                     textbox.cursorPosition--;
                 }
                 timeSinceLastKeyAction = 0.0;
@@ -153,6 +154,7 @@ private:
 
             if (textbox.canAddCharacter()) {
                 textbox.text.insert(textbox.cursorPosition, 1, static_cast<char>(typedChar));
+                textbox.updateDisplayText();
                 textbox.cursorPosition++;
             }
         }

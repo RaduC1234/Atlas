@@ -21,53 +21,55 @@ void MenuScene::onCreate() {
 }
 
 void MenuScene::onStart() {
+    const auto &windowRef = GameManager::getWindowRef();
 
-        const auto &windowRef = GameManager::getWindowRef();
+    int newHeight = static_cast<int>(windowRef->getMonitorSize().second * 0.75);
+    int newWidth = (newHeight * 16) / 9;
 
-        int newHeight = static_cast<int>(windowRef->getMonitorSize().second * 0.75);
-        int newWidth = (newHeight * 16) / 9;
-
-        windowRef->setWindowSize(newWidth, newHeight);
-        windowRef->centerWindow();
-        windowRef->setWindowStyle(Window::Style::UNDECORATED);
-
-
-        this->sideRect = Actors::createStaticProp(this->registry,
-                                              {glm::vec3(-1100.0f, -300.0f, 1.0f), 0.0f, glm::vec2(1060.0f, 1000.0f)},
-                                              {"", RenderComponent::defaultTexCoords(), Color(22,22,22,210), true}
-        );
-
-        this->background = Actors::createStaticProp(this->registry, // here
-                                                    {glm::vec3(0.0f, 0.0f, 1.0f), 0.0f, glm::vec2(1000.0f, 500.0f)},
-                                                    {"background01", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), true}
-        );
-
-        this->gameTitle = Actors::createStaticProp(this->registry,
-                                                 {glm::vec3(-1100.0f, 600.0f, 0.0f), 0.0f, glm::vec2(900.0f, 900.0f)},
-                                        {"iconAndLogo", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), true}
-                                        );
+    windowRef->setWindowSize(newWidth, newHeight);
+    windowRef->centerWindow();
+    windowRef->setWindowStyle(Window::Style::UNDECORATED);
 
 
-        this->playButton = Actors::createButton(this->registry,
-        {glm::vec3(-1100.0f, 0.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},
-         {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-         {"Play", "thaleah", Color::black(), false, false, [this]() {
-             AT_INFO("Play button clicked!");
-         }, nullptr, nullptr, Color::white(), Color(74, 58, 112), Color(38, 28, 61)});
+    this->sideRect = Actors::createStaticProp(this->registry,
+                                          {glm::vec3(-1100.0f, -300.0f, 1.0f), 0.0f, glm::vec2(1060.0f, 1000.0f)},
+                                          {"", RenderComponent::defaultTexCoords(), Color(22,22,22,210), true}
+    );
 
-        this->optionsButton = Actors::createButton(this->registry,
-                     {glm::vec3(-1100.0f, -300.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},  // Positioned in the left half and horizontally centered
-                     {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                     {"Options", "thaleah", Color::black(), false, false, [this]() {
+    this->background = Actors::createStaticProp(this->registry, // here
+                                                {glm::vec3(0.0f, 0.0f, 1.0f), 0.0f, glm::vec2(1000.0f, 500.0f)},
+                                                {"background01", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), true}
+    );
+
+    this->gameTitle = Actors::createStaticProp(this->registry,
+                                             {glm::vec3(-1100.0f, 600.0f, 0.0f), 0.0f, glm::vec2(900.0f, 900.0f)},
+                                    {"iconAndLogo", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), true}
+                                    );
+
+
+    this->playButton = Actors::createButton(this->registry,
+    {glm::vec3(-1100.0f, 0.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},
+     {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
+     {"Play", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),
+                     [this]() {
+                         AT_INFO("Play button clicked!");
+                     }, nullptr, nullptr});
+
+    this->optionsButton = Actors::createButton(this->registry,
+                 {glm::vec3(-1100.0f, -300.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},  // Positioned in the left half and horizontally centered
+                 {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
+                 {"Options", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),
+                     [this]() {
                          AT_INFO("Options button clicked!");
-                     }, nullptr, nullptr, Color::white(), Color(74, 58, 112), Color(38, 28, 61)});
+                     }, nullptr, nullptr});
 
-        this->quitButton = Actors::createButton(this->registry,
-                     {glm::vec3(-1100.0f, -600.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},  // Positioned in the left half and horizontally centered
-                     {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                     {"Quit", "thaleah", Color::black(), false, false, [this]() {
+    this->quitButton = Actors::createButton(this->registry,
+                 {glm::vec3(-1100.0f, -600.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},  // Positioned in the left half and horizontally centered
+                 {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
+                 {"Quit", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),
+                     [this]() {
                          AT_INFO("Quit button clicked!");
-                     }, nullptr, nullptr, Color::white(), Color(74,58,112), Color(38, 28, 61)});
+                     }, nullptr, nullptr});
 }
 
 void MenuScene::onUpdate(float deltaTime) {
@@ -96,9 +98,6 @@ void MenuScene::onRender(int screenWidth, int screenHeight) {
     const float baseWidth = 1920.0f;
     const float baseHeight = 1080.0f;
     const float baseZoom = 0.5f;
-
-    float aspectRatio = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
-    float baseAspectRatio = baseWidth / baseHeight;
 
     camera.setZoom(baseZoom * (screenWidth / baseWidth));
 
