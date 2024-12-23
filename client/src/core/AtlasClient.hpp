@@ -20,10 +20,8 @@ private:
 
     std::unordered_map<std::string, std::function<Scope<Scene>()>> sceneFactories;
     std::optional<std::string> requestedScene;
-    std::mutex sceneChangeMutex;
 
     void internalChangeScene(const std::string& sceneName);
-
 };
 
 

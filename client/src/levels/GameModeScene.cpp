@@ -1,6 +1,3 @@
-//
-// Created by Karina on 12/22/2024.
-//
 #include "GameModeScene.hpp"
 
 #include <imgui.h>
@@ -9,6 +6,7 @@
 #include "network/ClientNetworkService.hpp"
 #include "renderer/Color.hpp"
 #include "window/Window.hpp"
+
 
 void GameModeScene::onCreate() {
     ResourceManager::load<Font>("pixelify", "assets/fonts/PixelifySans-Medium.ttf");

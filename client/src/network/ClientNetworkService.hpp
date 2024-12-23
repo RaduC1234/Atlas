@@ -51,7 +51,7 @@ public:
             {"password", password}
         };
 
-        auto response = cpr::Post(
+        auto response = cpr::Get(
             cpr::Url{"http://localhost:8080/login"},
             cpr::Header{{"Content-Type", "application/JsonData"}},
             cpr::Body{requestBody.dump()}
@@ -60,7 +60,7 @@ public:
         try {
             if (response.status_code == 200) {
                 JsonData data = JsonData::parse(response.text);
-                return data["success"].get<bool>();
+                return data["requestStatus"].get<bool>();
             }
         } catch (const std::exception &e) {
             std::cerr << "Error in login request: " << e.what() << std::endl;

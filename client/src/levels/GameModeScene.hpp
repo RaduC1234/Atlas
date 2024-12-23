@@ -1,17 +1,11 @@
-//
-// Created by Karina on 12/21/2024.
-//
 #pragma once
 
-#include <imgui.h>
 #include <Atlas.hpp>
 
+#include "scene/Scene.hpp"
 #include "system/PawnSystem.hpp"
 #include "system/RenderSystem.hpp"
 #include "system/UISystem.hpp"
-#include "network/ClientNetworkService.hpp"
-#include "renderer/Color.hpp"
-#include "scene/Scene.hpp"
 
 class GameModeScene : public Scene {
 public:
