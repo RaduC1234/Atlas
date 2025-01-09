@@ -60,6 +60,7 @@ public:
         try {
             if (response.status_code == 200) {
                 JsonData data = JsonData::parse(response.text);
+                loginToken = data["authToken"].get<uint64_t>();
                 return data["requestStatus"].get<bool>();
             }
         } catch (const std::exception &e) {

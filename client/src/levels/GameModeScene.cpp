@@ -32,50 +32,55 @@ void GameModeScene::onStart() {
         GameManager::changeScene("MenuScene");
     };
 
+    // 1v1
+    auto onHalfMatchButton = []() {
+        AT_INFO("Hex Duel selected!");
+    };
+
+    auto onFullMatchButton = []() {
+        AT_INFO("Hex Arena selected!");
+    };
+
     this->sideRect = Actors::createStaticProp(this->registry,
-                                        {glm::vec3(-1100.0f, 0.0f, 1.0f), 0.0f, glm::vec2(1700.0f, 2400.0f)},
-                                        {"", RenderComponent::defaultTexCoords(), Color(22,22,22,200), true});
+                                              {glm::vec3(-1100.0f, 0.0f, 1.0f), 0.0f, glm::vec2(1700.0f, 2400.0f)},
+                                              {"", RenderComponent::defaultTexCoords(), Color(22, 22, 22, 200), true});
     // Background
     this->background = Actors::createStaticProp(this->registry,
-            {glm::vec3(0.0f, 0.0f, 1.0f), 0.0f, glm::vec2(1000.0f, 500.0f)},
-            {"background01", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), true});
+                                                {glm::vec3(0.0f, 0.0f, 1.0f), 0.0f, glm::vec2(1000.0f, 500.0f)},
+                                                {"background01", RenderComponent::defaultTexCoords(), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), true});
 
 
     // Title
     this->title = Actors::createStaticProp(this->registry,
-                                             {glm::vec3(-1135.0f, 470.0f, 0.0f), 0.0f, glm::vec2(15.0f, 30.0f)},
-                                    {"thaleah", "Select game mode", true, Color::white()}
-        );
+                                           {glm::vec3(-1135.0f, 470.0f, 0.0f), 0.0f, glm::vec2(15.0f, 30.0f)},
+                                           {"thaleah", "Select game mode", true, Color::white()}
+    );
 
     // 1v1 Button
     this->hexDuelButton = Actors::createButton(this->registry,
-            {glm::vec3(-1100.0f, 100.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},
-            {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-            {"Hex Duel", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), [this]() {
-                AT_INFO("Hex Duel selected!");
-            }, nullptr, nullptr});
+                                               {glm::vec3(-1100.0f, 100.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},
+                                               {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
+                                               {"Hex Duel", "thaleah", Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), onHalfMatchButton, nullptr, nullptr});
 
     this->hexDuelDescription = Actors::createStaticProp(this->registry,
-                                             {glm::vec3(-1100.0f, -100.0f, 0.0f), 0.0f, glm::vec2(10.0f, 10.0f)},
-                                    {"thaleah", "1v1", true, Color::white()});
+                                                        {glm::vec3(-1100.0f, -100.0f, 0.0f), 0.0f, glm::vec2(10.0f, 10.0f)},
+                                                        {"thaleah", "1v1", true, Color::white()});
 
     // 1v1v1v1 Button
     this->hexArenaButton = Actors::createButton(this->registry,
-            {glm::vec3(-1100.0f, -300.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},
-            {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-            {"Hex Arena", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), [this]() {
-                AT_INFO("Hex Arena selected!");
-            }, nullptr, nullptr});
+                                                {glm::vec3(-1100.0f, -300.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},
+                                                {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
+                                                {"Hex Arena", "thaleah", Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), onFullMatchButton, nullptr, nullptr});
 
     this->hexArenaDescription = Actors::createStaticProp(this->registry,
-                                     {glm::vec3(-1100.0f, -500.0f, 0.0f), 0.0f, glm::vec2(10.0f, 10.0f)},
-                            {"thaleah", "1v1v1v1", true, Color::white()});
+                                                         {glm::vec3(-1100.0f, -500.0f, 0.0f), 0.0f, glm::vec2(10.0f, 10.0f)},
+                                                         {"thaleah", "1v1v1v1", true, Color::white()});
 
     // Back Button
     this->backButton = Actors::createButton(this->registry,
-            {glm::vec3(-1500.0f, -800.0f, 0.0f), 0.0f, glm::vec2(500.0f, 150.0f)},
-            {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-            {"Back", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), onBackButtonCallback, nullptr, nullptr});
+                                            {glm::vec3(-1500.0f, -800.0f, 0.0f), 0.0f, glm::vec2(500.0f, 150.0f)},
+                                            {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
+                                            {"Back", "thaleah", Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), onBackButtonCallback, nullptr, nullptr});
 }
 
 void GameModeScene::onUpdate(float deltaTime) {
@@ -107,4 +112,3 @@ void GameModeScene::onRender(int screenWidth, int screenHeight) {
 void GameModeScene::onDestroy() {
     ResourceManager::clearAll();
 }
-

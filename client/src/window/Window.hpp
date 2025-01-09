@@ -4,13 +4,14 @@
 #include <GLFW/glfw3.h>
 #include <Atlas.hpp>
 
-
 class Window {
 public:
 
-    enum Style {
-        DECORATED,
-        UNDECORATED
+    enum Style : uint32_t {
+        DECORATED = BIT(0),
+        UNDECORATED = BIT(1),
+        MAXIMEZED = BIT(2),
+        MINIMIZED = BIT(3)
     };
 
     using CloseCallback = std::function<void()>;
@@ -25,7 +26,7 @@ public:
 
     void setWindowSize(int newWidth, int newHeight);
 
-    void setWindowStyle(Style style);
+    void setWindowStyle(uint32_t style);
 
     int getWidth() const {
         return width;

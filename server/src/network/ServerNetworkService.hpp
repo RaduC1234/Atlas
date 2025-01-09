@@ -90,7 +90,7 @@ public:
             const auto authToken = Uuid::randomUUID().getMostSignificantBits();
             this->players[authToken] = *it;
 
-            return crow::response(HttpStatus::OK, std::format(R"({{"requestStatus": 1, "authToken": "{0}"}})", authToken));
+            return crow::response(HttpStatus::OK, std::format(R"({{"requestStatus": true, "authToken": "{0}"}})", authToken));
         });
 
         CROW_ROUTE(app, "/matchmaking")([this](const crow::request &req) {

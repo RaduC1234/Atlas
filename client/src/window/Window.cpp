@@ -150,10 +150,8 @@ Window::~Window() {
 
 // TODO: custom and modular way of loading and setting custom cursors
 void Window::onUpdate() const {
-
     if (Mouse::currentCursor == Mouse::Cursors::DEFAULT) {
         glfwSetCursor(this->glfwWindow, this->defaultCursor);
-
     } else if (Mouse::currentCursor == Mouse::Cursors::TEXT) {
         glfwSetCursor(this->glfwWindow, this->textCursor);
     }
@@ -180,13 +178,13 @@ void Window::centerWindow() const {
         return;
     }
 
-    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    GLFWmonitor *monitor = glfwGetPrimaryMonitor();
     if (!monitor) {
         AT_ERROR("Failed to get primary monitor");
         return;
     }
 
-    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    const GLFWvidmode *mode = glfwGetVideoMode(monitor);
     if (!mode) {
         AT_ERROR("Failed to get video mode of primary monitor");
         return;
@@ -215,14 +213,14 @@ std::pair<int, int> Window::getMonitorSize() {
         throw std::runtime_error("Failed to initialize GLFW");
     }
 
-    GLFWmonitor* monitor = glfwGetWindowMonitor(this->glfwWindow);
+    GLFWmonitor *monitor = glfwGetWindowMonitor(this->glfwWindow);
     if (!monitor) {
         int windowX, windowY, windowWidth, windowHeight;
         glfwGetWindowPos(this->glfwWindow, &windowX, &windowY);
         glfwGetWindowSize(this->glfwWindow, &windowWidth, &windowHeight);
 
         int monitorCount;
-        GLFWmonitor** monitors = glfwGetMonitors(&monitorCount);
+        GLFWmonitor **monitors = glfwGetMonitors(&monitorCount);
         if (!monitors) {
             throw std::runtime_error("Failed to get monitors");
         }
@@ -235,7 +233,7 @@ std::pair<int, int> Window::getMonitorSize() {
                 windowY >= monitorY && windowY < monitorY + monitorHeight) {
                 monitor = monitors[i];
                 break;
-                }
+            }
         }
 
         if (!monitor) {
@@ -261,29 +259,31 @@ void Window::setWindowIcon(GLFWwindow *window, const char *iconPath) {
     }
 }
 
-void Window::setWindowStyle(Style style) {
+void Window::setWindowStyle(uint32_t style) {
     if (this->glfwWindow == nullptr) {
         AT_ERROR("GLFW window not initialized");
         return;
     }
 
-    switch (style) {
-        case DECORATED:
-            glfwSetWindowAttrib(this->glfwWindow, GLFW_DECORATED, GLFW_TRUE);
-        break;
-        case UNDECORATED:
-            glfwSetWindowAttrib(this->glfwWindow, GLFW_DECORATED, GLFW_FALSE);
-        break;
-        default:
-            AT_ERROR("Unknown window style");
-        break;
+    if (style & Style::DECORATED) {
+        glfwSetWindowAttrib(this->glfwWindow, GLFW_DECORATED, GLFW_TRUE);
+
+    } else if (style & Style::UNDECORATED) {
+        glfwSetWindowAttrib(this->glfwWindow, GLFW_DECORATED, GLFW_FALSE);
+
+    } else if (style & Style::MAXIMEZED) {
+        glfwSetWindowAttrib(this->glfwWindow, GLFW_MAXIMIZED, GLFW_TRUE);
+
+    } else if (style & Style::MINIMIZED) {
+        glfwSetWindowAttrib(this->glfwWindow, GLFW_MAXIMIZED, GLFW_FALSE);
     }
+
     glfwRestoreWindow(this->glfwWindow);
 }
 
-GLFWcursor * Window::loadCustomCursor(const char *cursorImagePath, int hotspotX, int hotspotY) {
+GLFWcursor *Window::loadCustomCursor(const char *cursorImagePath, int hotspotX, int hotspotY) {
     int width, height, channels;
-    unsigned char* imageData = stbi_load(cursorImagePath, &width, &height, &channels, 4); // Force 4 channels (RGBA)
+    unsigned char *imageData = stbi_load(cursorImagePath, &width, &height, &channels, 4); // Force 4 channels (RGBA)
 
     if (!imageData) {
         AT_ERROR("Failed to load cursor image: {0}", cursorImagePath)
@@ -296,7 +296,7 @@ GLFWcursor * Window::loadCustomCursor(const char *cursorImagePath, int hotspotX,
     glfwImage.pixels = imageData;
 
 
-    GLFWcursor* cursor = glfwCreateCursor(&glfwImage, hotspotX, hotspotY);
+    GLFWcursor *cursor = glfwCreateCursor(&glfwImage, hotspotX, hotspotY);
     if (!cursor) {
         AT_ERROR("Failed to create custom cursor");
         stbi_image_free(imageData);
@@ -307,4 +307,3 @@ GLFWcursor * Window::loadCustomCursor(const char *cursorImagePath, int hotspotX,
 
     return cursor;
 }
-
