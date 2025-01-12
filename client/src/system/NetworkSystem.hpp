@@ -8,6 +8,7 @@
 #include <atomic>
 #include <mutex>
 #include "renderer/Color.hpp"
+#include "window/Keyboard.hpp"
 
 class NetworkSystem {
 public:
@@ -23,9 +24,20 @@ private:
     std::mutex registryMutex; // Ensure safe registry modification
 
     void syncEntities(entt::registry &registry, uint64_t playerId) {
+        nlohmann::json input;
+
+        input["moveForward"] = Keyboard::isKeyPressed(Keyboard::W);
+        input["moveBackwards"] = Keyboard::isKeyPressed(Keyboard::S);
+        input["moveLeft"] = Keyboard::isKeyPressed(Keyboard::A);
+        input["moveRight"] = Keyboard::isKeyPressed(Keyboard::D);
+
         auto response = cpr::Post(
             cpr::Url{"http://localhost:8080/sync_entities"},
-            cpr::Body(nlohmann::json{{"playerId", playerId}}.dump()),
+            cpr::Body(nlohmann::json{
+                {"playerId", playerId},
+                {"input", input}
+            }.dump()),
+
             cpr::Header{{"Content-Type", "application/json"}}
         );
 
@@ -49,7 +61,8 @@ private:
         registry.clear(); // Clear all entities
 
         for (const auto &entityData: jsonResponse["entities"]) {
-            auto entity = registry.create();auto type = static_cast<EntityType>(entityData["entityType"].get<int>());
+            auto entity = registry.create();
+            auto type = static_cast<EntityType>(entityData["entityType"].get<int>());
             auto tileCode = entityData["tile-code"].get<uint32_t>();
             std::string textureName = "";
 
@@ -66,10 +79,18 @@ private:
             );
 
             switch (type) {
-                case PAWN:
-                    registry.emplace<PawnComponent>(entity,playerId);
+                case PAWN: {
+                    bool forward = entityData["PawnComponent"]["moveForward"];
+                    bool backwards = entityData["PawnComponent"]["moveBackwards"];
+                    bool left = entityData["PawnComponent"]["moveLeft"];
+                    bool right = entityData["PawnComponent"]["moveRight"];
+                    registry.emplace<PawnComponent>(entity, entityData["PawnComponent"]["playerId"], forward, backwards, left, right, 0.0f);
 
-                case STATIC:
+                    if (!forward && !backwards && !left && !right) {
+                        textureName = "front1";
+                    }
+                }
+                case STATIC: {
                     registry.emplace<TransformComponent>(
                         entity,
                         glm::vec3(entityData["TransformComponent"]["position"][0],
@@ -87,6 +108,7 @@ private:
                         Color::white()
                     );
                     break;
+                }
             }
         }
     }

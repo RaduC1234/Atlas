@@ -63,9 +63,22 @@ public:
                 {"scale", {transform.scale.x, transform.scale.y}}
             };
 
+            if (registry.any_of<PawnComponent>(entity)) {
+                auto &pawn = registry.get<PawnComponent>(entity);
+                entityJson["PawnComponent"] = {
+                    {"playerId", pawn.playerId},
+                    {"moveForward", pawn.moveForward},
+                    {"moveBackwards", pawn.moveBackwards},
+                    {"moveLeft", pawn.moveLeft},
+                    {"moveRight", pawn.moveRight},
+                    {"aimRotation", pawn.aimRotation}
+                };
+            }
+
             outJson["entities"].push_back(entityJson);
         }
     }
+
 
     uint64_t nextId() {
         return entId++;
@@ -185,7 +198,7 @@ public:
                 auto requestBody = nlohmann::json::parse(req.body);
                 uint64_t playerId = requestBody["playerId"].get<uint64_t>();
 
-                return handleSyncRequest(playerId);
+                return handleSyncRequest(playerId, requestBody["input"]);
             } catch (const std::exception &e) {
                 return crow::response(400, std::string("Error parsing request: ") + e.what());
             }
@@ -208,7 +221,8 @@ private:
     std::atomic_bool running;
     std::mutex handlerMutex;
 
-    crow::response handleSyncRequest(uint64_t playerId) {
+    crow::response handleSyncRequest(uint64_t playerId, nlohmann::json input) {
+        std::cout << input.dump() << "\n";
         for (Lobby &lobby: lobbies) {
             if (lobby.containsPlayer(playerId)) {
                 nlohmann::json responseJson;
