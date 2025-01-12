@@ -1,15 +1,15 @@
 #pragma once
-//after im done I will put the somehow use the Core.hpp from engine IDK why I cant put it here
+
 #include <memory>
 #include <vector>
 #include <unordered_map>
 #include <typeindex>
 #include <queue>
 #include <bitset>
-#include <algorithm>
 #include <iostream>
+#include <algorithm>
 #include "Actor.hpp"
-#include <ranges>
+
 constexpr std::size_t MAX_COMPONENTS = 64;
 
 class ComponentTypeRegistry {
@@ -48,16 +48,10 @@ public:
     friend class View;
 
     Registry() = default;
-    ~Registry() = default;
 
     Actor createEntity() {
-        Actor::IdType id;
-        if (!freeIds.empty()) {
-            id = freeIds.front();
-            freeIds.pop();
-        } else {
-            id = nextEntityId++;
-        }
+        Actor::IdType id = (freeIds.empty()) ? nextEntityId++ : freeIds.front();
+        if (!freeIds.empty()) freeIds.pop();
 
         Actor actor(id, this);
         entities.push_back(actor);
@@ -71,13 +65,12 @@ public:
             throw std::runtime_error("Invalid entity or entity does not belong to this registry.");
         }
 
-        for (auto& map : components | std::views::values) {
+        for (auto& [type, map] : components) {
             map->remove(entity.getId());
         }
 
         entityMasks.erase(entity.getId());
         freeIds.push(entity.getId());
-
         std::erase_if(entities, [entity](const Actor& e) { return e == entity; });
 
         std::cout << "Destroyed entity: " << entity.getId() << std::endl;
