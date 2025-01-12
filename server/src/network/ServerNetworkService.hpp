@@ -6,6 +6,7 @@
 #include "Packet.hpp"
 #include "ServerRequest.hpp"
 #include "data/DatabaseManager.hpp"
+#include "map/MapManager.hpp"
 
 struct Lobby {
     std::unordered_map<uint64_t, Player> player;
@@ -93,6 +94,16 @@ public:
             return crow::response(HttpStatus::OK, std::format(R"({{"requestStatus": true, "authToken": "{0}"}})", authToken));
         });
 
+        CROW_ROUTE(app, "/getMap")([this]() {
+            try {
+                std::string serializedMap = mapManager.getSerializedMapState();  // Correctly access mapManager
+                return crow::response(serializedMap); // Send the serialized map JSON
+            } catch (const std::exception& e) {
+                return crow::response(500, "Failed to retrieve map: " + std::string(e.what()));
+            }
+        });
+
+
         CROW_ROUTE(app, "/matchmaking")([this](const crow::request &req) {
             try {
 
@@ -132,7 +143,7 @@ private:
     std::atomic_bool running;
     std::vector<Lobby> lobbies;
     std::unordered_map<uint64_t, Player> players; // token, player
-
+    MapManager mapManager;
     std::mutex handlerMutex;
     std::unordered_map<uint32_t, Ref<ServerRequest> > handlers;
 
