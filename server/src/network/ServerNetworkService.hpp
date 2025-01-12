@@ -222,9 +222,30 @@ private:
     std::mutex handlerMutex;
 
     crow::response handleSyncRequest(uint64_t playerId, nlohmann::json input) {
-        std::cout << input.dump() << "\n";
         for (Lobby &lobby: lobbies) {
             if (lobby.containsPlayer(playerId)) {
+
+                auto view = lobby.registry.view<PawnComponent, TransformComponent>();
+                for (auto entity : view) {
+                    auto &pawn = view.get<PawnComponent>(entity);
+                    auto &transform = view.get<TransformComponent>(entity);
+
+                    if (pawn.playerId == playerId) {
+
+                        pawn.moveForward = input.value("moveForward", false);
+                        pawn.moveBackwards = input.value("moveBackwards", false);
+                        pawn.moveLeft = input.value("moveLeft", false);
+                        pawn.moveRight = input.value("moveRight", false);
+                        pawn.aimRotation = input.value("aimRotation", 0.0f);
+
+                        float speed = 25.0f;
+                        if (pawn.moveForward) transform.position.y += speed;
+                        if (pawn.moveBackwards) transform.position.y -= speed;
+                        if (pawn.moveLeft) transform.position.x -= speed;
+                        if (pawn.moveRight) transform.position.x += speed;
+                    }
+                }
+
                 nlohmann::json responseJson;
                 lobby.serializeRegistry(responseJson);
                 return crow::response(responseJson.dump());
