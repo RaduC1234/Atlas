@@ -3,7 +3,7 @@
 #include <Atlas.hpp>
 
 enum class TileType : uint8_t {
-    Empty = 0,
+    Path = 0,
     Grass = 1,
     Bush = 2,
     DestructibleWall = 3,
@@ -14,17 +14,17 @@ enum class TileType : uint8_t {
 };
 
 struct MapTile {
-    TileType type{TileType::Empty};
+    TileType type{TileType::Path};
     bool revealed{true};
     bool damaged{false};  // For the breakable walls
     bool walkable{true};  // collision flag
 
-    MapTile(TileType t = TileType::Empty) : type(t) {
+    MapTile(TileType t = TileType::Path) : type(t) {
         updateProperties();
     }
 
     void updateProperties() {
-        walkable = (type == TileType::Empty || type == TileType::Grass ||
+        walkable = (type == TileType::Path || type == TileType::Grass ||
                    type == TileType::HealthPickup || type == TileType::SpeedBoost);
     }
 
