@@ -2,61 +2,92 @@
 
 #include <Atlas.hpp>
 #include <cpr/cpr.h>
+#include <nlohmann/json.hpp>
+#include <thread>
+#include <future>
+#include <atomic>
+#include <mutex>
+#include "renderer/Color.hpp"
 
 class NetworkSystem {
 public:
-    NetworkSystem() {
-
-    }
-
-    // game thread
-    void update(float deltaTime, entt::registry &registry) {
-        auto view = registry.view<TransformComponent, PawnComponent>();
-
-        for (auto entity : view) {
-            auto &transform = view.get<TransformComponent>(entity);
-            auto &pawn = view.get<PawnComponent>(entity);
-
-            std::thread([deltaTime, pawn, &transform, &registry, entity]() {
-                try {
-                    // Serialize input data to JSON
-                    nlohmann::json inputJson = {
-                        {"moveForward", pawn.moveForward},
-                        {"moveBackwards", pawn.moveBackwards},
-                        {"moveLeft", pawn.moveLeft},
-                        {"moveRight", pawn.moveRight}
-                    };
-
-                    cpr::Response response = cpr::Post(
-                        cpr::Url{"http://localhost:8080/"},
-                        cpr::Header{{"Content-Type", "application/json"}},
-                        cpr::Body{inputJson.dump()}
-                    );
-
-                    if (response.error) {
-                        std::cerr << "Failed to send input to server: " << response.error.message << "\n";
-                        return;
-                    }
-
-                    if (response.status_code == 200) {
-                        auto responseJson = nlohmann::json::parse(response.text);
-                        glm::vec3 newPosition = {
-                            responseJson["x"].get<float>(),
-                            responseJson["y"].get<float>(),
-                            responseJson["z"].get<float>()
-                        };
-
-                        registry.get<TransformComponent>(entity).position = newPosition;
-                    } else {
-                        std::cerr << "Server error: " << response.status_code << "\n";
-                        std::cerr << "Response: " << response.text << "\n";
-                    }
-                } catch (const std::exception &e) {
-                    std::cerr << "Exception in network thread: " << e.what() << "\n";
-                }
-            }).detach();
+    void update(float deltaTime, entt::registry &registry, uint64_t playerId) {
+        if (!isSyncing.exchange(true)) {
+            // Prevent multiple requests
+            std::async(std::launch::async, &NetworkSystem::syncEntities, this, std::ref(registry), playerId);
         }
     }
-private:
 
+private:
+    std::atomic<bool> isSyncing{false}; // Prevent duplicate requests
+    std::mutex registryMutex; // Ensure safe registry modification
+
+    void syncEntities(entt::registry &registry, uint64_t playerId) {
+        auto response = cpr::Post(
+            cpr::Url{"http://localhost:8080/sync_entities"},
+            cpr::Body(nlohmann::json{{"playerId", playerId}}.dump()),
+            cpr::Header{{"Content-Type", "application/json"}}
+        );
+
+        if (response.status_code != 200) {
+            std::cerr << "Sync failed: " << response.status_code << std::endl;
+            isSyncing = false; // Reset flag
+            return;
+        }
+
+        try {
+            auto jsonResponse = nlohmann::json::parse(response.text);
+            overwriteRegistry(jsonResponse, registry, playerId);
+        } catch (const std::exception &e) {
+            std::cerr << "Error parsing sync response: " << e.what() << std::endl;
+        }
+
+        isSyncing = false; // Reset flag after completion
+    }
+
+    void overwriteRegistry(const nlohmann::json &jsonResponse, entt::registry &registry, uint64_t playerId) {
+        registry.clear(); // Clear all entities
+
+        for (const auto &entityData: jsonResponse["entities"]) {
+            auto entity = registry.create();auto type = static_cast<EntityType>(entityData["entityType"].get<int>());
+            auto tileCode = entityData["tile-code"].get<uint32_t>();
+            std::string textureName = "";
+
+            if (tileCode >= EntityCode::TILE_CODE && tileCode < EntityCode::TILE_CODE + EntityCode::NEXT) {
+                std::ostringstream oss;
+                oss << "tile_" << std::setw(4) << std::setfill('0') << (tileCode % 10000);
+                textureName = oss.str();
+            }
+
+            registry.emplace<NetworkComponent>(
+                entity,
+                entityData["networkId"].get<uint64_t>(),
+                type
+            );
+
+            switch (type) {
+                case PAWN:
+                    registry.emplace<PawnComponent>(entity,playerId);
+
+                case STATIC:
+                    registry.emplace<TransformComponent>(
+                        entity,
+                        glm::vec3(entityData["TransformComponent"]["position"][0],
+                                  entityData["TransformComponent"]["position"][1],
+                                  entityData["TransformComponent"]["position"][2]),
+                        entityData["TransformComponent"]["rotation"],
+                        glm::vec2(entityData["TransformComponent"]["scale"][0],
+                                  entityData["TransformComponent"]["scale"][1])
+                    );
+
+                    registry.emplace<RenderComponent>(
+                        entity,
+                        textureName,
+                        RenderComponent::defaultTexCoords(),
+                        Color::white()
+                    );
+                    break;
+            }
+        }
+    }
 };

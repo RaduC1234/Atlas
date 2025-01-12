@@ -15,13 +15,6 @@ public:
         AT_INFO("Server URL is: {0}", serverUrl);
     }
 
-    template<typename T, typename... Args>
-    static void addRequestTemplate(Args &&... args);
-
-    template<typename T>
-    static void sendRequestAsync();
-
-
     static bool reg(const std::string &username, const std::string &password) {
         JsonData requestBody = {
             {"username", username},

@@ -4,6 +4,24 @@
 
 #include "resource/Animation.hpp"
 
+enum EntityCode : uint32_t {
+    NEXT = 10000,
+    TILE_CODE = 10000,
+};
+
+enum EntityType {
+    STATIC,
+    PAWN
+};
+
+struct NetworkComponent {
+    uint64_t networkId;
+    EntityType entityType;
+    uint32_t tileCode; // code, x, x, x -> 1 for tiles xxx for number
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(NetworkComponent, networkId, entityType, tileCode);
+};
+
 struct TransformComponent {
     glm::vec3 position;
     float rotation;
@@ -72,7 +90,7 @@ struct RenderComponent {
 };
 
 struct PawnComponent {
-    uint32_t playerId{0};
+    uint64_t playerId{0};
     bool moveForward{false};
     bool moveBackwards{false};
     bool moveLeft{false};
@@ -112,7 +130,7 @@ struct TextboxComponent {
           cursorPosition(cursorPos),
           isFocused(focused),
           multiline(multiline),
-          isPassword(isPassword){
+          isPassword(isPassword) {
         updateDisplayText();
     }
 
@@ -148,18 +166,18 @@ struct ButtonComponent {
     std::function<void()> onPressed;
 
     ButtonComponent(std::string textRef,
-                   std::string fontRef,
-                   glm::vec4 normalTextColor,
-                   glm::vec4 hoverTextColor = glm::vec4(0.8f),
-                   glm::vec4 pressedTextColor = glm::vec4(0.6f),
-                   bool hovered = false,
-                   bool pressed = false,
-                   glm::vec4 normalColor = glm::vec4(1.0f),
-                   glm::vec4 hoverColor = glm::vec4(0.9f),
-                   glm::vec4 pressedColor = glm::vec4(0.8f),
-                   std::function<void()> clickHandler = nullptr,
-                   std::function<void()> hoverHandler = nullptr,
-                   std::function<void()> pressHandler = nullptr)
+                    std::string fontRef,
+                    glm::vec4 normalTextColor,
+                    glm::vec4 hoverTextColor = glm::vec4(0.8f),
+                    glm::vec4 pressedTextColor = glm::vec4(0.6f),
+                    bool hovered = false,
+                    bool pressed = false,
+                    glm::vec4 normalColor = glm::vec4(1.0f),
+                    glm::vec4 hoverColor = glm::vec4(0.9f),
+                    glm::vec4 pressedColor = glm::vec4(0.8f),
+                    std::function<void()> clickHandler = nullptr,
+                    std::function<void()> hoverHandler = nullptr,
+                    std::function<void()> pressHandler = nullptr)
         : text(std::move(textRef)),
           font(std::move(fontRef)),
           normalTextColor(normalTextColor),
@@ -179,7 +197,6 @@ struct ButtonComponent {
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(ButtonComponent, isHovered, isPressed);
 };
-
 
 
 //=========================================================================================

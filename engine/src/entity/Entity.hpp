@@ -2,6 +2,7 @@
 #include <entt/entt.hpp>
 
 #include "Components.hpp"
+#include "utils/Uuid.hpp"
 
 using Registry = entt::registry;
 using Actor = entt::entity;
