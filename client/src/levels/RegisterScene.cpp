@@ -40,7 +40,6 @@ void RegisterScene::onStart() {
             try {
                 if (ClientNetworkService::reg(username, password)) {
                     AT_INFO("Register successfully");
-                    GameManager::changeScene("MenuScene");
                 }
             } catch (std::runtime_error error) {
                 // print msj on ui
@@ -89,14 +88,14 @@ void RegisterScene::onStart() {
     this->registerButton = Actors::createButton(this->registry,
         {glm::vec3(-1090.0f, -520.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 250.0f)},
         {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-        {"Register", "thaleah", Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),
+        {"Register", "thaleah", Color::black(), Color::white(), Color::white(), Color::black(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), Color::gray(), false,
             registerCallback, nullptr, nullptr}
     );
 
     this->backButton = Actors::createButton(this->registry,
             {glm::vec3(-1500.0f, -800.0f, 0.0f), 0.0f, glm::vec2(500.0f, 150.0f)},
             {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-            {"Back", "thaleah", Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),
+            {"Back", "thaleah", Color::black(), Color::white(), Color::white(), Color::black(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), Color::gray(), false,
                 onBackButtonCallback, nullptr, nullptr});
 }
 

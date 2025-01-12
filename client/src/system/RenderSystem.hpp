@@ -120,7 +120,7 @@ private:
 
                 glm::vec4 currentTextColor = button.isPressed ? button.pressedTextColor :
                                       button.isHovered ? button.hoverTextColor :
-                                      button.normalTextColor;
+                                      button.isDisabled ? button.disabledTextColor : button.normalTextColor;
 
 
                 RenderManager::drawText(

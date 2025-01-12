@@ -60,6 +60,17 @@ public:
             auto& render = buttonView.get<RenderComponent>(entity);
             auto& button = buttonView.get<ButtonComponent>(entity);
 
+            bool isDisabled = button.isDisabled || registry.all_of<DisabledComponent>(entity);
+
+            if (isDisabled) {
+                // Ensure disabled state is consistent
+                button.isHovered = false;
+                button.isPressed = false;
+                render.color = button.disabledColor;
+                Mouse::setCursor(Mouse::Cursors::DEFAULT);
+                continue;
+            }
+
             if (isMouseOver(worldCoords, transform)) {
                 Mouse::setCursor(Mouse::Cursors::DEFAULT);
 
@@ -171,6 +182,11 @@ private:
         }
     }
 
+    static bool isButtonDisabled(Registry& registry, entt::entity entity) {
+        return registry.all_of<DisabledComponent>(entity) &&
+               registry.get<DisabledComponent>(entity).isDisabled;
+    }
+
     constexpr void removeCursor(TextboxComponent &textbox) {
         size_t cursorIndex = textbox.text.find('|');
         if (cursorIndex != std::string::npos) {
@@ -198,7 +214,10 @@ private:
             render.color = button.pressedColor;
         } else if (button.isHovered) {
             render.color = button.hoverColor;
-        } else {
+        } else if (button.isDisabled) {
+            render.color = button.disabledColor;
+        }
+        else {
             render.color = button.normalColor;
         }
     }

@@ -54,13 +54,13 @@ void MenuScene::onStart() {
     this->playButton = Actors::createButton(this->registry,
     {glm::vec3(-1100.0f, 0.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},
      {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-     {"Play", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),
-        onPlayButtonCallback, nullptr, nullptr});
+     {"Play", "thaleah",  Color::black(), Color::white(), Color::white(), Color::black(),false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),
+        Color::gray(),false,onPlayButtonCallback, nullptr, nullptr});
 
     this->optionsButton = Actors::createButton(this->registry,
                  {glm::vec3(-1100.0f, -300.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},  // Positioned in the left half and horizontally centered
                  {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                 {"Options", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),
+                 {"Options", "thaleah",  Color::black(), Color::white(), Color::white(), Color::black(),false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),Color::gray(), false,
                      [this]() {
                          AT_INFO("Options button clicked!");
                      }, nullptr, nullptr});
@@ -68,7 +68,7 @@ void MenuScene::onStart() {
     this->quitButton = Actors::createButton(this->registry,
                  {glm::vec3(-1100.0f, -600.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},  // Positioned in the left half and horizontally centered
                  {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                 {"Quit", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),
+                 {"Quit", "thaleah",  Color::black(), Color::white(), Color::white(), Color::black(),false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),Color::gray(), false,
                      [this]() {
                          AT_INFO("Quit button clicked!");
                      }, nullptr, nullptr});

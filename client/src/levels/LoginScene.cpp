@@ -89,16 +89,16 @@ void LoginScene::onStart() {
     this->loginButton = Actors::createButton(this->registry,
                                              {glm::vec3(-1090.0f, -520.0f, 0.0f), 0.0f, glm::vec2(1000.0f, 250.0f)},
                                              {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                                             {"Hex in", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),
-                                                 loginCallback, nullptr, nullptr}
+                                             {"Hex in", "thaleah",  Color::black(), Color::white(), Color::white(), Color::black(),false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),
+                                                 Color::gray(),false,loginCallback, nullptr, nullptr}
     );
 
     // Register button
     this->registerButton = Actors::createButton(this->registry,
                                                 {glm::vec3(-1090.0f, -800.0f, 0.0f), 0.0f, glm::vec2(600.0f, 150.0f)},
                                                 {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                                                {"Register", "thaleah",  Color::black(), Color::white(), Color::white(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),
-                                                 onRegisterButtonCallback, nullptr, nullptr}
+                                                {"Register", "thaleah",  Color::black(), Color::white(), Color::white(), Color::black(),false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66),
+                                                 Color::gray(),false,onRegisterButtonCallback, nullptr, nullptr}
     );
 }
 

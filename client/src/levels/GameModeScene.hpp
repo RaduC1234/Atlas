@@ -11,6 +11,10 @@ class GameModeScene : public Scene {
 public:
     void onCreate() override;
 
+    void disableButtons();
+
+    void enableButtons();
+
     void onStart() override;
 
     void onUpdate(float deltaTime) override;
@@ -22,6 +26,11 @@ public:
 private:
     Camera camera{{0.0f, 0.0f}, 0.5f};
     Registry registry;
+
+    bool hexDuelpressed = false;
+    bool hexArenapressed = false;
+    bool hexDuelDisabled = false;
+    bool hexArenaDisabled = false;
 
     RenderSystem renderSystem;
     PawnSystem pawnSystem;
@@ -35,5 +44,7 @@ private:
     Actor hexArenaDescription;
     Actor hexArenaButton;
     Actor backButton;
+    Actor findDuelButton;
+    Actor findArenaButton;
+    Actor stopFindingButton;
 };
-

@@ -25,8 +25,6 @@ struct RenderComponent {
     uint32_t shape; // 0 for quads, 1 for circles, 2 for text
     std::string textureKey; // Background texture for quads
     glm::vec4 color; // Primary color for quads or text
-    glm::vec4 borderColor; // Border color (optional)
-    float borderWidth; // Border width (optional)
     std::string text; // Rendered text (if shape == 2)
     std::string fontKey; // Font key for text rendering
     TextureCoords coords; // Texture coordinates for quads
@@ -68,7 +66,7 @@ struct RenderComponent {
         };
     }
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(RenderComponent, textureKey, coords, color, borderColor, borderWidth, shape, text, fontKey, isCentered);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(RenderComponent, textureKey, coords, color, shape, text, fontKey, isCentered);
 };
 
 struct PawnComponent {
@@ -138,11 +136,14 @@ struct ButtonComponent {
     glm::vec4 normalTextColor;
     glm::vec4 hoverTextColor;
     glm::vec4 pressedTextColor;
+    glm::vec4 disabledTextColor; // Color when the button is disabled
     bool isHovered;
     bool isPressed;
     glm::vec4 normalColor;
     glm::vec4 hoverColor;
     glm::vec4 pressedColor;
+    glm::vec4 disabledColor; // Color when the button is disabled
+    bool isDisabled; // New field for disabled state
     std::function<void()> onClick;
     std::function<void()> onHover;
     std::function<void()> onPressed;
@@ -152,11 +153,14 @@ struct ButtonComponent {
                    glm::vec4 normalTextColor,
                    glm::vec4 hoverTextColor = glm::vec4(0.8f),
                    glm::vec4 pressedTextColor = glm::vec4(0.6f),
+                   glm::vec4 disabledTextColor = glm::vec4(0.5f), // Default disabled text color
                    bool hovered = false,
                    bool pressed = false,
                    glm::vec4 normalColor = glm::vec4(1.0f),
                    glm::vec4 hoverColor = glm::vec4(0.9f),
                    glm::vec4 pressedColor = glm::vec4(0.8f),
+                   glm::vec4 disabledColor = glm::vec4(0.7f), // Default disabled color
+                   bool disabled = false, // Default disabled state
                    std::function<void()> clickHandler = nullptr,
                    std::function<void()> hoverHandler = nullptr,
                    std::function<void()> pressHandler = nullptr)
@@ -165,21 +169,43 @@ struct ButtonComponent {
           normalTextColor(normalTextColor),
           hoverTextColor(hoverTextColor),
           pressedTextColor(pressedTextColor),
+          disabledTextColor(disabledTextColor),
           isHovered(hovered),
           isPressed(pressed),
-          onClick(std::move(clickHandler)),
-          onHover(std::move(hoverHandler)),
-          onPressed(std::move(pressHandler)),
           normalColor(normalColor),
           hoverColor(hoverColor),
-          pressedColor(pressedColor) {
+          pressedColor(pressedColor),
+          disabledColor(disabledColor),
+          isDisabled(disabled),
+          onClick(std::move(clickHandler)),
+          onHover(std::move(hoverHandler)),
+          onPressed(std::move(pressHandler)) {
     }
 
     ButtonComponent() = default;
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(ButtonComponent, isHovered, isPressed);
+    void handleClick() {
+        if (isDisabled) return;
+        if (onClick) onClick();
+    }
+
+    void handleHover() {
+        if (isDisabled) return;
+        if (onHover) onHover();
+    }
+
+    void handlePress() {
+        if (isDisabled) return;
+        if (onPressed) onPressed();
+    }
+
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(ButtonComponent, isHovered, isPressed, isDisabled);
 };
 
+struct DisabledComponent {
+    bool isDisabled = false;
+};
 
 
 //=========================================================================================
