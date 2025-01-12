@@ -1,10 +1,10 @@
 #pragma once
+
+#include <cstdint>
+#include <nlohmann/json.hpp> // Ensure this is properly installed via vcpkg or any other package manager
 #include "Registry.hpp"
 #include "ECSException.hpp"
-#include <cstdint>
-#include <nlohmann/json.hpp> // Need to resolve the problem with the vcpkg
-//Need to complete the type registry for now it's ok completing it next day or next life
-// Forward declarations , you know what im done for these week
+
 class Registry;
 using Json = nlohmann::json;
 
@@ -13,7 +13,7 @@ public:
     using IdType = std::uint32_t;
 
     Actor() = default;
-    explicit Actor(IdType id, Registry* registry = nullptr) 
+    explicit Actor(IdType id, Registry* registry = nullptr)
         : id(id), registry(registry) {}
 
     [[nodiscard]] IdType getId() const { return id; }
@@ -42,29 +42,30 @@ public:
 private:
     IdType id = 0;
     Registry* registry = nullptr;
-    friend class Registry;
+
+    friend class Registry; // Allows the Registry class to access private members
 };
 
 // Template implementations
 template<typename T>
 bool Actor::hasComponent() const {
-    return registry && registry->getComponent<T>(*this) != nullptr;
+    return registry && registry->template getComponent<T>(*this) != nullptr;
 }
 
 template<typename T>
 T* Actor::getComponent() {
-    return registry ? registry->getComponent<T>(*this) : nullptr;
+    return registry ? registry->template getComponent<T>(*this) : nullptr;
 }
 
 template<typename T, typename... Args>
 T& Actor::addComponent(Args&&... args) {
     if (!registry) throw ECSException("Actor has no registry");
-    return registry->addComponent<T>(*this, std::forward<Args>(args)...);
+    return registry->template addComponent<T>(*this, std::forward<Args>(args)...);
 }
 
 template<typename T>
 void Actor::removeComponent() {
-    if (registry) registry->removeComponent<T>(*this);
+    if (registry) registry->template removeComponent<T>(*this);
 }
 
 // Serialization implementations
@@ -75,5 +76,7 @@ inline Json Actor::toJson() const {
 }
 
 inline void Actor::fromJson(const Json& json) {
-    id = json["id"];
+    if (json.contains("id")) {
+        id = json.at("id").get<IdType>();
+    }
 }

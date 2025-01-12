@@ -50,18 +50,37 @@ private:
         return oss.str();
     }
 
-    static void renderTile(const MapTile& tile, uint32_t x, uint32_t y, Registry& registry) {
-        std::string textureKey = getTileTextureKey(tile.type);
-        // Set z-index to ensure proper layer rendering
-        glm::vec3 position(x * MapState::TILE_SIZE, y * MapState::TILE_SIZE, TILE_LAYER_Z);
-        glm::vec2 size(MapState::TILE_SIZE, MapState::TILE_SIZE);
+    // Helper function to convert glm::vec4 to a string for logging
+    static std::string glmVec4ToString(const glm::vec4& vec) {
+        return "(" + std::to_string(vec.r) + ", " +
+               std::to_string(vec.g) + ", " +
+               std::to_string(vec.b) + ", " +
+               std::to_string(vec.a) + ")";
+    }
 
-        glm::vec4 color = getTileColor(tile);
+    // Function to get the color based on the tile type
+    static glm::vec4 getTileColorByType(TileType type) {
+        switch (type) {
+            case TileType::Path:               return glm::vec4(0.6f, 0.3f, 0.1f, 1.0f);  // Brown for path
+            case TileType::Grass:              return glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);  // Green for grass
+            case TileType::Bush:               return glm::vec4(0.1f, 0.4f, 0.1f, 1.0f);  // Dark green for bush
+            case TileType::DestructibleWall:   return glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);  // Gray for destructible walls
+            case TileType::IndestructibleWall: return glm::vec4(0.3f, 0.3f, 0.3f, 1.0f);  // Dark gray for indestructible walls
+            case TileType::HealthPickup:       return glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);  // Blue for health pickup
+            case TileType::SpeedBoost:         return glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);  // Pink for speed boost
+            case TileType::HiddenBomb:         return glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);  // Red for hidden bomb
+            default:                          return glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);  // Default white for unknown tile types
+        }
+    }
+
+    static void renderTile(const MapTile& tile, uint32_t x, uint32_t y, Registry& registry) {
+        glm::vec4 color = getTileColorByType(tile.type);  // Get the color based on the tile type
+        
 
         Actors::createStaticProp(
             registry,
-            {position, 0.0f, size},
-            {textureKey, RenderComponent::defaultTexCoords(), color}
+            {glm::vec3(x * MapState::TILE_SIZE, y * MapState::TILE_SIZE, TILE_LAYER_Z), 0.0f, glm::vec2(MapState::TILE_SIZE, MapState::TILE_SIZE)},
+            {"", RenderComponent::defaultTexCoords(), color}  // Render a colored square for each tile
         );
     }
 
@@ -82,9 +101,9 @@ private:
     }
 
     static std::string getTileTextureKey(TileType type) {
-        // Mapping of TileType to tile numbers
+        // Mapping of TileType to tile numbers (for textures)
         static const std::unordered_map<TileType, int> tileMappings = {
-            {TileType::Empty,             0},
+            {TileType::Path,             0},
             {TileType::Grass,             49},
             {TileType::Bush,              2},
             {TileType::DestructibleWall,   37},

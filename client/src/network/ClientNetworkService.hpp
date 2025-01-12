@@ -4,6 +4,8 @@
 #include "Packet.hpp"
 #include <cpr/cpr.h>
 
+#include "map/MapState.hpp"
+
 class ClientNetworkService {
 public:
     ClientNetworkService() = default;
@@ -20,6 +22,22 @@ public:
 
     template<typename T>
     static void sendRequestAsync();
+
+    static MapState getMapData() {
+        auto response = cpr::Get(cpr::Url{"http://localhost:8080/getMap"});
+
+        AT_INFO("Response from server: {0}", response.text);
+        if (response.status_code != 200) {
+            throw std::runtime_error("Failed to fetch map data from server.");
+        }
+
+        try {
+            auto mapDataJson = nlohmann::json::parse(response.text);
+            return mapDataJson.get<MapState>();  // Deserialize into MapState
+        } catch (const std::exception &e) {
+            throw std::runtime_error("Error parsing map data: " + std::string(e.what()));
+        }
+    }
 
 
     static bool reg(const std::string &username, const std::string &password) {
