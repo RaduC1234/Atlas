@@ -70,7 +70,7 @@ private:
     int initialCursorX, initialCursorY;
     int cursorOffsetX, cursorOffsetY;
     int initialWindowX, initialWindowY;
-
+    bool decorated{true};
 
     inline static int glfw_windowCount = 0;
 };

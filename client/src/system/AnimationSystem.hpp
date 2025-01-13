@@ -2,7 +2,9 @@
 
 #include <Atlas.hpp>
 
-
+/**
+ * @unused
+ */
 class AnimationSystem {
 public:
     void update(double deltaTime, Registry& registry) {
