@@ -34,30 +34,30 @@ void Renderer::drawPrimitive(const glm::vec3 &position, const glm::vec2 &scale, 
 }
 
 void Renderer::drawText(glm::vec3 position, float scale, const glm::vec4 &color, const Font &font, const std::string &text, bool centered) {
-    // Center horizontally and vertically if 'centered' is true
+    /*
+     * https://learnopengl.com/In-Practice/Text-Rendering
+     * https://steamcdn-a.akamaihd.net/apps/valve/2007/SIGGRAPH2007_AlphaTestedMagnification.pdf
+     */
     if (centered) {
-        // Calculate total width
         float totalWidth = 0.0f;
         for (const char c: text) {
             const auto &[textureID, size, bearing, advance] = font.getCharacter(c);
-            totalWidth += (advance / 64.0f) * scale; // Sum the width of each character (with scaling)
+            totalWidth += (advance / 64.0f) * scale;
         }
         totalWidth -= (font.getCharacter(text.back()).advance / 64.0f) * scale; // Remove extra space after the last character
 
-        // Calculate total height (from tallest character)
         float totalHeight = 0.0f;
         for (const char c: text) {
             const auto &[textureID, size, bearing, advance] = font.getCharacter(c);
             float height = static_cast<float>(size.y) * scale;
-            totalHeight = std::max(totalHeight, height); // Find the tallest character
+            totalHeight = std::max(totalHeight, height);
         }
 
-        // Adjust starting position for centering
-        position.x -= totalWidth / 2.0f; // Center horizontally
-        position.y += totalHeight / 2.0f; // Center vertically
+        position.x -= totalWidth / 2.0f;
+        position.y += totalHeight / 2.0f;
     }
 
-    // Render each character of the text
+
     for (const char c: text) {
         const auto &[textureID, size, bearing, advance] = font.getCharacter(c);
 
@@ -67,7 +67,6 @@ void Renderer::drawText(glm::vec3 position, float scale, const glm::vec4 &color,
         float width = static_cast<float>(size.x) * scale;
         float height = static_cast<float>(size.y) * scale;
 
-        // Efficiently manage the sprite creation (avoid creating a new texture for every character)
         static std::unordered_map<uint32_t, Ref<Texture> > textureCache;
         if (textureCache.find(textureID) == textureCache.end()) {
             textureCache[textureID] = CreateRef<Texture>(textureID);
@@ -86,13 +85,11 @@ void Renderer::drawText(glm::vec3 position, float scale, const glm::vec4 &color,
             0x0
         );
 
-        // Advance the position for the next character
-        position.x += (advance / 64.0f) * scale; // Correctly scale the advance (1/64th of a pixel)
+        position.x += (advance / 64.0f) * scale;
     }
 }
 
 void Renderer::flush(uint32_t screenWidth, uint32_t screenHeight, Camera &camera) {
-    // sort the batches by their z-index so the transparency is applied correctly
 
     camera.applyViewport(screenWidth, screenHeight);
 

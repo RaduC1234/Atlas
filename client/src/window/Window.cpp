@@ -159,7 +159,7 @@ void Window::onUpdate() const {
     glfwPollEvents();
     glfwSwapBuffers(glfwWindow);
 
-    if (isDragging) {
+    if (this->isDragging && !this->decorated) {
         double cursor_x, cursor_y;
         glfwGetCursorPos(this->glfwWindow, &cursor_x, &cursor_y);
 
@@ -267,13 +267,12 @@ void Window::setWindowStyle(uint32_t style) {
 
     if (style & Style::DECORATED) {
         glfwSetWindowAttrib(this->glfwWindow, GLFW_DECORATED, GLFW_TRUE);
-
+        this->decorated = true;
     } else if (style & Style::UNDECORATED) {
         glfwSetWindowAttrib(this->glfwWindow, GLFW_DECORATED, GLFW_FALSE);
-
+        this->decorated = false;
     } else if (style & Style::MAXIMEZED) {
         glfwSetWindowAttrib(this->glfwWindow, GLFW_MAXIMIZED, GLFW_TRUE);
-
     } else if (style & Style::MINIMIZED) {
         glfwSetWindowAttrib(this->glfwWindow, GLFW_MAXIMIZED, GLFW_FALSE);
     }

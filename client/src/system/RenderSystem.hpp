@@ -5,7 +5,6 @@
 
 class RenderSystem {
 public:
-    // Define render layers - lower numbers render first
     enum class RenderLayer {
         BACKGROUND = 0,
         TILES = 1,
@@ -15,14 +14,13 @@ public:
     };
 
     void update(double deltaTime, Registry &registry) {
-        // Group entities by layer
         std::map<RenderLayer, std::vector<entt::entity>> layeredEntities;
 
         auto view = registry.view<TransformComponent, RenderComponent>();
         for (auto entity : view) {
-            RenderLayer layer = RenderLayer::TILES; // Default layer
+            RenderLayer layer = RenderLayer::TILES;
 
-            // Determine layer based on entity type
+
             if (registry.any_of<PawnComponent>(entity)) {
                 layer = RenderLayer::PLAYERS;
             }
@@ -30,7 +28,6 @@ public:
                 layer = RenderLayer::UI;
             }
             else {
-                // For tiles and other entities, use z-index to determine relative order within layer
                 auto& transform = view.get<TransformComponent>(entity);
                 if (transform.position.z <= 1.0f) {
                     layer = RenderLayer::BACKGROUND;
@@ -46,7 +43,6 @@ public:
             layeredEntities[layer].push_back(entity);
         }
 
-        // Sort entities within each layer by z-index
         for (auto& [layer, entities] : layeredEntities) {
             std::sort(entities.begin(), entities.end(),
                 [&registry](const entt::entity& a, const entt::entity& b) {
@@ -56,7 +52,6 @@ public:
                 });
         }
 
-        // Render each layer in order
         for (int layer = 0; layer <= static_cast<int>(RenderLayer::UI); ++layer) {
             auto currentLayer = static_cast<RenderLayer>(layer);
             if (layeredEntities.find(currentLayer) != layeredEntities.end()) {
@@ -66,7 +61,6 @@ public:
             }
         }
 
-        // Handle additional UI rendering (text for buttons, etc)
         if (layeredEntities.find(RenderLayer::UI) != layeredEntities.end()) {
             renderUIElements(registry);
         }

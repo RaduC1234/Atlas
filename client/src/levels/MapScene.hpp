@@ -6,7 +6,7 @@
 #include "system/UISystem.hpp"
 #include "map/MapState.hpp"
 #include "network/ClientNetworkService.hpp"
-#include "renderer/MapRenderer.hpp"
+//#include "renderer/MapRenderer.hpp"
 
 class MapScene : public Scene {
 public:
@@ -20,7 +20,7 @@ public:
         camera.setPosition({0.0f, 0.0f});  // Set camera position if necessary
         try {
             MapState mapState = ClientNetworkService::getMapData();  // Fetch the map data from server
-            MapRenderer::renderMap(mapState,registry);
+            //MapRenderer::renderMap(mapState,registry);
             renderMapText(mapState);
         } catch (const std::exception &e) {
             AT_ERROR("Failed to fetch or render map: {0}", e.what());  // Log error if map fetching fails
