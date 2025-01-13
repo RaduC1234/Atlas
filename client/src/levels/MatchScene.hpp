@@ -22,7 +22,6 @@ public:
 private:
     Camera camera{{0.0f, 0.0f}, 1.0f};
     uint64_t playerId;
-    Registry registry;
 
     PawnSystem pawnSystem;
     RenderSystem renderSystem;

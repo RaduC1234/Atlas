@@ -21,7 +21,6 @@ public:
 
 private:
     Camera camera{{0.0f, 0.0f}, 0.5f};
-    Registry registry;
 
     RenderSystem renderSystem;
     PawnSystem pawnSystem;

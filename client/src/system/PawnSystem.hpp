@@ -10,7 +10,7 @@
 class PawnSystem {
 public:
 
-    void update(double deltaTime, Registry &registry, uint32_t playerId, Camera &camera) {
+    void update(double deltaTime, entt::registry &registry, uint32_t playerId, Camera &camera) {
         // Retrieve the mouse position in screen coordinates
         auto x = Mouse::getPosition(); // Assuming Mouse::getPosition() exists
         glm::vec2 mouseWorldPos = camera.screenToWorld({x.first, x.second}); // Convert to world position

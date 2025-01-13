@@ -101,7 +101,7 @@ public:
             Actor playerEntity = lobby.getRegistry().create();
             lobby.getRegistry().emplace<TransformComponent>(playerEntity, glm::vec3(100 * playerId, 100 * playerId, 0.0f), 0.0f, glm::vec2(100, 100));
             lobby.getRegistry().emplace<PawnComponent>(playerEntity, static_cast<uint32_t>(playerId));
-            lobby.getRegistry().emplace<NetworkComponent>(playerEntity, lobby.nextId(), EntityType::PAWN, static_cast<uint32_t>(0));
+            lobby.getRegistry().emplace<NetworkComponent>(playerEntity, lobby.nextId());
 
             lobby.getPlayerList().push_back(playerId);
 

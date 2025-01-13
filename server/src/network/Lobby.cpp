@@ -1,11 +1,48 @@
 #include "Lobby.hpp"
 
+#include "map/MapGenerator.hpp"
+
+Lobby::Lobby() {
+    constexpr glm::vec2 tileSize = {100.0f, 100.0f};
+
+    const std::vector<std::vector<int>> map = {
+        {1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1}
+    };
+
+    int width = map[0].size();
+    int height = map.size();
+
+    float offsetX = -(width * tileSize.x) / 2.0f + tileSize.x / 2.0f;
+    float offsetY = -(height * tileSize.y) / 2.0f + tileSize.y / 2.0f;
+
+    for (int row = 0; row < height; ++row) {
+        for (int col = 0; col < width; ++col) {
+            int tileNumber = map[row][col];
+
+            if (tileNumber < 0) {
+                continue;
+            }
+
+            float posX = col * tileSize.x + offsetX;
+            float posY = row * tileSize.y + offsetY;
+            std::cout << tileNumber;
+
+            const auto actor = registry.create();
+            registry.emplace<NetworkComponent>(actor, nextId(), static_cast<uint32_t>(0));
+            registry.emplace<TransformComponent>(actor, glm::vec3(posX, posY, 5.0f), 0.0f, tileSize);
+        }
+    }
+}
+
 Lobby::Lobby(Lobby &&other) noexcept: registry(std::move(other.registry)),
                                       players(std::move(other.players)),
                                       entId(other.entId) {
 }
 
-Lobby & Lobby::operator=(Lobby &&other) noexcept {
+Lobby &Lobby::operator=(Lobby &&other) noexcept {
     if (this != &other) {
         std::lock_guard<std::mutex> lock(other.registryMutex);
         registry = std::move(other.registry);
@@ -31,7 +68,6 @@ void Lobby::serializeRegistry(nlohmann::json &outJson) {
         nlohmann::json entityJson;
         entityJson["id"] = static_cast<int>(entity);
         entityJson["networkId"] = network.networkId;
-        entityJson["entityType"] = static_cast<int>(network.entityType);
         entityJson["tile-code"] = static_cast<int>(network.tileCode);
 
         entityJson["TransformComponent"] = {
@@ -49,6 +85,13 @@ void Lobby::serializeRegistry(nlohmann::json &outJson) {
                 {"moveLeft", pawn.moveLeft},
                 {"moveRight", pawn.moveRight},
                 {"aimRotation", pawn.aimRotation}
+            };
+        }
+
+        if (registry.any_of<RigidbodyComponent>(entity)) {
+            auto &rigidbody = registry.get<RigidbodyComponent>(entity);
+            entityJson["RigidbodyComponent"] = {
+                {"isSolid", rigidbody.isSolid}
             };
         }
 

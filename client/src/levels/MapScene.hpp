@@ -28,7 +28,7 @@ public:
     }
 
     void onUpdate(float deltaTime) override {
-        renderSystem.update(deltaTime, registry);
+        renderSystem.update(registry);
     }
 
     void onRender(int screenWidth, int screenHeight) override {
@@ -41,7 +41,6 @@ public:
     }
 
 private:
-    Registry registry;
     RenderSystem renderSystem;
     UISystem uiSystem;
     Camera camera{{0.0f, 0.0f}, 0.5f};  // Define camera (if needed)

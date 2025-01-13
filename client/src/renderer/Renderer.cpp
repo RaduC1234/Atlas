@@ -90,28 +90,34 @@ void Renderer::drawText(glm::vec3 position, float scale, const glm::vec4 &color,
 }
 
 void Renderer::flush(uint32_t screenWidth, uint32_t screenHeight, Camera &camera) {
-
     camera.applyViewport(screenWidth, screenHeight);
 
-    std::ranges::sort(batches,
-                      [](const RenderBatch &a, const RenderBatch &b) {
-                          return a.getZIndex() > b.getZIndex();
-                      });
+    // Sort only if needed
+    static bool sorted = false;
+    if (!sorted) {
+        std::ranges::sort(batches, [](const RenderBatch &a, const RenderBatch &b) {
+            return a.getZIndex() > b.getZIndex();
+        });
+        sorted = true;
+    }
 
-    glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w); // clear the screen and apply the background color
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the color buffer and depth buffer
+    glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     for (auto &batch: batches) {
         batch.start();
         batch.render(screenWidth, screenHeight, camera);
+        batch.clear();
     }
-    batches.clear();
+
+    sorted = false;
 
     GLenum err;
     if ((err = glGetError()) != GL_NO_ERROR) {
         AT_ERROR("OpenGL error: {0}", err);
     }
 }
+
 
 void Renderer::init() {
     // link glfw and glad

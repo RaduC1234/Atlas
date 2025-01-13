@@ -1,25 +1,19 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include "core/Core.hpp"
 
-#include "resource/Animation.hpp"
+#include <glm/glm.hpp>
 
 enum EntityCode : uint32_t {
     NEXT = 10000,
     TILE_CODE = 10000,
 };
 
-enum EntityType {
-    STATIC,
-    PAWN
-};
-
 struct NetworkComponent {
     uint64_t networkId;
-    EntityType entityType;
     uint32_t tileCode; // code, x, x, x -> 1 for tiles xxx for number
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(NetworkComponent, networkId, entityType, tileCode);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(NetworkComponent, networkId, tileCode);
 };
 
 struct TransformComponent {
@@ -100,10 +94,11 @@ struct PawnComponent {
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(PawnComponent, playerId);
 };
 
-struct RigidBodyComponent {
-    bool useIncremental{true};
+struct RigidbodyComponent {
+    bool isSolid{false};
 };
 
+//=======================UI============================
 struct TextboxComponent {
     std::string text; // Reference to external string
     std::string displayText;
@@ -225,60 +220,4 @@ struct ButtonComponent {
 
 struct DisabledComponent {
     bool isDisabled = false;
-};
-
-
-//=========================================================================================
-struct AnimationComponent {
-    std::shared_ptr<Animation> currentAnimation;
-    std::unordered_map<std::string, std::shared_ptr<Animation> > animations;
-    float animationTimer = 0.0f;
-    size_t currentFrame = 0;
-    bool paused = false;
-
-    void update(double deltaTime) {
-        if (paused || !currentAnimation) return;
-
-        animationTimer += deltaTime;
-        if (animationTimer >= currentAnimation->getFrameDuration()) {
-            animationTimer = 0.0f;
-            currentFrame = (currentFrame + 1) % currentAnimation->getFrames().size();
-        }
-    }
-
-    std::string getCurrentFrame() const {
-        if (!currentAnimation) {
-            std::cerr << "Warning: No current animation is set.\n";
-            return "";
-        }
-        const auto &frames = currentAnimation->getFrames();
-        if (frames.empty()) {
-            std::cerr << "Warning: Current animation '" << currentAnimation->getName() << "' has no frames.\n";
-            return "";
-        }
-        return frames[currentFrame];
-    }
-
-    void setAnimation(const std::string &animationKey) {
-        if (animations.find(animationKey) != animations.end()) {
-            currentAnimation = animations[animationKey];
-            animationTimer = 0.0f;
-            currentFrame = 0;
-        } else {
-            std::cerr << "Warning: Animation '" << animationKey << "' not found.\n";
-        }
-    }
-
-    void pause() { paused = true; }
-    void resume() { paused = false; }
-
-    void validateAnimations() const {
-        for (const auto &[key, anim]: animations) {
-            if (!anim) {
-                std::cerr << "Error: Animation '" << key << "' is null.\n";
-            } else if (anim->getFrames().empty()) {
-                std::cerr << "Warning: Animation '" << key << "' has no frames.\n";
-            }
-        }
-    }
 };

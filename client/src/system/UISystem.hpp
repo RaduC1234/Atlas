@@ -6,7 +6,7 @@
 
 class UISystem {
 public:
-    void update(double deltaTime, Registry &registry, const Camera &camera) {
+    void update(double deltaTime,entt::registry &registry, const Camera &camera) {
         auto [mouseX, mouseY] = Mouse::getPosition();
         const auto worldCoords = camera.screenToWorld(glm::vec2(mouseX, mouseY));
         //textBox functions
@@ -182,7 +182,7 @@ private:
         }
     }
 
-    static bool isButtonDisabled(Registry& registry, entt::entity entity) {
+    static bool isButtonDisabled(entt::registry& registry, entt::entity entity) {
         return registry.all_of<DisabledComponent>(entity) &&
                registry.get<DisabledComponent>(entity).isDisabled;
     }

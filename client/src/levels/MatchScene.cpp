@@ -40,7 +40,7 @@ void MatchScene::onUpdate(float deltaTime) {
 
     networkSystem.update(deltaTime, registry, this->playerId);
     pawnSystem.update(deltaTime, registry, this->playerId, this->camera);
-    renderSystem.update(deltaTime, registry);
+    renderSystem.update(registry);
 
     ImGui::End();
 

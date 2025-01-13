@@ -126,7 +126,7 @@ void GameModeScene::onStart() {
 
 void GameModeScene::onUpdate(float deltaTime) {
     uiSystem.update(deltaTime, registry, camera);
-    renderSystem.update(deltaTime, registry);
+    renderSystem.update(registry);
 }
 
 void GameModeScene::onRender(int screenWidth, int screenHeight) {

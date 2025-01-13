@@ -117,7 +117,7 @@ void RegisterScene::onUpdate(float deltaTime) {
     ImGui::End();
 
     uiSystem.update(deltaTime, registry, camera);
-    renderSystem.update(deltaTime, registry);
+    renderSystem.update(registry);
 }
 
 void RegisterScene::onRender(int screenWidth, int screenHeight) {

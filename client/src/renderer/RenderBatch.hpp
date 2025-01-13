@@ -56,6 +56,8 @@ public:
         return zIndex;
     }
 
+    void clear();
+
 private:
 
     struct Vertex {

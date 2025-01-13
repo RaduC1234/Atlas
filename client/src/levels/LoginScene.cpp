@@ -120,7 +120,7 @@ void LoginScene::onUpdate(float deltaTime) {
     ImGui::End();
 
     uiSystem.update(deltaTime, registry, camera);
-    renderSystem.update(deltaTime, registry);
+    renderSystem.update(registry);
 }
 
 void LoginScene::onRender(int screenWidth, int screenHeight) {

@@ -25,7 +25,6 @@ public:
 
 private:
     Camera camera{{0.0f, 0.0f}, 0.5f};
-    Registry registry;
 
     bool hexDuelpressed = false;
     bool hexArenapressed = false;

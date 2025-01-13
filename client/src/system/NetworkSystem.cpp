@@ -90,14 +90,14 @@ void NetworkSystem::overwriteRegistry(const nlohmann::json &jsonResponse, entt::
             entity = existingEntities[networkId];
         } else {
             entity = registry.create();
-            registry.emplace<NetworkComponent>(entity, networkId, static_cast<EntityType>(entityData["entityType"].get<int>()));
+            registry.emplace<NetworkComponent>(entity, networkId);
         }
 
         auto tileCode = entityData["tile-code"].get<uint32_t>();
         std::string textureName;
 
         if (tileCode >= EntityCode::TILE_CODE && tileCode < EntityCode::TILE_CODE + EntityCode::NEXT) {
-            textureName = std::format("tile_{:04}", tileCode % 10000);
+            textureName = std::format("tile_{:04}", tileCode % TILE_CODE);
         }
 
         if (entityData.contains("PawnComponent")) {
