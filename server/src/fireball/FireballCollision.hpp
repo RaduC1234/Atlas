@@ -1,7 +1,7 @@
 #pragma once
 
 #include "FireballData.hpp"
-#include "data/Player.hpp"
+#include "../data/Player.hpp"
 
 struct CollisionResult {
     bool collision{false};         // Whether collision occurred

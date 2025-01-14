@@ -3,7 +3,7 @@
 #include <Atlas.hpp>
 #include "map/MapState.hpp"
 #include "map/MapTile.hpp"
-#include "map/MapGenerator.hpp"
+#include "MapGenerator.hpp"
 #include "map/MapModification.hpp"
 
 class MapManager {

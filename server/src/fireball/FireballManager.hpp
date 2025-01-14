@@ -1,6 +1,6 @@
 #pragma once
 
-#include "data/FireballData.hpp"
+#include "FireballData.hpp"
 #include "FireballCollision.hpp"
 #include <functional>
 
