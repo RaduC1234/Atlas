@@ -5,12 +5,7 @@
 Lobby::Lobby() {
     constexpr glm::vec2 tileSize = {100.0f, 100.0f};
 
-    const std::vector<std::vector<int>> map = {
-        {1, 1, 1, 1, 1, 1, 1},
-        {1, 1, 1, 1, 1, 1, 1},
-        {1, 1, 1, 1, 1, 1, 1},
-        {1, 1, 1, 1, 1, 1, 1}
-    };
+    auto map = MapGenerator(50,50).getMap();
 
     int width = map[0].size();
     int height = map.size();
@@ -28,10 +23,9 @@ Lobby::Lobby() {
 
             float posX = col * tileSize.x + offsetX;
             float posY = row * tileSize.y + offsetY;
-            std::cout << tileNumber;
 
             const auto actor = registry.create();
-            registry.emplace<NetworkComponent>(actor, nextId(), static_cast<uint32_t>(0));
+            registry.emplace<NetworkComponent>(actor, nextId(), static_cast<uint32_t>(tileNumber + TILE_CODE));
             registry.emplace<TransformComponent>(actor, glm::vec3(posX, posY, 5.0f), 0.0f, tileSize);
         }
     }

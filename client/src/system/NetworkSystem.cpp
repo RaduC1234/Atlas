@@ -13,6 +13,7 @@ NetworkSystem::~NetworkSystem() {
 }
 
 void NetworkSystem::update(float deltaTime, entt::registry &registry, uint64_t playerId) {
+
     if (!isSyncing.exchange(true)) {
         std::lock_guard<std::mutex> lock(queueMutex);
         syncQueue.push(SyncData(&registry, playerId));

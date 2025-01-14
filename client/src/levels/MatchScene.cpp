@@ -24,7 +24,7 @@ void MatchScene::onCreate() {
 void MatchScene::onStart() {
     auto response = cpr::Get(cpr::Url{"http://127.0.0.1:8080/join_match"});
     if (response.status_code == 200) {
-       this->playerId = std::stoull(response.text);
+        this->playerId = std::stoull(response.text);
     }
 }
 
@@ -36,27 +36,34 @@ void MatchScene::onUpdate(float deltaTime) {
     auto coords = this->camera.screenToWorld({Mouse::getX(), Mouse::getY()});
     ImGui::Text("Mouse World: (%.1f, %.1f)", coords.x, coords.y);
 
-    //pawnSystem.update(deltaTime, registry, 0, camera);
+    static bool wireFrame = false;
+    ImGui::Checkbox("Wireframe", &wireFrame);
 
-    networkSystem.update(deltaTime, registry, this->playerId);
+    if (wireFrame) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    } else {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+    ImGui::SameLine();
+    static bool syncWithServer = true;
+    ImGui::Checkbox("Sync", &syncWithServer);
+
+    static float zoom = 1.0f;
+    if (ImGui::SliderFloat("Zoom", &zoom, 0.1f, 2.0f, "%.1f")) {
+        // Ensure stepping of 0.1
+        zoom = round(zoom * 10.0f) / 10.0f;
+        camera.setZoom(zoom);
+    }
+
+    if (syncWithServer)
+        networkSystem.update(deltaTime, registry, this->playerId);
     pawnSystem.update(deltaTime, registry, this->playerId, this->camera);
-    renderSystem.update(registry);
 
     ImGui::End();
-
-    // Debugging: Check if entities exist
-    auto view = registry.view<entt::entity>();
-    size_t entityCount = std::distance(view.begin(), view.end());
-    std::cout << "Rendering Entities: " << entityCount << std::endl;
-
-    for (auto entity : view) {
-        auto& transform = registry.get<TransformComponent>(entity);
-        std::cout << "Entity " << static_cast<int>(entity) << " at ("
-                  << transform.position.x << ", " << transform.position.y << ")\n";
-    }
 }
 
 void MatchScene::onRender(int screenWidth, int screenHeight) {
+    renderSystem.update(registry);
     RenderManager::flush(screenWidth, screenHeight, camera);
 }
 
