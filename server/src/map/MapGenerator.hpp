@@ -1,3 +1,4 @@
+//generator pentru path, indestructible wall, destructible wall
 #pragma once
 
 #include <Atlas.hpp>
@@ -50,6 +51,24 @@ private:
         map = std::vector<std::vector<int>>(rows, std::vector<int>(cols, 40)); // Indestructible walls
     }
 
+    void createCornerSpaces() {
+        std::vector<std::pair<int, int>> corners = {
+            {0, 0}, {0, rows - 2}, {cols - 2, 0}, {cols - 2, rows - 2}
+        };
+
+        for (const auto& corner : corners) {
+            int cornerX = corner.first;
+            int cornerY = corner.second;
+
+            for (int y = cornerY; y < cornerY + 2; ++y) {
+                for (int x = cornerX; x < cornerX + 2; ++x) {
+                    if (y >= 0 && y < rows && x >= 0 && x < cols) {
+                        map[y][x] = 48; // Path
+                    }
+                }
+            }
+        }
+    }
 
     bool isValidRoomPlacement(const Room& room) {
         if (room.x < BORDER || room.y < BORDER ||
@@ -179,13 +198,68 @@ private:
     }
 
     void createConnections() {
-         for (const auto& room : rooms) {
-             for (const auto& connected : room->connections) {
-                 connectRooms(room, connected);
+        for (const auto& room : rooms) {
+            for (const auto& connected : room->connections) {
+                connectRooms(room, connected);
             }
-         }
+        }
     }
 
+    double distanceBetweenPoints(int x1, int y1, int x2, int y2) {
+        int dx = x2 - x1;
+        int dy = y2 - y1;
+        return std::sqrt(dx * dx + dy * dy);
+    }
+
+    void connectCornerToNearestRoom() {
+        std::vector<std::pair<int, int>> corners = {
+            {0, 0}, {0, rows - 2}, {cols - 2, 0}, {cols - 2, rows - 2}
+        };
+
+        for (const auto& corner : corners) {
+            int cornerCenterX = corner.first + 1;
+            int cornerCenterY = corner.second + 1;
+
+            double minDistance = std::numeric_limits<double>::max();
+            Room* nearestRoom = nullptr;
+
+            for (const auto& room : rooms) {
+                double dist = distanceBetweenPoints(cornerCenterX, cornerCenterY,
+                                                  room->centerX(), room->centerY());
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    nearestRoom = room;
+                }
+            }
+
+            if (nearestRoom) {
+                int roomX = nearestRoom->centerX();
+                int roomY = nearestRoom->centerY();
+
+                int x1 = std::min(cornerCenterX, roomX);
+                int x2 = std::max(cornerCenterX, roomX);
+                for (int x = x1; x <= x2; ++x) {
+                    for (int dy = -1; dy <= 1; ++dy) {
+                        int y = cornerCenterY + dy;
+                        if (y >= 0 && y < rows && x >= 0 && x < cols) {
+                            map[y][x] = 48; // Path
+                        }
+                    }
+                }
+
+                int y1 = std::min(cornerCenterY, roomY);
+                int y2 = std::max(cornerCenterY, roomY);
+                for (int y = y1; y <= y2; ++y) {
+                    for (int dx = -1; dx <= 1; ++dx) {
+                        int x = roomX + dx;
+                        if (x >= 0 && x < cols && y >= 0 && y < rows) {
+                            map[y][x] = 48; // Path
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     void addExtraConnections(int connectionChance) {
         for (size_t i = 0; i < rooms.size(); ++i) {
@@ -203,6 +277,102 @@ private:
         }
     }
 
+    std::vector<std::vector<int>> labelCorridors() {
+        std::vector<std::vector<int>> labels(rows, std::vector<int>(cols, 0));
+        int currentLabel = 1;
+        std::queue<std::pair<int, int>> q;
+
+        for (int y = 0; y < rows; ++y) {
+            for (int x = 0; x < cols; ++x) {
+                if (map[y][x] == 48 && !isInRoom(x, y) && labels[y][x] == 0) {
+                    q.push({x, y});
+                    labels[y][x] = currentLabel;
+
+                    while (!q.empty()) {
+                        auto [cx, cy] = q.front();
+                        q.pop();
+
+                        for (int dy = -1; dy <= 1; ++dy) {
+                            for (int dx = -1; dx <= 1; ++dx) {
+                                if (dy == 0 && dx == 0)
+                                    continue;
+                                int nx = cx + dx;
+                                int ny = cy + dy;
+                                if (nx >= 0 && nx < cols && ny >= 0 && ny < rows &&
+                                    map[ny][nx] == 48 && !isInRoom(nx, ny) && labels[ny][nx] == 0) {
+                                    labels[ny][nx] = currentLabel;
+                                    q.push({nx, ny});
+                                }
+                            }
+                        }
+                    }
+                    currentLabel++;
+                }
+            }
+        }
+
+        return labels;
+    }
+
+    bool isInRoom(int x, int y) const {
+        for (const auto& room : rooms) {
+            if (x >= room->x && x < room->x + room->width &&
+                y >= room->y && y < room->y + room->height) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void placeBreakableWalls() {
+        std::vector<std::vector<int>> labels = labelCorridors();
+
+        std::vector<std::vector<std::pair<int, int>>> corridors;
+        int maxLabel = 0;
+        for (const auto& row : labels) {
+            for (int label : row) {
+                if (label > maxLabel)
+                    maxLabel = label;
+            }
+        }
+
+        corridors.resize(maxLabel + 1);
+
+        for (int y = 0; y < rows; ++y) {
+            for (int x = 0; x < cols; ++x) {
+                if (labels[y][x] > 0) {
+                    corridors[labels[y][x]].emplace_back(x, y);
+                }
+            }
+        }
+
+        const double WALL_PROBABILITY_PER_CORRIDOR = 0.5;
+
+        for (size_t label = 1; label < corridors.size(); ++label) {
+            if (corridors[label].empty())
+                continue;
+
+            std::shuffle(corridors[label].begin(), corridors[label].end(), rng);
+
+            int wallsToPlace = static_cast<int>(corridors[label].size() * WALL_PROBABILITY_PER_CORRIDOR);
+            if (wallsToPlace < 1 && corridors[label].size() > 0)
+                wallsToPlace = 1;
+
+            int wallsPlaced = 0;
+
+            for (const auto& tile : corridors[label]) {
+                if (wallsPlaced >= wallsToPlace)
+                    break;
+
+                int x = tile.first;
+                int y = tile.second;
+
+                map[y][x] = 63; // Breakable box
+                wallsPlaced++;
+            }
+
+        }
+    }
 
 public:
     MapGenerator(int numRows, int numCols)
@@ -214,6 +384,9 @@ public:
         createConnections();
         addExtraConnections(30);
 
+        placeBreakableWalls();
+        createCornerSpaces();
+        connectCornerToNearestRoom();
     }
 
     ~MapGenerator() {
@@ -227,4 +400,3 @@ public:
     }
 
 };
-
