@@ -184,20 +184,11 @@ private:
     typedef void (*GetValidRatingRangeFunc)(const Rating*, int, double*, double*, bool*, char*, int);
     typedef void (*UpdateRatingsFunc)(Rating*, const Rating*, const double*, int, bool*, char*, int);
 
-    static HMODULE hDLL;
-    static GetDefaultRatingFunc getDefaultRatingFunc;
-    static EvaluateMatchFunc evaluateMatchFunc;
-    static CanPlayerJoinFunc canPlayerJoinFunc;
-    static GetValidRatingRangeFunc getValidRatingRangeFunc;
-    static UpdateRatingsFunc updateRatingsFunc;
+    inline static HMODULE hDLL = nullptr;
+    inline static GetDefaultRatingFunc getDefaultRatingFunc = nullptr;
+    inline static EvaluateMatchFunc evaluateMatchFunc = nullptr;
+    inline static CanPlayerJoinFunc canPlayerJoinFunc = nullptr;
+    inline static GetValidRatingRangeFunc getValidRatingRangeFunc = nullptr;
+    inline static UpdateRatingsFunc updateRatingsFunc = nullptr;
 #endif
 };
-
-#ifdef WIN32
-HMODULE MatchmakingManager::hDLL = nullptr;
-MatchmakingManager::GetDefaultRatingFunc MatchmakingManager::getDefaultRatingFunc = nullptr;
-MatchmakingManager::EvaluateMatchFunc MatchmakingManager::evaluateMatchFunc = nullptr;
-MatchmakingManager::CanPlayerJoinFunc MatchmakingManager::canPlayerJoinFunc = nullptr;
-MatchmakingManager::GetValidRatingRangeFunc MatchmakingManager::getValidRatingRangeFunc = nullptr;
-MatchmakingManager::UpdateRatingsFunc MatchmakingManager::updateRatingsFunc = nullptr;
-#endif

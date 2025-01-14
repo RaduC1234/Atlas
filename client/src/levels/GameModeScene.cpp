@@ -7,7 +7,6 @@
 #include "renderer/Color.hpp"
 #include "window/Window.hpp"
 
-
 void GameModeScene::onCreate() {
     ResourceManager::load<Font>("pixelify", "assets/fonts/PixelifySans-Medium.ttf");
     ResourceManager::load<Font>("roboto", "assets/fonts/Roboto-Light.ttf");
@@ -41,44 +40,43 @@ void GameModeScene::onStart() {
         GameManager::changeScene("MenuScene");
     };
 
-    auto findingButton = [this](const std::string &buttonText, const std::string &actionText, glm::vec3 position) {
-        return Actors::createButton(
-            this->registry,
-            {position, 0.0f, glm::vec2(600.0f, 200.0f)},
-            {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-            {actionText, "thaleah", Color::black(), Color::white(), Color::white(), Color::black(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), Color::gray(), false, nullptr, nullptr, nullptr}
-        );
-    };
-
-    auto stopButton = [this](glm::vec3 position) {
-        return Actors::createButton(
-            this->registry,
-            {position, 0.0f, glm::vec2(100.0f, 100.0f)},
-            {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-            {"X", "thaleah", Color::black(), Color::white(), Color::white(), Color::black(), false, false, Color::white(), Color(1.0f, 0.0f, 0.0f, 1.0f), Color(1.0f, 0.0f, 0.0f, 1.0f), Color::gray(), false, [this]() {
-                // Re-enable Hex Duel and Hex Arena buttons
-                enableButtons();
-            }, nullptr, nullptr}
-        );
-    };
-
-    auto onHalfMatchButton = [this, findingButton, stopButton]() {
-        // Disable both buttons if they exist
+    auto onHexDuelButton = [this]() {
         if (!hexDuelpressed) {
-            disableButtons();
-            findDuelButton = findingButton("Find Duel", "Hex Duel", glm::vec3(-1100.0f, 800.0f, 0.0f));
-            stopFindingButton = stopButton(glm::vec3(-500.0f, 800.0f, 0.0f));
-            hexDuelpressed = true;
+            try {
+                AT_INFO("Joining Hex Duel queue...");
+                ClientNetworkService::joinMatchmaking(ClientNetworkService::GameMode::HEX_DUEL);
+                disableButtons();
+                hexDuelpressed = true;
+                findDuelButton = Actors::createButton(
+                    registry,
+                    {glm::vec3(-1100.0f, 800.0f, 0.0f), 0.0f, glm::vec2(800.0f, 300.0f)},
+                    {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
+                    {"Finding Duel Match...", "thaleah", Color::black(), Color::white(), Color::white(), Color::black()}
+                );
+            } catch (const std::exception& e) {
+                AT_ERROR("Failed to join matchmaking: {}", e.what());
+                enableButtons();
+            }
         }
     };
 
-    auto onFullMatchButton = [this, findingButton, stopButton]() {
-        // Disable both buttons if they exist
+    auto onHexArenaButton = [this]() {
         if (!hexArenapressed) {
-            disableButtons();
-            findArenaButton = findingButton("Find Arena", "Hex Arena", glm::vec3(-1100.0f, 800.0f, 0.0f));
-            stopFindingButton = stopButton(glm::vec3(-500.0f, 800.0f, 0.0f));
-            hexArenapressed = true;
+            try {
+                AT_INFO("Joining Hex Arena queue...");
+                ClientNetworkService::joinMatchmaking(ClientNetworkService::GameMode::HEX_ARENA);
+                disableButtons();
+                hexArenapressed = true;
+                findArenaButton = Actors::createButton(
+                    registry,
+                    {glm::vec3(-1100.0f, 800.0f, 0.0f), 0.0f, glm::vec2(800.0f, 300.0f)},
+                    {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
+                    {"Finding Arena Match...", "thaleah", Color::black(), Color::white(), Color::white(), Color::black()}
+                );
+            } catch (const std::exception& e) {
+                AT_ERROR("Failed to join matchmaking: {}", e.what());
+                enableButtons();
+            }
         }
     };
 
@@ -100,7 +98,7 @@ void GameModeScene::onStart() {
     this->hexDuelButton = Actors::createButton(this->registry,
                                                {glm::vec3(-1100.0f, 100.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},
                                                {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                                               {"Hex Duel", "thaleah", Color::black(), Color::white(), Color::white(), Color::black(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), Color::gray(), false, onHalfMatchButton, nullptr, nullptr});
+                                               {"Hex Duel", "thaleah", Color::black(), Color::white(), Color::white(), Color::black(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), Color::gray(), false, onHexDuelButton, nullptr, nullptr});
 
     this->hexDuelDescription = Actors::createStaticProp(this->registry,
                                                         {glm::vec3(-1100.0f, -100.0f, 0.0f), 0.0f, glm::vec2(10.0f, 10.0f)},
@@ -110,7 +108,7 @@ void GameModeScene::onStart() {
     this->hexArenaButton = Actors::createButton(this->registry,
                                                 {glm::vec3(-1100.0f, -300.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},
                                                 {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                                                        {"Hex Arena", "thaleah", Color::black(), Color::white(), Color::white(), Color::black(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), Color::gray(), false, onFullMatchButton, nullptr, nullptr});
+                                                        {"Hex Arena", "thaleah", Color::black(), Color::white(), Color::white(), Color::black(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), Color::gray(), false, onHexArenaButton, nullptr, nullptr});
 
     this->hexArenaDescription = Actors::createStaticProp(this->registry,
                                                          {glm::vec3(-1100.0f, -500.0f, 0.0f), 0.0f, glm::vec2(10.0f, 10.0f)},
@@ -123,8 +121,39 @@ void GameModeScene::onStart() {
                                                 {"Back", "thaleah", Color::black(), Color::white(), Color::white(), Color::black(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), Color::gray(), false, onBackButtonCallback, nullptr, nullptr});
 }
 
-
 void GameModeScene::onUpdate(float deltaTime) {
+    static float matchCheckTimer = 0.0f;
+    matchCheckTimer += deltaTime;
+
+    // Check match status every second if in queue
+    if ((hexDuelpressed || hexArenapressed) && matchCheckTimer >= 1.0f) {
+        try {
+            if (ClientNetworkService::checkMatchStatus()) {
+                // Store the player's role in the match
+                auto playerId = ClientNetworkService::getCurrentPlayerId();
+                auto matchId = ClientNetworkService::getCurrentMatchId();
+
+                // Set the window to fullscreen and undecorated
+                auto *windowRef = GameManager::getWindowRef();
+                auto monitorSize = windowRef->getMonitorSize();
+
+                windowRef->setWindowSize(monitorSize.first, monitorSize.second);
+                windowRef->setWindowStyle(Window::Style::DECORATED);
+
+                // Store match data and change scene
+                GameManager::setMatchData(matchId, playerId);
+                GameManager::changeScene("MatchScene");
+                return;
+            }
+        } catch (const std::exception& e) {
+            AT_ERROR("Failed to check match status: {}", e.what());
+            enableButtons(); // Re-enable buttons on error
+            hexDuelpressed = false;
+            hexArenapressed = false;
+        }
+        matchCheckTimer = 0.0f;
+    }
+
     uiSystem.update(deltaTime, registry, camera);
     renderSystem.update(registry);
 }
@@ -151,5 +180,12 @@ void GameModeScene::onRender(int screenWidth, int screenHeight) {
 }
 
 void GameModeScene::onDestroy() {
+    if (hexDuelpressed || hexArenapressed) {
+        try {
+            ClientNetworkService::leaveMatchmaking();
+        } catch (const std::exception& e) {
+            AT_ERROR("Failed to leave matchmaking: {}", e.what());
+        }
+    }
     ResourceManager::clearAll();
 }

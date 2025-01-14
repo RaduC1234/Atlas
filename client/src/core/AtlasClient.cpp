@@ -9,6 +9,7 @@
 #include "network/ClientNetworkService.hpp"
 #include "renderer/ImGuiLayer.h"
 #include "renderer/RenderManager.hpp"
+#include "levels/MapScene.hpp"
 
 void AtlasClient::run() {
     Log::init();
@@ -41,8 +42,9 @@ void AtlasClient::run() {
     sceneFactories["RegisterScene"] = []() { return CreateScope<RegisterScene>(); };
     sceneFactories["GameModeScene"] = []() { return CreateScope<GameModeScene>(); };
     sceneFactories["MatchScene"] = []() { return CreateScope<MatchScene>(); };
+    sceneFactories["MapScene"] = []() { return CreateScope<MapScene>(); };
 
-    this->changeScene("MatchScene");
+    this->changeScene("LoginScene");
 
     float beginTime = Time::now().toSeconds();
     float endTime;

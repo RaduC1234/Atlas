@@ -1,12 +1,16 @@
 #pragma once
 
 #include <Atlas.hpp>
+#include <asio/detail/mutex.hpp>
+
+#include "cpr/api.h"
 #include "renderer/RenderManager.hpp"
 
 class RenderSystem {
 public:
     void update(entt::registry &registry) {
         // Handle all render components (quads, text, and textboxes)
+        std::lock_guard<std::mutex> lock(registryMutex);
         auto view = registry.view<TransformComponent, RenderComponent>();
 
         for (const auto &entity: view) {
@@ -88,4 +92,7 @@ public:
             );
         }
     }
+
+private:
+    std::mutex registryMutex;
 };

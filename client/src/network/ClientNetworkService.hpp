@@ -8,6 +8,11 @@
 
 class ClientNetworkService {
 public:
+    enum class GameMode {
+        HEX_DUEL,    // 1v1
+        HEX_ARENA    // 1v1v1v1
+    };
+
     ClientNetworkService() = default;
 
     ~ClientNetworkService() = default;
@@ -69,9 +74,9 @@ public:
             {"password", password}
         };
 
-        auto response = cpr::Get(
-            cpr::Url{"http://localhost:8080/login"},
-            cpr::Header{{"Content-Type", "application/JsonData"}},
+        auto response = cpr::Get(  // Changed from Get to Post
+            cpr::Url{serverUrl + "/login"},  // Changed path to use serverUrl
+            cpr::Header{{"Content-Type", "application/json"}},  // Fixed content type
             cpr::Body{requestBody.dump()}
         );
 
@@ -79,14 +84,147 @@ public:
             if (response.status_code == 200) {
                 JsonData data = JsonData::parse(response.text);
                 loginToken = data["authToken"].get<uint64_t>();
+                AT_INFO("Login successful with token: {}", loginToken);  // Added logging
                 return data["requestStatus"].get<bool>();
             }
         } catch (const std::exception &e) {
-            std::cerr << "Error in login request: " << e.what() << std::endl;
+            AT_ERROR("Error in login request: {}", e.what());
         }
 
         return false;
     }
+
+    static bool joinMatchmaking(GameMode mode) {
+        JsonData requestBody = {
+            {"playerId", loginToken},
+            {"gameMode", mode == GameMode::HEX_DUEL ? "HEX_DUEL" : "HEX_ARENA"}
+        };
+
+        auto response = cpr::Post(
+            cpr::Url{serverUrl + "/matchmaking"},
+            cpr::Header{{"Content-Type", "application/json"}},
+            cpr::Body{requestBody.dump()}
+        );
+
+        if (response.status_code == 200) {
+            AT_INFO("Successfully joined matchmaking queue");
+            return true;
+        }
+
+        AT_ERROR("Failed to join matchmaking: {}", response.text);
+        return false;
+    }
+
+    static bool leaveMatchmaking() {
+        JsonData requestBody = {
+            {"playerId", loginToken}
+        };
+
+        auto response = cpr::Post(
+            cpr::Url{serverUrl + "/leave_queue"},
+            cpr::Header{{"Content-Type", "application/json"}},
+            cpr::Body{requestBody.dump()}
+        );
+
+        if (response.status_code == 200) {
+            AT_INFO("Successfully left matchmaking queue");
+            return true;
+        }
+
+        AT_ERROR("Failed to leave matchmaking: {}", response.text);
+        return false;
+    }
+
+    // Add method to submit match results
+    static bool submitMatchResult(uint64_t matchId, uint64_t winnerId) {
+        JsonData requestBody = {
+            {"matchId", matchId},
+            {"winnerId", winnerId}
+        };
+
+        auto response = cpr::Post(
+            cpr::Url{serverUrl + "/match_result"},
+            cpr::Header{{"Content-Type", "application/json"}},
+            cpr::Body{requestBody.dump()}
+        );
+
+        if (response.status_code == 200) {
+            AT_INFO("Successfully submitted match result");
+            return true;
+        }
+
+        AT_ERROR("Failed to submit match result: {}", response.text);
+        return false;
+    }
+
+    static uint64_t joinMatch() {
+        auto response = cpr::Post(
+            cpr::Url{serverUrl + "/join_match"},
+            cpr::Header{{"Content-Type", "application/json"}}
+        );
+
+        if (response.status_code != 200) {
+            AT_ERROR("Failed to join match: {}", response.text);
+            throw std::runtime_error("Failed to join match: " + response.text);
+        }
+
+        try {
+            uint64_t playerId = std::stoull(response.text);
+            currentPlayerId = playerId;  // Store the player ID
+            AT_INFO("Successfully joined match with player ID: {}", playerId);
+            return playerId;
+        } catch (const std::exception& e) {
+            AT_ERROR("Error parsing player ID from response: {}", e.what());
+            throw std::runtime_error("Error parsing player ID from response: " + std::string(e.what()));
+        }
+    }
+
+    static bool checkMatchStatus() {
+        try {
+            auto response = cpr::Get(
+                cpr::Url{serverUrl + "/match_status"},
+                cpr::Header{{"Content-Type", "application/json"}},
+                cpr::Parameters{{"playerId", std::to_string(loginToken)}}
+            );
+
+            if (response.status_code != 200) {
+                if (response.status_code == 404) {
+                    // This is an expected case when not in queue
+                    return false;
+                }
+                AT_ERROR("Failed to check match status: Status code {}", response.status_code);
+                return false;
+            }
+
+            if (response.text.empty()) {
+                AT_ERROR("Empty response from server when checking match status");
+                return false;
+            }
+
+            try {
+                auto jsonResponse = JsonData::parse(response.text);
+                bool matchFound = jsonResponse["matchFound"].get<bool>();
+
+                if (matchFound) {
+                    currentMatchId = jsonResponse["matchId"].get<uint64_t>();
+                    AT_INFO("Match found! Match ID: {}", currentMatchId);
+                    return true;
+                }
+
+                return false;
+            } catch (const std::exception& e) {
+                AT_ERROR("Error parsing match status response: {}", e.what());
+                return false;
+            }
+        } catch (const std::exception& e) {
+            AT_ERROR("Network error checking match status: {}", e.what());
+            return false;
+        }
+    }
+
+    static uint64_t getCurrentMatchId() { return currentMatchId; }
+
+    static uint64_t getCurrentPlayerId() { return currentPlayerId; }
 
 private:
     template<typename Class>
@@ -97,4 +235,6 @@ private:
 
     static inline uint64_t loginToken{0};
     static inline std::string serverUrl{};
+    static inline uint64_t currentMatchId{0};
+    static inline uint64_t currentPlayerId{0};
 };

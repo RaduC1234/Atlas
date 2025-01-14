@@ -27,10 +27,23 @@ public:
         return registryMutex;
     }
 
-    std::vector<uint64_t> & getPlayerList() {
+    const std::vector<uint64_t>& getPlayerList() const {
         return players;
     }
 
+    // Non-const access for modifications
+    std::vector<uint64_t>& getPlayerList() {
+        return players;
+    }
+
+    // Alternative: Add a dedicated method for adding players
+    void addPlayer(uint64_t playerId) {
+        players.push_back(playerId);
+    }
+
+    uint64_t getId() const {
+        return entId;  // Using entId as the lobby ID
+    }
 private:
     entt::registry registry;
     std::mutex registryMutex;
