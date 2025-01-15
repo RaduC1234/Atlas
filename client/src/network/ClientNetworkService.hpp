@@ -1,7 +1,6 @@
 #pragma once
 
-#include "ClientRequest.hpp"
-#include "Packet.hpp"
+#include <Atlas.hpp>
 #include <cpr/cpr.h>
 
 #include "map/MapState.hpp"
@@ -227,11 +226,6 @@ public:
     static uint64_t getCurrentPlayerId() { return currentPlayerId; }
 
 private:
-    template<typename Class>
-    static std::shared_ptr<ClientRequest> &requestInstance() {
-        static std::shared_ptr<ClientRequest> instance;
-        return instance;
-    }
 
     static inline uint64_t loginToken{0};
     static inline std::string serverUrl{};

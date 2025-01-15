@@ -2,10 +2,6 @@
 
 #include <Atlas.hpp>
 #include <cpr/cpr.h>
-#include <thread>
-#include <queue>
-#include <mutex>
-#include <atomic>
 
 struct SyncData {
     entt::registry* registry;  // ✅ Allows null and dynamic assignment
@@ -25,6 +21,9 @@ public:
 
 private:
     void syncEntities(entt::registry &registry, uint64_t playerId);
+
+    void predictEntities(entt::registry &registry, float deltaTime);
+
     void overwriteRegistry(const nlohmann::json &jsonResponse, entt::registry &registry, uint64_t playerId);
     void networkThread();
 

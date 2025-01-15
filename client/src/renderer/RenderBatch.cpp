@@ -276,11 +276,3 @@ void RenderBatch::render(int screenWidth, int screenHeight, Camera &camera) {
 
     glBindVertexArray(0);
 }
-
-void RenderBatch::clear() {
-    vertices.clear(); // Remove all stored vertices
-    indices.clear();  // Remove all stored indices
-    vertexIndex = 0;  // Reset vertex index counter
-    full = false;     // Mark batch as not full
-}
-

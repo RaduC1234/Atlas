@@ -57,14 +57,15 @@ void MatchScene::onUpdate(float deltaTime) {
 
     if (syncWithServer)
         networkSystem.update(deltaTime, registry, this->playerId);
-    pawnSystem.update(deltaTime, registry, this->playerId, this->camera);
 
-    ImGui::End();
+    pawnSystem.update(deltaTime, registry, this->playerId, this->camera);
 }
 
 void MatchScene::onRender(int screenWidth, int screenHeight) {
     renderSystem.update(registry);
     RenderManager::flush(screenWidth, screenHeight, camera);
+
+    ImGui::End();
 }
 
 void MatchScene::onDestroy() {

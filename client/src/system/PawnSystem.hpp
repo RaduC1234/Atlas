@@ -19,12 +19,12 @@ public:
         registry.view<PawnComponent, RenderComponent>().each([&](auto entity, PawnComponent &pawn, RenderComponent &render) {
             if (pawn.moveForward) {
                 render.textureKey = "back1";
-            } else if (pawn.moveBackwards) {
-                render.textureKey = "front1";
-            } else if (pawn.moveLeft) {
+            }else if (pawn.moveLeft) {
                 render.textureKey = "left1";
             } else if (pawn.moveRight) {
                 render.textureKey = "right1";
+            }  else {
+                render.textureKey = "front1";
             }
         });
     }

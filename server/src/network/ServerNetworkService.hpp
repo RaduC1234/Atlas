@@ -171,7 +171,7 @@ public:
             }
         });
 
-        // Matchmaking (Create Lobbies)
+        // Matchmaking (Create Lobbies) - test only
         CROW_ROUTE(app, "/join_match")([this](const crow::request &req) {
             std::lock_guard<std::mutex> lock(handlerMutex);
 
@@ -328,7 +328,7 @@ private:
                         pawn.moveRight = input.value("moveRight", false);
                         pawn.aimRotation = input.value("aimRotation", 0.0f);
 
-                        float speed = 25.0f;
+                        constexpr float speed = 50.0f;
                         if (pawn.moveForward) transform.position.y += speed;
                         if (pawn.moveBackwards) transform.position.y -= speed;
                         if (pawn.moveLeft) transform.position.x -= speed;

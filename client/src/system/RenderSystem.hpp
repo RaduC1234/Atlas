@@ -1,22 +1,14 @@
 #pragma once
 
 #include <Atlas.hpp>
-#include <asio/detail/mutex.hpp>
-
-#include "cpr/api.h"
 #include "renderer/RenderManager.hpp"
 
 class RenderSystem {
 public:
     void update(entt::registry &registry) {
-        // Handle all render components (quads, text, and textboxes)
-        std::lock_guard<std::mutex> lock(registryMutex);
-        auto view = registry.view<TransformComponent, RenderComponent>();
+        std::lock_guard<std::mutex> lock(registryLock);
 
-        for (const auto &entity: view) {
-            const auto &transform = view.get<TransformComponent>(entity);
-            const auto &render = view.get<RenderComponent>(entity);
-
+        registry.view<TransformComponent, RenderComponent>().each([](auto entity, auto &transform, auto &render) {
             switch (render.shape) {
                 case 0: // Quad
                     RenderManager::drawRotatedQuad(
@@ -43,7 +35,7 @@ public:
                 default:
                     break;
             }
-        }
+        });
 
         auto buttonView = registry.view<TransformComponent, RenderComponent, ButtonComponent>();
         for (const auto &entity: buttonView) {
@@ -57,9 +49,7 @@ public:
                 textPosition.x -= transform.scale.x * 0.025f;
                 textPosition.y -= transform.scale.y * 0.22f;
 
-                glm::vec4 currentTextColor = button.isPressed ? button.pressedTextColor :
-                                      button.isHovered ? button.hoverTextColor :
-                                      button.isDisabled ? button.disabledTextColor : button.normalTextColor;
+                glm::vec4 currentTextColor = button.isPressed ? button.pressedTextColor : button.isHovered ? button.hoverTextColor : button.isDisabled ? button.disabledTextColor : button.normalTextColor;
 
                 RenderManager::drawText(
                     glm::vec3(textPosition.x, textPosition.y, transform.position.z - 1),
@@ -94,5 +84,5 @@ public:
     }
 
 private:
-    std::mutex registryMutex;
+    std::mutex registryLock;
 };
