@@ -2,6 +2,7 @@
 
 #include <Atlas.hpp>
 #include "renderer/RenderManager.hpp"
+#include "resource/ResourceManager.hpp"
 
 class RenderSystem {
 public:

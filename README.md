@@ -1,25 +1,51 @@
 # Project Atlas
 
-## Building
+## 📌 Cloning 
 
-Requirements: vcpkg, cmake \
-\
-Dependencies:
-1. [GLM](https://github.com/g-truc/glm)
-2. [GLAD-OpenGL](https://glad.dav1d.de/)
-3. [GLFW](https://www.glfw.org/)
-4. [Freetype](https://github.com/freetype/freetype)
-5. [Stb](https://github.com/nothings/stb)
-6. [ENTT](https://github.com/skypjack/entt)
-7. [SQLiteCpp](https://github.com/SRombauts/SQLiteCpp)
-8. [Nlohmann-Json](https://github.com/nlohmann/json)
+To properly clone this repository along with its submodules, follow one of the methods below:
 
-### Tasks
+### 1️⃣ Using Command Line
+Run the following command to clone the repository and its submodules in **one step**:
 
-- Pentru task-uri săptămânale [aici](https://github.com/users/RaduC1234/projects/6/views/1).
-- Exista 2 branchuri: unul main pe care sa **NU faceti push direct si nici pull request**, si unul de test
+```sh
+git clone --recursive https://github.com/RaduC1234/Atlas
+```
 
-## Battle city
+### 2️⃣ Cloning via an IDE (VS, CLion, etc.)
+
+If you're cloning the project using an **IDE** that doesn't automatically initialize submodules, you must manually initialize and update them **after cloning** by running:
+
+```sh
+git submodule update --init --recursive
+```
+
+## 🛠️ Building the Project
+
+### ⚙️ Project Configurations
+The project consists of the following components:
+
+- **Client** – Executable
+- **Server** – Executable
+- **Matchmaking** – Shared Library
+- **Engine** – Static Library
+
+### 📋 Requirements
+- [CMake](https://cmake.org/) (for building the project)
+
+### 📦 Dependencies
+The project depends on the following external libraries:
+
+1. [GLM](https://github.com/g-truc/glm) – Header-only math library
+2. [EnTT](https://github.com/skypjack/entt) – Entity Component System (ECS) library
+3. [Nlohmann-JSON](https://github.com/nlohmann/json) – JSON parsing library
+4. [SQLiteCpp](https://github.com/SRombauts/SQLiteCpp) – SQLite database wrapper
+5. [Crow](https://github.com/CrowCpp/Crow) – C++ web framework
+6. [Glad (OpenGL)](https://glad.dav1d.de/) – OpenGL loader
+7. [GLFW](https://www.glfw.org/) – OpenGL windowing and input handling
+8. [Freetype](https://github.com/freetype/freetype) – Font rendering library
+9. [stb](https://github.com/nothings/stb) – Header-only graphics and image processing utilities
+
+##  Battle city
 
 Jocul [Battle city](https://docs.google.com/document/d/1ZUAht8qgf-_eWXlgzBdUDsHmSIjltmKt4VtcDRZftMs/edit?tab=t.0#heading=h.7qep3k3doi7) se desfășoară într-un spațiu bidimensional în care mai mulți jucători se luptă pentru a distruge tancurile inamice și să câștige teritoriul tabelei de joc. Pornind de ideea acestui joc să se implementeze o aplicație care respectă următoarele reguli:
 - Într-un spațiu minat sunt plasate cel mult 4 personaje (câte unul pentru fiecare jucător) în unul din colțurile tabelei de joc. Fiecare personaj se va putea deplasa cu câte o unitate în una din cele 4 direcții (sus, jos, stânga sau dreapta) dacă este liberă, cu scopul de a-i împușca pe inamici.

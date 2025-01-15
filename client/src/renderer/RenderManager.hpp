@@ -5,7 +5,7 @@
 
 class RenderManager {
 public:
-    static void init(uint32_t maxBatchSize = 1000);
+    static void init(uint32_t maxBatchSize = 2000);
 
     static void shutdown();
 
@@ -18,7 +18,7 @@ public:
     * @param color color of the quad
     * @param sprite leave default for opaque quad
     * @param centered Specifies whether the rendering origin is at the center of the shape (true) or at its bottom-left corner (false).
-    * @param specialProperties instructs the renderer to draw using special techniques
+    * @param specialProperties instructs the renderer to draw using special techniques @link RenderBatch
     */
     static void drawRotatedQuad(const glm::vec3 &position, const glm::vec2 &size, float rotation, const glm::vec4 &color, const Sprite &sprite = Sprite(), bool centered = false, int32_t specialProperties = 0x00);
 
@@ -28,7 +28,7 @@ public:
     * @param color color of the quad
     * @param sprite leave default for opaque quad
     * @param centered Specifies whether the rendering origin is at the center of the shape (true) or at its bottom-left corner (false).
-    * @param specialProperties instructs the renderer to draw using special techniques
+    * @param specialProperties instructs the renderer to draw using special techniques @link RenderBatch
     */
     static void drawQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, const Sprite &sprite = Sprite(), bool centered = false, int32_t specialProperties = 0x00);
 

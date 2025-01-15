@@ -5,6 +5,7 @@
 #include "core/GameManager.hpp"
 #include "network/ClientNetworkService.hpp"
 #include "renderer/Color.hpp"
+#include "resource/ResourceManager.hpp"
 #include "window/Window.hpp"
 
 void GameModeScene::onCreate() {

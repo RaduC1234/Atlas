@@ -91,7 +91,9 @@ void RenderBatch::addShape(const glm::vec2 &position, const glm::vec2 &scale, fl
         glm::vec2 uv1, uv2;
     };
 
-
+    /*
+     * https://en.wikipedia.org/wiki/9-slice_scaling.
+     */
     if (properties & RENDERER_NINE_SLICE) {
         float cornerSize = glm::min(scale.x, scale.y) * 0.25f;
 
@@ -239,6 +241,7 @@ void RenderBatch::addShape(const glm::vec2 &position, const glm::vec2 &scale, fl
 
 
 void RenderBatch::render(int screenWidth, int screenHeight, Camera &camera) {
+    // @see {@link /assets/shaders/render.glsl}
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wireframe mode
     shader->bind(); // use shader
 

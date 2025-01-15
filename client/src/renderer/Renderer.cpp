@@ -107,8 +107,7 @@ void Renderer::flush(uint32_t screenWidth, uint32_t screenHeight, Camera &camera
     }
     batches.clear();
 
-    GLenum err;
-    if ((err = glGetError()) != GL_NO_ERROR) {
+    if (GLenum err; (err = glGetError()) != GL_NO_ERROR) {
         AT_ERROR("OpenGL error: {0}", err);
     }
 }

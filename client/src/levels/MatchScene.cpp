@@ -5,6 +5,7 @@
 #include "renderer/Color.hpp"
 #include "renderer/Font.hpp"
 #include "renderer/Texture.hpp"
+#include "resource/ResourceManager.hpp"
 #include "window/Mouse.hpp"
 
 void MatchScene::onCreate() {

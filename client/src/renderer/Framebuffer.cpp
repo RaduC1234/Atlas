@@ -14,7 +14,6 @@ Framebuffer::Framebuffer(int width, int height) : width(width), height(height) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
 
-    // Check if framebuffer is complete
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         std::cerr << "Error: Framebuffer is incomplete!" << std::endl;
     }
@@ -33,7 +32,7 @@ Framebuffer::~Framebuffer() {
 
 void Framebuffer::bind() const {
     glBindFramebuffer(GL_FRAMEBUFFER, framebufferObject);
-    glViewport(0, 0, width, height); // Adjust the viewport to match the framebuffer size
+    glViewport(0, 0, width, height); // Adjust the viewport to match the framebuffer size. TODO: rewrite Camera
 }
 
 void Framebuffer::unbind() const {

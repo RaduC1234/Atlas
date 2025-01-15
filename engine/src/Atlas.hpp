@@ -6,9 +6,6 @@
 // events
 #include "event/EventManager.hpp"
 
-// resource
-#include "resource/ResourceManager.hpp"
-
 // entity
 #include "entity/Entity.hpp"
 
