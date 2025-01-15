@@ -361,15 +361,24 @@ private:
     void tryMatchDuel() {
         auto duelPlayers = getPlayersInQueue(GameMode::HEX_DUEL);
 
+        // Early return if we don't have enough players
+        if (duelPlayers.size() < 2) return;
+
         for (size_t i = 0; i < duelPlayers.size(); i++) {
             for (size_t j = i + 1; j < duelPlayers.size(); j++) {
+                // Create a vector with exactly 2 players for the duel
                 std::vector<Player> playerPair = {duelPlayers[i].player, duelPlayers[j].player};
                 auto quality = MatchmakingManager::evaluateMatch(playerPair);
 
                 if (quality.isValid && quality.quality >= 0.7) {
-                    createMatch({duelPlayers[i], duelPlayers[j]}, GameMode::HEX_DUEL);
-                    removeFromQueue({duelPlayers[i].playerId, duelPlayers[j].playerId});
-                    break;
+                    // Create a vector with exactly 2 QueuedPlayer objects
+                    std::vector<QueuedPlayer> matchedPair = {duelPlayers[i], duelPlayers[j]};
+                    createMatch(matchedPair, GameMode::HEX_DUEL);
+
+                    // Remove only the matched players from queue
+                    std::vector<uint64_t> matchedIds = {duelPlayers[i].playerId, duelPlayers[j].playerId};
+                    removeFromQueue(matchedIds);
+                    return; // Exit after creating a match
                 }
             }
         }
@@ -377,10 +386,15 @@ private:
 
     void tryMatchArena() {
         auto arenaPlayers = getPlayersInQueue(GameMode::HEX_ARENA);
+
+        // Early return if we don't have enough players
         if (arenaPlayers.size() < 4) return;
 
+        // Look for groups of exactly 4 players
         for (size_t i = 0; i <= arenaPlayers.size() - 4; i++) {
+            // Take exactly 4 players for evaluation
             std::vector<QueuedPlayer> potentialMatch(arenaPlayers.begin() + i, arenaPlayers.begin() + i + 4);
+
             std::vector<Player> playerGroup;
             for (const auto& qp : potentialMatch) {
                 playerGroup.push_back(qp.player);
@@ -390,15 +404,30 @@ private:
 
             if (quality.isValid && quality.quality >= 0.6) {
                 createMatch(potentialMatch, GameMode::HEX_ARENA);
+
+                // Remove exactly these 4 players from queue
                 std::vector<uint64_t> playerIds;
                 for (const auto& player : potentialMatch) {
                     playerIds.push_back(player.playerId);
                 }
                 removeFromQueue(playerIds);
-                break;
+                return; // Exit after creating a match
             }
         }
     }
+
+    // Helper function to validate match requirements
+    static bool validateMatchRequirements(const std::vector<QueuedPlayer>& players, GameMode mode) {
+        size_t requiredPlayers = (mode == GameMode::HEX_DUEL) ? 2 : 4;
+        if (players.size() != requiredPlayers) {
+            AT_ERROR("Invalid number of players for game mode {}. Required: {}, Got: {}",
+                    mode == GameMode::HEX_DUEL ? "HEX_DUEL" : "HEX_ARENA",
+                    requiredPlayers, players.size());
+            return false;
+        }
+        return true;
+    }
+
     std::vector<QueuedPlayer> getPlayersInQueue(GameMode mode) {
         std::vector<QueuedPlayer> result;
         std::copy_if(matchmakingQueue.begin(), matchmakingQueue.end(),
@@ -419,61 +448,83 @@ private:
 
      void createMatch(const std::vector<QueuedPlayer>& matchedPlayers, GameMode mode) {
         std::lock_guard<std::mutex> lock(handlerMutex);
+
+        // Verify correct number of players for game mode
+        size_t expectedPlayers = (mode == GameMode::HEX_DUEL) ? 2 : 4;
+        if (matchedPlayers.size() != expectedPlayers) {
+            AT_ERROR("Invalid number of players for game mode. Expected: {}, Got: {}",
+                    expectedPlayers, matchedPlayers.size());
+            return;
+        }
+
+        // Create lobby and add authorized players to its list
         lobbies.emplace_back();
         Lobby& lobby = lobbies.back();
 
-        for (const auto& queuedPlayer : matchedPlayers) {
-            Actor playerEntity = lobby.getRegistry().create();
-            glm::vec3 position;
-
-            if (mode == GameMode::HEX_DUEL) {
-                position = matchedPlayers[0].playerId == queuedPlayer.playerId ?
-                          glm::vec3(-300, 0, 0) : glm::vec3(300, 0, 0);
-            } else {
-                int playerIndex = &queuedPlayer - &matchedPlayers[0];
-                switch (playerIndex) {
-                    case 0: position = glm::vec3(-300, -300, 0); break;
-                    case 1: position = glm::vec3(300, -300, 0); break;
-                    case 2: position = glm::vec3(-300, 300, 0); break;
-                    case 3: position = glm::vec3(300, 300, 0); break;
-                }
-            }
-
-            lobby.getRegistry().emplace<TransformComponent>(playerEntity, position, 0.0f, glm::vec2(100, 100));
-            lobby.getRegistry().emplace<PawnComponent>(playerEntity, queuedPlayer.playerId);
-            lobby.getRegistry().emplace<NetworkComponent>(playerEntity, lobby.nextId());
-            lobby.addPlayer(queuedPlayer.playerId);
+        // Add all matched players to authorized list
+        for (const auto& player : matchedPlayers) {
+            lobby.addPlayer(player.playerId);
         }
 
         // Create match record
         Match matchRecord;
+        std::vector<int> playerIds;
         for (const auto& player : matchedPlayers) {
-            // Update player match ID in database
             Player updatedPlayer = player.player;
-            updatedPlayer.setMatchId(lobby.nextId());
+            updatedPlayer.setMatchId(lobby.getId());
             DatabaseManager::update(updatedPlayer);
-
-            // Add to match record
-            matchRecord.setPlayerIds(std::vector<int>{static_cast<int>(player.playerId)});
+            playerIds.push_back(static_cast<int>(player.playerId));
         }
+
+        matchRecord.setPlayerIds(playerIds);
         DatabaseManager::create(matchRecord);
 
-        AT_INFO("Created new {} match with {} players",
+        AT_INFO("Created new {} lobby for {} players",
                 mode == GameMode::HEX_DUEL ? "HEX_DUEL" : "HEX_ARENA",
                 matchedPlayers.size());
+    }
 
-        // Notify players about match creation
-        nlohmann::json matchInfo;
-        matchInfo["matchId"] = lobby.nextId();
-        matchInfo["gameMode"] = mode == GameMode::HEX_DUEL ? "HEX_DUEL" : "HEX_ARENA";
-        matchInfo["players"] = nlohmann::json::array();
+    crow::response handleJoinMatch(const crow::request& req) {
+        std::lock_guard<std::mutex> lock(handlerMutex);
 
-        for (const auto& player : matchedPlayers) {
-            matchInfo["players"].push_back({
-                {"playerId", player.playerId},
-                {"username", player.player.getUsername()},
-                {"rating", player.player.getGlickoRating()}
-            });
+        try {
+            auto body = crow::json::load(req.body);
+            uint64_t playerId = body["playerId"].i();
+
+            // Find the lobby this player belongs to
+            for (auto& lobby : lobbies) {
+                if (lobby.containsPlayer(playerId)) {
+                    auto& playerList = lobby.getPlayerList();
+                    size_t playerIndex = std::find(playerList.begin(), playerList.end(), playerId) - playerList.begin();
+
+                    // Create player entity with position based on index
+                    Actor playerEntity = lobby.getRegistry().create();
+                    glm::vec3 position;
+
+                    // Position based on total expected players
+                    if (playerList.size() <= 2) { // HEX_DUEL
+                        position = (playerIndex == 0) ? glm::vec3(-300, 0, 0) : glm::vec3(300, 0, 0);
+                    } else { // HEX_ARENA
+                        switch (playerIndex) {
+                            case 0: position = glm::vec3(-300, -300, 0); break;
+                            case 1: position = glm::vec3(300, -300, 0); break;
+                            case 2: position = glm::vec3(-300, 300, 0); break;
+                            case 3: position = glm::vec3(300, 300, 0); break;
+                            default: position = glm::vec3(0, 0, 0); break;
+                        }
+                    }
+
+                    lobby.getRegistry().emplace<TransformComponent>(playerEntity, position, 0.0f, glm::vec2(100, 100));
+                    lobby.getRegistry().emplace<PawnComponent>(playerEntity, playerId);
+                    lobby.getRegistry().emplace<NetworkComponent>(playerEntity, lobby.nextId());
+
+                    return crow::response(200, std::to_string(playerId));
+                }
+            }
+
+            return crow::response(404, "No matching lobby found for player");
+        } catch (const std::exception& e) {
+            return crow::response(400, std::string("Error: ") + e.what());
         }
     }
 
