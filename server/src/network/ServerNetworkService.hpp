@@ -6,6 +6,7 @@
 #include "Lobby.hpp"
 #include "data/DatabaseManager.hpp"
 #include "matchmaking/MatchmakingManager.hpp"
+#include <vector>
 
 enum class GameMode {
     HEX_DUEL,
