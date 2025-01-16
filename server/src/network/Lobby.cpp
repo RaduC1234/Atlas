@@ -27,6 +27,11 @@ Lobby::Lobby() {
             const auto actor = registry.create();
             registry.emplace<NetworkComponent>(actor, nextId(), static_cast<uint32_t>(tileNumber + TILE_CODE));
             registry.emplace<TransformComponent>(actor, glm::vec3(posX, posY, 5.0f), 0.0f, tileSize);
+
+            if (tileNumber == 40 || tileNumber == 63) {
+                registry.emplace<RigidbodyComponent>(actor, RigidbodyComponent{true});
+            }
+
         }
     }
 }
