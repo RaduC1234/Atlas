@@ -158,6 +158,8 @@ void ServerNetworkService::start(const uint32_t port) {
         lobby.getRegistry().emplace<PawnComponent>(playerEntity, static_cast<uint32_t>(playerId));
         lobby.getRegistry().emplace<NetworkComponent>(playerEntity, lobby.nextId());
 
+        lobby.getRegistry().emplace<RigidbodyComponent>(playerEntity, RigidbodyComponent{true});
+
         lobby.getPlayerList().push_back(playerId);
 
         return crow::response(std::to_string(playerId));
@@ -207,7 +209,7 @@ void ServerNetworkService::start(const uint32_t port) {
             auto requestBody = nlohmann::json::parse(req.body);
             uint64_t playerId = requestBody["playerId"].get<uint64_t>();
 
-            return handleSyncRequest(playerId, requestBody["input"]);
+            return this->handleSyncRequest(playerId, requestBody["input"]);
         } catch (const std::exception &e) {
             return crow::response(400, std::string("Error parsing request: ") + e.what());
         }
@@ -267,13 +269,14 @@ void ServerNetworkService::stop() {
 crow::response ServerNetworkService::handleSyncRequest(uint64_t playerId, nlohmann::json input) {
     for (Lobby &lobby: lobbies) {
         if (lobby.containsPlayer(playerId)) {
-
             auto view = lobby.getRegistry().view<PawnComponent, TransformComponent>();
+
             for (auto entity : view) {
                 auto &pawn = view.get<PawnComponent>(entity);
                 auto &transform = view.get<TransformComponent>(entity);
 
                 if (pawn.playerId == playerId) {
+                    glm::vec3 originalPos = transform.position;
 
                     pawn.moveForward = input.value("moveForward", false);
                     pawn.moveBackwards = input.value("moveBackwards", false);
@@ -282,10 +285,80 @@ crow::response ServerNetworkService::handleSyncRequest(uint64_t playerId, nlohma
                     pawn.aimRotation = input.value("aimRotation", 0.0f);
 
                     constexpr float speed = 50.0f;
-                    if (pawn.moveForward) transform.position.y += speed;
-                    if (pawn.moveBackwards) transform.position.y -= speed;
+
+                    // Apply movement
                     if (pawn.moveLeft) transform.position.x -= speed;
                     if (pawn.moveRight) transform.position.x += speed;
+
+                    // Check horizontal collisions
+                    bool xCollision = false;
+                    auto view2 = lobby.getRegistry().view<RigidbodyComponent, TransformComponent>();
+
+                    for (auto wall : view2) {
+                        const auto& wallTransform = view2.get<TransformComponent>(wall);
+                        const auto& rigidbody = view2.get<RigidbodyComponent>(wall);
+
+                        if (!rigidbody.isSolid || entity == wall) {
+                            continue;
+                        }
+
+                        // Calculate actual edges of both objects
+                        float playerLeft = transform.position.x - (transform.scale.x * 0.4f); // Reduced collision box
+                        float playerRight = transform.position.x + (transform.scale.x * 0.4f);
+                        float wallLeft = wallTransform.position.x - (wallTransform.scale.x * 0.5f);
+                        float wallRight = wallTransform.position.x + (wallTransform.scale.x * 0.5f);
+                        float playerTop = transform.position.y + (transform.scale.y * 0.4f);
+                        float playerBottom = transform.position.y - (transform.scale.y * 0.4f);
+                        float wallTop = wallTransform.position.y + (wallTransform.scale.y * 0.5f);
+                        float wallBottom = wallTransform.position.y - (wallTransform.scale.y * 0.5f);
+
+                        // Check if boxes overlap
+                        if (playerRight > wallLeft && playerLeft < wallRight &&
+                            playerTop > wallBottom && playerBottom < wallTop) {
+                            xCollision = true;
+                            break;
+                        }
+                    }
+
+                    if (xCollision) {
+                        transform.position.x = originalPos.x;
+                    }
+
+                    // Apply vertical movement
+                    if (pawn.moveForward) transform.position.y += speed;
+                    if (pawn.moveBackwards) transform.position.y -= speed;
+
+                    // Check vertical collisions
+                    bool yCollision = false;
+
+                    for (auto wall : view2) {
+                        const auto& wallTransform = view2.get<TransformComponent>(wall);
+                        const auto& rigidbody = view2.get<RigidbodyComponent>(wall);
+
+                        if (!rigidbody.isSolid || entity == wall) {
+                            continue;
+                        }
+
+                        // Calculate actual edges of both objects
+                        float playerLeft = transform.position.x - (transform.scale.x * 0.4f);
+                        float playerRight = transform.position.x + (transform.scale.x * 0.4f);
+                        float wallLeft = wallTransform.position.x - (wallTransform.scale.x * 0.5f);
+                        float wallRight = wallTransform.position.x + (wallTransform.scale.x * 0.5f);
+                        float playerTop = transform.position.y + (transform.scale.y * 0.4f);
+                        float playerBottom = transform.position.y - (transform.scale.y * 0.4f);
+                        float wallTop = wallTransform.position.y + (wallTransform.scale.y * 0.5f);
+                        float wallBottom = wallTransform.position.y - (wallTransform.scale.y * 0.5f);
+
+                        if (playerRight > wallLeft && playerLeft < wallRight &&
+                            playerTop > wallBottom && playerBottom < wallTop) {
+                            yCollision = true;
+                            break;
+                        }
+                    }
+
+                    if (yCollision) {
+                        transform.position.y = originalPos.y;
+                    }
                 }
             }
 
@@ -294,6 +367,7 @@ crow::response ServerNetworkService::handleSyncRequest(uint64_t playerId, nlohma
             return crow::response(responseJson.dump());
         }
     }
+
     return crow::response(404, "Invalid player ID");
 }
 
@@ -455,6 +529,8 @@ crow::response ServerNetworkService::handleJoinMatch(const crow::request& req) {
                 lobby.getRegistry().emplace<TransformComponent>(playerEntity, position, 0.0f, glm::vec2(100, 100));
                 lobby.getRegistry().emplace<PawnComponent>(playerEntity, playerId);
                 lobby.getRegistry().emplace<NetworkComponent>(playerEntity, lobby.nextId());
+
+                lobby.getRegistry().emplace<RigidbodyComponent>(playerEntity, RigidbodyComponent{true});
 
                 return crow::response(200, std::to_string(playerId));
             }
