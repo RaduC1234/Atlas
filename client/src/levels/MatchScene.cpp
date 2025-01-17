@@ -21,6 +21,11 @@ void MatchScene::onCreate() {
     ResourceManager::loadFromDirectory<Texture>("assets/textures", nullptr, ".png", ".jpg");
 
     // =========================================================================================
+
+    constexpr float mapSize = 50.0f * 100.0f; // 5000 units total
+    cameraController.setBounds({mapSize, mapSize}); // This is the total size, camera system will center it
+    cameraController.setSmoothness(0.05f);   // Enable smooth following
+    cameraController.setZoom(0.4f);
 }
 
 void MatchScene::onStart() {
@@ -51,16 +56,17 @@ void MatchScene::onUpdate(float deltaTime) {
     ImGui::Checkbox("Sync", &syncWithServer);
 
     static float zoom = 1.0f;
+    float minZoom = camera.getMinimumZoomLevel();
     if (ImGui::SliderFloat("Zoom", &zoom, 0.1f, 2.0f, "%.1f")) {
-        // Ensure stepping of 0.1
-        zoom = round(zoom * 10.0f) / 10.0f;
-        camera.setZoom(zoom);
+        zoom = max(round(zoom * 10.0f) / 10.0f, minZoom);
+        cameraController.setZoom(zoom);
     }
 
     if (syncWithServer)
         networkSystem.update(deltaTime, registry, this->playerId);
 
     pawnSystem.update(deltaTime, registry, this->playerId, this->camera);
+    cameraController.update(registry, this->playerId, deltaTime);
 }
 
 void MatchScene::onRender(int screenWidth, int screenHeight) {

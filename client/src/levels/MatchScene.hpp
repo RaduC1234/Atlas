@@ -2,6 +2,7 @@
 
 #include "Atlas.hpp"
 #include "renderer/Camera.hpp"
+#include "renderer/CameraController.hpp"
 #include "scene/Scene.hpp"
 #include "system/NetworkSystem.hpp"
 #include "system/PawnSystem.hpp"
@@ -26,4 +27,5 @@ private:
     PawnSystem pawnSystem;
     RenderSystem renderSystem;
     NetworkSystem networkSystem;
+    CameraController cameraController{camera};
 };

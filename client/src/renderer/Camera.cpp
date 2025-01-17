@@ -76,3 +76,35 @@ glm::mat4 Camera::getViewMatrix() {
 
     return viewMatrix;
 }
+
+glm::vec2 Camera::calculateBoundedPosition(const glm::vec2& targetPos) const {
+    // First calculate the actual viewport size (same as in applyViewport)
+    float viewportWidth, viewportHeight;
+    float desiredAspectRatio = 16.0f / 9.0f;
+
+    if (static_cast<float>(windowSize.x) / windowSize.y > desiredAspectRatio) {
+        viewportHeight = windowSize.y;
+        viewportWidth = viewportHeight * desiredAspectRatio;
+    } else {
+        viewportWidth = windowSize.x;
+        viewportHeight = viewportWidth / desiredAspectRatio;
+    }
+
+    // Calculate the world-space visible area based on viewport and zoom
+    float worldVisibleWidth = (viewportWidth / zoomFactor) * 1.03f;
+    float worldVisibleHeight = viewportHeight / zoomFactor * 1.50f; // Adjust vertical view area
+
+    // Map boundaries (centered at 0,0)
+    float halfMapWidth = mapSize.x * 0.5f;
+    float halfMapHeight = mapSize.y * 0.5f;
+
+    // Calculate the actual view area half-dimensions
+    float halfViewWidth = worldVisibleWidth * 0.5f;
+    float halfViewHeight = worldVisibleHeight * 0.5f;
+
+    // Calculate bounds ensuring we don't show outside the map
+    float maxX = std::max(-halfMapWidth + halfViewWidth, std::min(halfMapWidth - halfViewWidth, targetPos.x));
+    float maxY = std::max(-halfMapHeight + halfViewHeight, std::min(halfMapHeight - halfViewHeight, targetPos.y));
+
+    return glm::vec2(maxX, maxY);
+}
