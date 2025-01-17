@@ -44,7 +44,7 @@ void AtlasClient::run() {
     sceneFactories["MatchScene"] = []() { return CreateScope<MatchScene>(); };
     sceneFactories["MapScene"] = []() { return CreateScope<MapScene>(); };
 
-    this->changeScene("LoginScene");
+    this->changeScene("MatchScene");
 
     float beginTime = Time::now().toSeconds();
     float endTime;

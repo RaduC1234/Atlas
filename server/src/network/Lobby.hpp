@@ -1,29 +1,40 @@
 #pragma once
 
 #include <Atlas.hpp>
+#include <crow/websocket.h>
+
+struct PlayerInput {
+    bool moveForward = false;
+    bool moveBackwards = false;
+    bool moveLeft = false;
+    bool moveRight = false;
+    float aimRotation = 0.0f;
+};
 
 class Lobby {
 public:
+
     Lobby();
 
-    Lobby(const Lobby &) = delete; // to prevent Registry copy - invalid
-    Lobby &operator=(const Lobby &) = delete;
+    Lobby(const Lobby&) = delete;
+    Lobby& operator=(const Lobby&) = delete;
 
-    Lobby(Lobby &&other) noexcept;
-
-    Lobby &operator=(Lobby &&other) noexcept;
+    Lobby(Lobby&& other) noexcept;
+    Lobby& operator=(Lobby&& other) noexcept;
 
     bool containsPlayer(uint64_t playerId);
-
-    void serializeRegistry(nlohmann::json &outJson);
-
     uint64_t nextId();
 
-    entt::registry & getRegistry() {
+    void start();
+    void update(float deltaTime);
+
+    void setPlayerInput(uint64_t playerId, const PlayerInput& input);
+
+    entt::registry& getRegistry() {
         return registry;
     }
 
-    std::mutex & getRegistryMutex() {
+    std::mutex& getRegistryMutex() {
         return registryMutex;
     }
 
@@ -31,35 +42,47 @@ public:
         return players;
     }
 
-    // Non-const access for modifications
-    std::vector<uint64_t>& getPlayerList() {
-        return players;
-    }
-
-    // Alternative: Add a dedicated method for adding players
     void addPlayer(uint64_t playerId) {
         players.push_back(playerId);
     }
 
-    uint64_t getId() const {
-        return entId;  // Using entId as the lobby ID
+    int getPlayersSize() {
+        return this->players.size();
     }
+
+    uint64_t getId() const {
+        return entId;
+    }
+
+    bool hasStarted() const {
+        return started;
+    }
+
+    void addConnection(uint64_t playerId, crow::websocket::connection* conn) {
+        std::lock_guard<std::mutex> lock(playersMutex);
+        playerConnections[playerId] = conn;
+    }
+
+    void removeConnection(uint64_t playerId) {
+        std::lock_guard<std::mutex> lock(playersMutex);
+        playerConnections.erase(playerId);
+    }
+
+
 private:
+    const float baseSpeed = 100.0f;
+
     entt::registry registry;
     std::mutex registryMutex;
+
     std::vector<uint64_t> players;
     uint64_t entId = 0;
 
-    // I was forced to write like this. I know it s any pattern and bad.
-    const std::unordered_map<uint32_t, uint32_t> tileConversion =
-    {
-        {0, 48}, // path - path
-        {1, 42}, // grass - path with stones
-        {2, 56}, // bush - mine cart
-        {3, 63}, // destructible wall - create
-        {4, 0}, // indisputable wall
-        {5, 48},
-        {6, 48},
-        {7, 48}
-    };
+    bool started = false;
+
+    std::unordered_map<uint64_t, PlayerInput> inputQueue; // Latest input for each player
+    std::mutex inputMutex;
+
+    std::unordered_map<uint64_t, crow::websocket::connection*> playerConnections;
+    std::mutex playersMutex;
 };

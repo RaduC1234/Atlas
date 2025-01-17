@@ -8,7 +8,6 @@ Texture::Texture(const std::string &filePath): filePath(filePath) {
 }
 
 void Texture::generateAndLoad(const char *filePth) {
-
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
 
@@ -21,7 +20,7 @@ void Texture::generateAndLoad(const char *filePth) {
     // When shrinking an image, pixelate
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    auto data = stbi_load(filePth, &width, &height, &channel, 0);
+    const auto data = stbi_load(filePth, &width, &height, &channel, 0);
 
     if (data) {
         GLenum format;
@@ -34,11 +33,8 @@ void Texture::generateAndLoad(const char *filePth) {
 
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
     } else {
-        std::stringstream ss;
-        ss << "Error loading texture: " << filePth;
-        AT_ERROR(ss.str());
+        AT_ERROR("Error loading texture: {}", filePth);
     }
-
 
     stbi_image_free(data);
 }

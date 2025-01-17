@@ -15,5 +15,6 @@
 #include "utils/ExecutorService.hpp"
 #include "utils/FileSystem.hpp"
 #include "utils/Uuid.hpp"
+#include "utils/AtomicQueue.hpp"
 
 

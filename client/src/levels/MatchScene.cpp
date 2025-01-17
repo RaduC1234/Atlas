@@ -1,6 +1,7 @@
 #include "MatchScene.hpp"
 
 #include <imgui.h>
+#include <cpr/cpr.h>
 
 #include "renderer/Color.hpp"
 #include "renderer/Font.hpp"

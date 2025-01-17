@@ -1,11 +1,37 @@
 #include "Lobby.hpp"
-
 #include "map/MapGenerator.hpp"
 
 Lobby::Lobby() {
-    constexpr glm::vec2 tileSize = {100.0f, 100.0f};
+}
 
-    auto map = MapGenerator(50,50).getMap();
+Lobby::Lobby(Lobby &&other) noexcept
+    : registry(std::move(other.registry)),
+      players(std::move(other.players)),
+      entId(other.entId) {
+}
+
+Lobby &Lobby::operator=(Lobby &&other) noexcept {
+    if (this != &other) {
+        std::lock_guard<std::mutex> lock(other.registryMutex);
+        registry = std::move(other.registry);
+        players = std::move(other.players);
+        entId = other.entId;
+    }
+    return *this;
+}
+
+bool Lobby::containsPlayer(uint64_t playerId) {
+    return std::ranges::find(players, playerId) != players.end();
+}
+
+uint64_t Lobby::nextId() {
+    return entId++;
+}
+
+void Lobby::start() {
+    /*constexpr glm::vec2 tileSize = {100.0f, 100.0f};
+
+    auto map = MapGenerator(50, 50).getMap();
 
     int width = map[0].size();
     int height = map.size();
@@ -28,71 +54,118 @@ Lobby::Lobby() {
             registry.emplace<NetworkComponent>(actor, nextId(), static_cast<uint32_t>(tileNumber + TILE_CODE));
             registry.emplace<TransformComponent>(actor, glm::vec3(posX, posY, 5.0f), 0.0f, tileSize);
         }
+    }*/
+    this->started = true;
+}
+
+void Lobby::setPlayerInput(uint64_t playerId, const PlayerInput &input) {
+    std::lock_guard<std::mutex> lock(inputMutex);
+    inputQueue[playerId] = input;
+}
+
+
+void Lobby::update(float deltaTime) {
+    auto view = registry.view<TransformComponent, NetworkComponent>();
+
+    // Extract the latest player inputs
+    std::unordered_map<uint64_t, PlayerInput> latestInputs;
+    {
+        std::lock_guard<std::mutex> lock(inputMutex);
+        latestInputs = std::move(inputQueue);
+        inputQueue.clear();
     }
-}
 
-Lobby::Lobby(Lobby &&other) noexcept: registry(std::move(other.registry)),
-                                      players(std::move(other.players)),
-                                      entId(other.entId) {
-}
+    // Process movement
+    for (const auto entity : view) {
+        auto &transform = view.get<TransformComponent>(entity);
+        const auto &network = view.get<NetworkComponent>(entity);
 
-Lobby &Lobby::operator=(Lobby &&other) noexcept {
-    if (this != &other) {
-        std::lock_guard<std::mutex> lock(other.registryMutex);
-        registry = std::move(other.registry);
-        players = std::move(other.players);
-        entId = other.entId;
+        if (auto pawn = registry.try_get<PawnComponent>(entity)) {
+            pawn->moveForward = false;
+            pawn->moveBackwards = false;
+            pawn->moveLeft = false;
+            pawn->moveRight = false;
+
+            // Find the latest input for this player
+            auto it = latestInputs.find(pawn->playerId);
+            if (it != latestInputs.end()) {
+                const auto &input = it->second;
+
+                // Update PawnComponent movement flags
+                pawn->moveForward = input.moveForward;
+                pawn->moveBackwards = input.moveBackwards;
+                pawn->moveLeft = input.moveLeft;
+                pawn->moveRight = input.moveRight;
+
+                // Apply input to the TransformComponent for movement
+                if (input.moveForward) transform.position.y += this->baseSpeed * deltaTime;
+                if (input.moveBackwards)
+                    transform.position.y -= this->baseSpeed * deltaTime;
+                if (input.moveLeft) transform.position.x -= this->baseSpeed * deltaTime;
+                if (input.moveRight) transform.position.x += this->baseSpeed * deltaTime;
+
+                transform.rotation = input.aimRotation;
+            }
+        }
     }
-    return *this;
-}
 
-bool Lobby::containsPlayer(uint64_t playerId) {
-    return std::ranges::find(players, playerId) != players.end();
-}
+    // Serialize the game state
+    nlohmann::json gameState;
+    gameState["entities"] = nlohmann::json::array();
 
-void Lobby::serializeRegistry(nlohmann::json &outJson) {
-    std::lock_guard<std::mutex> lock(registryMutex);
-    outJson["entities"] = nlohmann::json::array();
+    try {
+        for (auto entity : view) {
+            const auto &network = view.get<NetworkComponent>(entity);
+            const auto &transform = registry.get<TransformComponent>(entity);
 
-    auto view = registry.view<NetworkComponent, TransformComponent>();
-    for (auto entity: view) {
-        auto &network = view.get<NetworkComponent>(entity);
-        auto &transform = registry.get<TransformComponent>(entity);
+            nlohmann::json entityJson;
 
-        nlohmann::json entityJson;
-        entityJson["id"] = static_cast<int>(entity);
-        entityJson["networkId"] = network.networkId;
-        entityJson["tile-code"] = static_cast<int>(network.tileCode);
+            // Add mandatory components
+            entityJson["id"] = static_cast<int>(entity);
+            entityJson["networkId"] = network.networkId;
+            entityJson["tile-code"] = static_cast<int>(network.tileCode);
 
-        entityJson["TransformComponent"] = {
-            {"position", {transform.position.x, transform.position.y, transform.position.z}},
-            {"rotation", transform.rotation},
-            {"scale", {transform.scale.x, transform.scale.y}}
-        };
-
-        if (registry.any_of<PawnComponent>(entity)) {
-            auto &pawn = registry.get<PawnComponent>(entity);
-            entityJson["PawnComponent"] = {
-                {"playerId", pawn.playerId},
-                {"moveForward", pawn.moveForward},
-                {"moveBackwards", pawn.moveBackwards},
-                {"moveLeft", pawn.moveLeft},
-                {"moveRight", pawn.moveRight},
-                {"aimRotation", pawn.aimRotation}
+            entityJson["TransformComponent"] = {
+                {"position", {transform.position.x, transform.position.y, transform.position.z}},
+                {"rotation", transform.rotation},
+                {"scale", {transform.scale.x, transform.scale.y}}
             };
+
+            // Add optional PawnComponent if it exists
+            if (auto pawn = registry.try_get<PawnComponent>(entity)) {
+                entityJson["PawnComponent"] = {
+                    {"playerId", pawn->playerId},
+                    {"moveForward", pawn->moveForward},
+                    {"moveBackwards", pawn->moveBackwards},
+                    {"moveLeft", pawn->moveLeft},
+                    {"moveRight", pawn->moveRight},
+                    {"aimRotation", pawn->aimRotation}
+                };
+            }
+
+            // Add optional RigidbodyComponent if it exists
+            if (auto rigidbody = registry.try_get<RigidbodyComponent>(entity)) {
+                entityJson["RigidbodyComponent"] = {
+                    {"isSolid", rigidbody->isSolid}
+                };
+            }
+
+            // Push entity data to the game state
+            gameState["entities"].push_back(entityJson);
         }
 
-        if (registry.any_of<RigidbodyComponent>(entity)) {
-            auto &rigidbody = registry.get<RigidbodyComponent>(entity);
-            entityJson["RigidbodyComponent"] = {
-                {"isSolid", rigidbody.isSolid}
-            };
+        // Broadcast the game state to all connected clients
+        {
+            std::lock_guard<std::mutex> lock(playersMutex); // Protect playerConnections
+            for (const auto &conn : playerConnections | std::views::values) {
+                if (conn) {
+                    conn->send_text(gameState.dump());
+                }
+            }
         }
-
-        outJson["entities"].push_back(entityJson);
+    } catch (const std::exception &e) {
+        std::cerr << "Error serializing or sending game state: " << e.what() << std::endl;
     }
 }
 
-uint64_t Lobby::nextId() {
-    return entId++;
-}
+
