@@ -1,8 +1,73 @@
 #include "ClientNetworkService.hpp"
 
+#include <boost/asio/connect.hpp>              // For connect()
+#include <boost/asio/io_context.hpp>          // For io_context
+#include <boost/asio/ip/tcp.hpp>              // For TCP resolver and socket
+#include <boost/beast/http.hpp>               // For HTTP types and operations
+#include <boost/beast/core/buffers_to_string.hpp> // For converting buffers to strings
+#include <boost/beast/core/flat_buffer.hpp>   // For flat_buffer
+#include <boost/beast/version.hpp>            // For BOOST_BEAST_VERSION_STRING
+
+#include <cpr/cpr.h>
+
 void ClientNetworkService::init(const std::string &remoteHost) {
     serverUrl = remoteHost;
     AT_INFO("Server URL is: {0}", serverUrl);
+}
+
+std::string ClientNetworkService::httpRequest(
+    const std::string& target,
+    boost::beast::http::verb method,
+    const std::string& body,
+    const std::map<std::string, std::string>& headers
+) {
+    try {
+        // IO Context and Resolver
+        boost::asio::io_context ioc;
+        boost::asio::ip::tcp::resolver resolver(ioc);
+
+        // Resolve the server URL and connect
+        auto const results = resolver.resolve(serverUrl, "80"); // Assuming HTTP on port 80
+        boost::asio::ip::tcp::socket socket(ioc);
+        boost::asio::connect(socket, results.begin(), results.end());
+
+        // Create HTTP request
+        boost::beast::http::request<boost::beast::http::string_body> req{method, target, 11};
+        req.set(boost::beast::http::field::host, serverUrl);
+        req.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+
+        // Add headers
+        for (const auto& [key, value] : headers) {
+            req.set(key, value);
+        }
+
+        // Add body for POST/PUT methods
+        if (method == boost::beast::http::verb::post || method == boost::beast::http::verb::put) {
+            req.body() = body;
+            req.prepare_payload();
+        }
+
+        // Send the request
+        boost::beast::http::write(socket, req);
+
+        // Receive the response
+        boost::beast::flat_buffer buffer;
+        boost::beast::http::response<boost::beast::http::dynamic_body> res;
+        boost::beast::http::read(socket, buffer, res);
+
+        // Gracefully close the socket
+        boost::beast::error_code ec;
+        socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+        if (ec && ec != boost::beast::errc::not_connected) {
+            throw boost::beast::system_error{ec};
+        }
+
+        // Return response as a string
+        return boost::beast::buffers_to_string(res.body().data());
+    } catch (const std::exception& ex) {
+        AT_ERROR("HTTP Request failed: {}", ex.what());
+        return "";
+    }
 }
 
 MapState ClientNetworkService::getMapData() {

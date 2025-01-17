@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Atlas.hpp>
-#include <cpr/cpr.h>
+#include <boost/beast/http/verb.hpp>
 
 #include "map/MapState.hpp"
 
@@ -16,11 +16,7 @@ public:
     ~ClientNetworkService() = default;
     static void init(const std::string &remoteHost);
 
-    template<typename T, typename... Args>
-    static void addRequestTemplate(Args &&... args);
-
-    template<typename T>
-    static void sendRequestAsync();
+    static std::string httpRequest(const std::string& target, boost::beast::http::verb method, const std::string& body = "", const std::map<std::string, std::string>& headers = {});
 
     static MapState getMapData();
     static bool reg(const std::string &username, const std::string &password);

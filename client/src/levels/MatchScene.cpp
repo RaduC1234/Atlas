@@ -58,7 +58,7 @@ void MatchScene::onUpdate(float deltaTime) {
     static float zoom = 1.0f;
     float minZoom = camera.getMinimumZoomLevel();
     if (ImGui::SliderFloat("Zoom", &zoom, 0.1f, 2.0f, "%.1f")) {
-        zoom = max(round(zoom * 10.0f) / 10.0f, minZoom);
+        zoom = std::max(round(zoom * 10.0f) / 10.0f, minZoom);
         cameraController.setZoom(zoom);
     }
 

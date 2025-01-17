@@ -35,5 +35,8 @@
   }, {
     "name" : "libcurl-simple-https",
     "version>=" : "2022-02-14"
+  }, {
+    "name" : "boost-beast",
+    "version>=" : "1.86.0"
   } ]
 }

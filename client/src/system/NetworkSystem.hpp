@@ -4,51 +4,50 @@
 #include <boost/beast/websocket.hpp>
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <nlohmann/json.hpp>
-#include <iostream>
 #include <entt/entt.hpp>
 #include "renderer/Color.hpp"
 #include "window/Keyboard.hpp"
 
+/**
+ * @author Radu
+ */
 class NetworkSystem {
 public:
-    NetworkSystem() : resolver_(io_context_), websocket_stream_(io_context_), connected_(false) {
+    NetworkSystem() : resolver(ioContext), websocketStream(ioContext), connected(false) {
         try {
-            auto const results = resolver_.resolve("localhost", "8080");
+            auto const results = resolver.resolve("localhost", "8080");
 
-            boost::asio::connect(websocket_stream_.next_layer(), results.begin(), results.end());
+            boost::asio::connect(websocketStream.next_layer(), results.begin(), results.end());
 
-            websocket_stream_.handshake("localhost", "/sync_entities_ws");
+            this->websocketStream.handshake("localhost", "/sync_entities_ws");
+            this->connected = true;
+            AT_INFO("WebSocket connection established");;
 
-            connected_ = true;
-            std::cout << "WebSocket connection established." << std::endl;
-
-            // Launch WebSocket reader thread
-            reader_thread_ = std::thread(&NetworkSystem::readServerUpdates, this);
+            readerThread = std::thread(&NetworkSystem::readServerUpdates, this);
         } catch (const std::exception &e) {
-            std::cerr << "WebSocket initialization error: " << e.what() << std::endl;
-            connected_ = false;
+            AT_ERROR("WebSocket initialization error: ", e.what());
+            this->connected = false;
         }
     }
 
     ~NetworkSystem() {
-        if (connected_) {
+        if (connected) {
             try {
-                websocket_stream_.close(boost::beast::websocket::close_code::normal);
-                std::cout << "WebSocket connection closed." << std::endl;
+                websocketStream.close(boost::beast::websocket::close_code::normal);
+                AT_INFO("WebSocket connection closed.");
             } catch (const std::exception &e) {
-                std::cerr << "Error closing WebSocket: " << e.what() << std::endl;
+                AT_ERROR("Error closing WebSocket: ", e.what());
             }
         }
 
-        if (reader_thread_.joinable()) {
-            reader_thread_.join();
+        if (readerThread.joinable()) {
+            readerThread.join();
         }
     }
 
     // local deltaTime - only for predictions
     void update(float deltaTime, entt::registry &registry, uint64_t playerId) {
-        if (connected_) {
+        if (connected) {
             sendInput(playerId);
             processUpdates(registry);
         } else {
@@ -60,46 +59,44 @@ private:
     void sendInput(uint64_t playerId) {
         nlohmann::json input;
 
-        // Populate the input JSON
         input["playerId"] = playerId;
         input["input"] = {
             {"moveBackward", Keyboard::isKeyPressed(Keyboard::S)},
             {"moveForward", Keyboard::isKeyPressed(Keyboard::W)},
             {"moveRight", Keyboard::isKeyPressed(Keyboard::D)},
             {"moveLeft", Keyboard::isKeyPressed(Keyboard::A)},
-            {"aimRotation", 0} // Replace 0 with actual rotation if available
+            {"aimRotation", 0}
         };
 
         try {
-            // Write the JSON as a string to the WebSocket stream
-            websocket_stream_.write(boost::asio::buffer(input.dump()));
+            websocketStream.write(boost::asio::buffer(input.dump()));
         } catch (const std::exception &e) {
-            std::cerr << "Error sending input to server: " << e.what() << std::endl;
+            AT_ERROR("Error sending input to server: {}", e.what());
         }
     }
 
 
     void readServerUpdates() {
-        while (connected_) {
+        while (connected) {
             try {
                 boost::beast::flat_buffer buffer;
-                websocket_stream_.read(buffer);
+                websocketStream.read(buffer);
 
                 auto response = nlohmann::json::parse(boost::beast::buffers_to_string(buffer.data())); {
-                    std::lock_guard<std::mutex> lock(update_mutex_);
-                    update_queue_.push(response);
+                    std::lock_guard<std::mutex> lock(updateMutex);
+                    updateQueue.push(response);
                 }
-                update_condition_.notify_one();
+                updateCondition.notify_one();
             } catch (const std::exception &e) {
-                std::cerr << "WebSocket error during read: " << e.what() << std::endl;
+                AT_ERROR("WebSocket error during read: ", e.what());
             }
         }
     }
 
     void processUpdates(entt::registry &registry) {
         std::queue<nlohmann::json> local_queue; {
-            std::lock_guard<std::mutex> lock(update_mutex_);
-            std::swap(local_queue, update_queue_);
+            std::lock_guard<std::mutex> lock(updateMutex);
+            std::swap(local_queue, updateQueue);
         }
 
         while (!local_queue.empty()) {
@@ -111,7 +108,6 @@ private:
     }
 
     void overwriteRegistry(const nlohmann::json &jsonResponse, entt::registry &registry) {
-        // Cache existing entities in the registry
         std::unordered_map<uint64_t, entt::entity> existingEntities;
 
         auto view = registry.view<NetworkComponent>();
@@ -120,12 +116,10 @@ private:
             existingEntities[netComp.networkId] = entity;
         }
 
-        // Iterate through entities received in the delta update
         for (const auto &entityData: jsonResponse["entities"]) {
             uint64_t networkId = entityData["networkId"].get<uint64_t>();
             entt::entity entity;
 
-            // Check if the entity exists or create it
             if (existingEntities.contains(networkId)) {
                 entity = existingEntities[networkId];
             } else {
@@ -133,7 +127,7 @@ private:
                 registry.emplace<NetworkComponent>(entity, networkId);
             }
 
-            // Update components based on the received data
+            // update
             auto tileCode = entityData["tile-code"].get<uint32_t>();
             std::string textureName;
 
@@ -175,13 +169,13 @@ private:
         }
     }
 
-    boost::asio::io_context io_context_;
-    boost::asio::ip::tcp::resolver resolver_;
-    boost::beast::websocket::stream<boost::asio::ip::tcp::socket> websocket_stream_;
-    bool connected_;
+    boost::asio::io_context ioContext;
+    boost::asio::ip::tcp::resolver resolver;
+    boost::beast::websocket::stream<boost::asio::ip::tcp::socket> websocketStream;
+    bool connected;
 
-    std::queue<nlohmann::json> update_queue_; // Queue to store incoming updates
-    std::mutex update_mutex_; // Mutex to protect access to the queue
-    std::condition_variable update_condition_; // Condition variable to signal updates
-    std::thread reader_thread_; // Thread to read WebSocket updates asynchronously
+    std::queue<nlohmann::json> updateQueue; // store incoming updates
+    std::mutex updateMutex;
+    std::condition_variable updateCondition;
+    std::thread readerThread;
 };

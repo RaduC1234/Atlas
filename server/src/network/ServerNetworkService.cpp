@@ -1,5 +1,6 @@
 #include "ServerNetworkService.hpp"
 
+/*
 ServerNetworkService::ServerNetworkService() : running(false) {
     MatchmakingManager::init();
 }
@@ -541,3 +542,4 @@ crow::response ServerNetworkService::handleJoinMatch(const crow::request& req) {
         return crow::response(400, std::string("Error: ") + e.what());
     }
 }
+*/

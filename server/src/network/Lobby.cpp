@@ -100,13 +100,11 @@ void Lobby::update(float deltaTime) {
             if (it != latestInputs.end()) {
                 const auto &input = it->second;
 
-                // Update PawnComponent movement flags
                 pawn->moveForward = input.moveForward;
                 pawn->moveBackwards = input.moveBackwards;
                 pawn->moveLeft = input.moveLeft;
                 pawn->moveRight = input.moveRight;
 
-                // Apply input to the TransformComponent for movement
                 if (input.moveForward) transform.position.y += this->baseSpeed * deltaTime;
                 if (input.moveBackwards)
                     transform.position.y -= this->baseSpeed * deltaTime;
@@ -120,7 +118,7 @@ void Lobby::update(float deltaTime) {
         }
     }
 
-    // Serialize the game state
+
     nlohmann::json gameState;
     gameState["entities"] = nlohmann::json::array();
 
@@ -137,7 +135,6 @@ void Lobby::update(float deltaTime) {
 
             nlohmann::json entityJson;
 
-            // Add mandatory components
             entityJson["id"] = static_cast<int>(entity);
             entityJson["networkId"] = network.networkId;
             entityJson["tile-code"] = static_cast<int>(network.tileCode);
@@ -148,7 +145,6 @@ void Lobby::update(float deltaTime) {
                 {"scale", {transform.scale.x, transform.scale.y}}
             };
 
-            // Add optional PawnComponent if it exists
             if (auto pawn = registry.try_get<PawnComponent>(entity)) {
                 entityJson["PawnComponent"] = {
                     {"playerId", pawn->playerId},
@@ -160,20 +156,18 @@ void Lobby::update(float deltaTime) {
                 };
             }
 
-            // Add optional RigidbodyComponent if it exists
             if (auto rigidbody = registry.try_get<RigidbodyComponent>(entity)) {
                 entityJson["RigidbodyComponent"] = {
                     {"isSolid", rigidbody->isSolid}
                 };
             }
 
-            // Push entity data to the game state
             gameState["entities"].push_back(entityJson);
         }
 
-        // Broadcast the game state to all connected clients
+        // broadcast the game state to all connected clients
         {
-            std::lock_guard<std::mutex> lock(playersMutex); // Protect playerConnections
+            std::lock_guard<std::mutex> lock(playersMutex);
             for (const auto &conn : playerConnections | std::views::values) {
                 if (conn) {
                     conn->send_text(gameState.dump());
@@ -181,12 +175,11 @@ void Lobby::update(float deltaTime) {
             }
         }
     } catch (const std::exception &e) {
-        std::cerr << "Error serializing or sending game state: " << e.what() << std::endl;
+        AT_ERROR("Error serializing or sending game state: ", e.what());
     }
 }
 
 void Lobby::markDirty(entt::registry &registry, entt::entity entity) {
-    // Mark the entity dirty if it has a NetworkComponent
     if (auto network = registry.try_get<NetworkComponent>(entity)) {
         network->dirtyFlag = true;
     }
