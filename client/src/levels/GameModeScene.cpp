@@ -50,9 +50,9 @@ void GameModeScene::onStart() {
                 hexDuelpressed = true;
                 findDuelButton = Actors::createButton(
                     registry,
-                    {glm::vec3(-1100.0f, 800.0f, 0.0f), 0.0f, glm::vec2(800.0f, 300.0f)},
+                    {glm::vec3(-1100.0f, 800.0f, 0.0f), 0.0f, glm::vec2(1150.0f, 250.0f)},
                     {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                    {"Finding Duel Match...", "thaleah", Color::black(), Color::white(), Color::white(), Color::black()}
+                    {"Find Hex Duel", "thaleah", Color::black(), Color::white(), Color::white(), Color::black()}
                 );
             } catch (const std::exception& e) {
                 AT_ERROR("Failed to join matchmaking: {}", e.what());
@@ -70,9 +70,9 @@ void GameModeScene::onStart() {
                 hexArenapressed = true;
                 findArenaButton = Actors::createButton(
                     registry,
-                    {glm::vec3(-1100.0f, 800.0f, 0.0f), 0.0f, glm::vec2(800.0f, 300.0f)},
+                    {glm::vec3(-1100.0f, 800.0f, 0.0f), 0.0f, glm::vec2(1150.0f, 250.0f)},
                     {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                    {"Finding Arena Match...", "thaleah", Color::black(), Color::white(), Color::white(), Color::black()}
+                    {"Find Hex Arena", "thaleah", Color::black(), Color::white(), Color::white(), Color::black()}
                 );
             } catch (const std::exception& e) {
                 AT_ERROR("Failed to join matchmaking: {}", e.what());
@@ -92,7 +92,7 @@ void GameModeScene::onStart() {
 
     // Title
     this->title = Actors::createStaticProp(this->registry,
-                                           {glm::vec3(-1135.0f, 470.0f, 0.0f), 0.0f, glm::vec2(15.0f, 30.0f)},
+                                           {glm::vec3(-1135.0f, 320.0f, 0.0f), 0.0f, glm::vec2(15.0f, 30.0f)},
                                            {"thaleah", "Select game mode", true, Color::white()});
 
     // 1v1 Button

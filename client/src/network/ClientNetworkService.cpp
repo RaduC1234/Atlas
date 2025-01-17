@@ -1,4 +1,3 @@
-// ClientNetworkService.cpp
 #include "ClientNetworkService.hpp"
 
 void ClientNetworkService::init(const std::string &remoteHost) {
