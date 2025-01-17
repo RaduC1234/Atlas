@@ -13,32 +13,37 @@ struct PlayerInput {
 
 class Lobby {
 public:
-
     Lobby();
 
-    Lobby(const Lobby&) = delete;
-    Lobby& operator=(const Lobby&) = delete;
+    Lobby(const Lobby &) = delete;
 
-    Lobby(Lobby&& other) noexcept;
-    Lobby& operator=(Lobby&& other) noexcept;
+    Lobby &operator=(const Lobby &) = delete;
+
+    Lobby(Lobby &&other) noexcept;
+
+    Lobby &operator=(Lobby &&other) noexcept;
 
     bool containsPlayer(uint64_t playerId);
+
     uint64_t nextId();
 
     void start();
+
     void update(float deltaTime);
 
-    void setPlayerInput(uint64_t playerId, const PlayerInput& input);
+    void markDirty(entt::registry &registry, entt::entity entity);
 
-    entt::registry& getRegistry() {
+    void setPlayerInput(uint64_t playerId, const PlayerInput &input);
+
+    entt::registry &getRegistry() {
         return registry;
     }
 
-    std::mutex& getRegistryMutex() {
+    std::mutex &getRegistryMutex() {
         return registryMutex;
     }
 
-    const std::vector<uint64_t>& getPlayerList() const {
+    const std::vector<uint64_t> &getPlayerList() const {
         return players;
     }
 
@@ -58,7 +63,7 @@ public:
         return started;
     }
 
-    void addConnection(uint64_t playerId, crow::websocket::connection* conn) {
+    void addConnection(uint64_t playerId, crow::websocket::connection *conn) {
         std::lock_guard<std::mutex> lock(playersMutex);
         playerConnections[playerId] = conn;
     }
@@ -67,7 +72,6 @@ public:
         std::lock_guard<std::mutex> lock(playersMutex);
         playerConnections.erase(playerId);
     }
-
 
 private:
     const float baseSpeed = 100.0f;
@@ -83,6 +87,12 @@ private:
     std::unordered_map<uint64_t, PlayerInput> inputQueue; // Latest input for each player
     std::mutex inputMutex;
 
-    std::unordered_map<uint64_t, crow::websocket::connection*> playerConnections;
+    std::unordered_map<uint64_t, crow::websocket::connection *> playerConnections;
     std::mutex playersMutex;
+
 };
+
+#define DIRTY_COMPONENT(clazz) \
+registry.on_construct<clazz>().connect<&Lobby::markDirty>(*this); \
+registry.on_update<clazz>().connect<&Lobby::markDirty>(*this); \
+registry.on_destroy<clazz>().connect<&Lobby::markDirty>(*this);

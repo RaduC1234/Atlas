@@ -13,8 +13,9 @@ struct NetworkComponent {
     uint64_t networkId;
     uint32_t tileCode; // code, x, x, x -> 1 for tiles xxx for number
     glm::vec3 lastServerPosition;
+    mutable bool dirtyFlag;
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(NetworkComponent, networkId, tileCode);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(NetworkComponent, networkId, tileCode, dirtyFlag);
 };
 
 struct TransformComponent {

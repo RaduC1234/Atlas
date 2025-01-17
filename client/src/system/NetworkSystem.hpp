@@ -111,6 +111,7 @@ private:
     }
 
     void overwriteRegistry(const nlohmann::json &jsonResponse, entt::registry &registry) {
+        // Cache existing entities in the registry
         std::unordered_map<uint64_t, entt::entity> existingEntities;
 
         auto view = registry.view<NetworkComponent>();
@@ -119,10 +120,12 @@ private:
             existingEntities[netComp.networkId] = entity;
         }
 
+        // Iterate through entities received in the delta update
         for (const auto &entityData: jsonResponse["entities"]) {
             uint64_t networkId = entityData["networkId"].get<uint64_t>();
             entt::entity entity;
 
+            // Check if the entity exists or create it
             if (existingEntities.contains(networkId)) {
                 entity = existingEntities[networkId];
             } else {
@@ -130,6 +133,7 @@ private:
                 registry.emplace<NetworkComponent>(entity, networkId);
             }
 
+            // Update components based on the received data
             auto tileCode = entityData["tile-code"].get<uint32_t>();
             std::string textureName;
 
@@ -143,6 +147,7 @@ private:
                 pawnComp.moveBackwards = entityData["PawnComponent"]["moveBackwards"];
                 pawnComp.moveLeft = entityData["PawnComponent"]["moveLeft"];
                 pawnComp.moveRight = entityData["PawnComponent"]["moveRight"];
+                pawnComp.aimRotation = entityData["PawnComponent"]["aimRotation"];
 
                 if (!pawnComp.moveForward && !pawnComp.moveBackwards && !pawnComp.moveLeft && !pawnComp.moveRight) {
                     textureName = "front1";

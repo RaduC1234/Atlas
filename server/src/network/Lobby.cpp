@@ -29,7 +29,11 @@ uint64_t Lobby::nextId() {
 }
 
 void Lobby::start() {
-    /*constexpr glm::vec2 tileSize = {100.0f, 100.0f};
+
+    DIRTY_COMPONENT(TransformComponent);
+    DIRTY_COMPONENT(PawnComponent);
+
+    constexpr glm::vec2 tileSize = {100.0f, 100.0f};
 
     auto map = MapGenerator(50, 50).getMap();
 
@@ -54,7 +58,8 @@ void Lobby::start() {
             registry.emplace<NetworkComponent>(actor, nextId(), static_cast<uint32_t>(tileNumber + TILE_CODE));
             registry.emplace<TransformComponent>(actor, glm::vec3(posX, posY, 5.0f), 0.0f, tileSize);
         }
-    }*/
+    }
+
     this->started = true;
 }
 
@@ -62,7 +67,6 @@ void Lobby::setPlayerInput(uint64_t playerId, const PlayerInput &input) {
     std::lock_guard<std::mutex> lock(inputMutex);
     inputQueue[playerId] = input;
 }
-
 
 void Lobby::update(float deltaTime) {
     auto view = registry.view<TransformComponent, NetworkComponent>();
@@ -105,6 +109,8 @@ void Lobby::update(float deltaTime) {
                 if (input.moveRight) transform.position.x += this->baseSpeed * deltaTime;
 
                 transform.rotation = input.aimRotation;
+
+                network.dirtyFlag = true;
             }
         }
     }
@@ -116,6 +122,12 @@ void Lobby::update(float deltaTime) {
     try {
         for (auto entity : view) {
             const auto &network = view.get<NetworkComponent>(entity);
+
+            if (!network.dirtyFlag) {
+                continue;
+            }
+            network.dirtyFlag = false;
+
             const auto &transform = registry.get<TransformComponent>(entity);
 
             nlohmann::json entityJson;
@@ -168,4 +180,10 @@ void Lobby::update(float deltaTime) {
     }
 }
 
+void Lobby::markDirty(entt::registry &registry, entt::entity entity) {
+    // Mark the entity dirty if it has a NetworkComponent
+    if (auto network = registry.try_get<NetworkComponent>(entity)) {
+        network->dirtyFlag = true;
+    }
+}
 
