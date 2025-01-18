@@ -15,6 +15,10 @@ public:
 
     void enableButtons();
 
+    void disableLeaveQueueButton();
+
+    void enableLeaveQueueButton(std::function<void()> onClick);
+
     void onStart() override;
 
     void onUpdate(float deltaTime) override;
@@ -46,4 +50,5 @@ private:
     Actor findDuelButton;
     Actor findArenaButton;
     Actor stopFindingButton;
+    Actor leaveQueueButton;
 };

@@ -18,15 +18,69 @@ void GameModeScene::onCreate() {
     ResourceManager::loadFromDirectory<Texture>("assets/textures", nullptr, ".png", ".jpg");
 }
 
-void GameModeScene::disableButtons() {
-    registry.emplace_or_replace<DisabledComponent>(hexDuelButton);
-    registry.emplace_or_replace<DisabledComponent>(hexArenaButton);
+void GameModeScene::enableLeaveQueueButton(std::function<void()> onClick) {
+    if (registry.valid(leaveQueueButton)) {
+        registry.remove<DisabledComponent>(leaveQueueButton);
+        auto& button = registry.get<ButtonComponent>(leaveQueueButton);
+        button.isDisabled = false;
+        button.onClick = onClick;
+
+        auto& render = registry.get<RenderComponent>(leaveQueueButton);
+        render.color = Color::white(); // Enabled color
+    }
+}
+
+void GameModeScene::disableLeaveQueueButton() {
+    if (registry.valid(leaveQueueButton)) {
+        registry.emplace_or_replace<DisabledComponent>(leaveQueueButton, true);
+        auto& button = registry.get<ButtonComponent>(leaveQueueButton);
+        button.isDisabled = true;
+
+        auto& render = registry.get<RenderComponent>(leaveQueueButton);
+        render.color = Color::gray(); // Disabled color
+    }
 }
 
 void GameModeScene::enableButtons() {
-    registry.remove<DisabledComponent>(hexDuelButton);
-    registry.remove<DisabledComponent>(hexArenaButton);
+    if (registry.valid(hexDuelButton)) {
+        registry.remove<DisabledComponent>(hexDuelButton);
+        auto& button = registry.get<ButtonComponent>(hexDuelButton);
+        button.isDisabled = false;
+
+        auto& render = registry.get<RenderComponent>(hexDuelButton);
+        render.color = Color::white(); // Normal color
+    }
+
+    if (registry.valid(hexArenaButton)) {
+        registry.remove<DisabledComponent>(hexArenaButton);
+        auto& button = registry.get<ButtonComponent>(hexArenaButton);
+        button.isDisabled = false;
+
+        auto& render = registry.get<RenderComponent>(hexArenaButton);
+        render.color = Color::white(); // Normal color
+    }
 }
+
+void GameModeScene::disableButtons() {
+    if (registry.valid(hexDuelButton)) {
+        registry.emplace_or_replace<DisabledComponent>(hexDuelButton, true);
+        auto& button = registry.get<ButtonComponent>(hexDuelButton);
+        button.isDisabled = true;
+
+        auto& render = registry.get<RenderComponent>(hexDuelButton);
+        render.color = Color::gray(); // Disabled color
+    }
+
+    if (registry.valid(hexArenaButton)) {
+        registry.emplace_or_replace<DisabledComponent>(hexArenaButton, true);
+        auto& button = registry.get<ButtonComponent>(hexArenaButton);
+        button.isDisabled = true;
+
+        auto& render = registry.get<RenderComponent>(hexArenaButton);
+        render.color = Color::gray(); // Disabled color
+    }
+}
+
 
 void GameModeScene::onStart() {
     const auto &windowRef = GameManager::getWindowRef();
@@ -42,45 +96,93 @@ void GameModeScene::onStart() {
         GameManager::changeScene("MenuScene");
     };
 
-    auto onHexDuelButton = [this]() {
-        if (!hexDuelpressed) {
-            try {
-                AT_INFO("Joining Hex Duel queue...");
-                ClientNetworkService::joinMatchmaking(ClientNetworkService::GameMode::HEX_DUEL);
-                disableButtons();
-                hexDuelpressed = true;
-                findDuelButton = Actors::createButton(
-                    registry,
-                    {glm::vec3(-1100.0f, 800.0f, 0.0f), 0.0f, glm::vec2(1150.0f, 250.0f)},
-                    {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                    {"Find Hex Duel", "thaleah", Color::black(), Color::white(), Color::white(), Color::black()}
-                );
-            } catch (const std::exception& e) {
-                AT_ERROR("Failed to join matchmaking: {}", e.what());
-                enableButtons();
-            }
+    auto leaveCurrentQueue = [this]() {
+        if (hexDuelpressed || hexArenapressed) {
+            AT_INFO("Leaving current queue...");
+            ClientNetworkService::leaveMatchmaking();
+
+            // Reset state
+            hexDuelpressed = false;
+            hexArenapressed = false;
+
+            // Disable the "Leave Queue" button
+            disableLeaveQueueButton();
+
+            // Re-enable Hex Duel and Hex Arena buttons
+            enableButtons();
         }
     };
 
-    auto onHexArenaButton = [this]() {
-        if (!hexArenapressed) {
-            try {
-                AT_INFO("Joining Hex Arena queue...");
-                ClientNetworkService::joinMatchmaking(ClientNetworkService::GameMode::HEX_ARENA);
-                disableButtons();
-                hexArenapressed = true;
-                findArenaButton = Actors::createButton(
-                    registry,
-                    {glm::vec3(-1100.0f, 800.0f, 0.0f), 0.0f, glm::vec2(1150.0f, 250.0f)},
-                    {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
-                    {"Find Hex Arena", "thaleah", Color::black(), Color::white(), Color::white(), Color::black()}
-                );
-            } catch (const std::exception& e) {
-                AT_ERROR("Failed to join matchmaking: {}", e.what());
-                enableButtons();
-            }
+    // Create Leave Queue button (initially disabled)
+    this->leaveQueueButton = Actors::createButton(
+        registry,
+        {glm::vec3(-1100.0f, 800.0f, 0.0f), 0.0f, glm::vec2(1150.0f, 250.0f)},
+        {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::gray(), true, RENDERER_NINE_SLICE},
+        {"Leave Queue", "thaleah", Color::black(), Color::white(), Color::white(), Color::black(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), Color::gray(), true, nullptr, nullptr, nullptr}
+    );
+    registry.emplace<DisabledComponent>(leaveQueueButton, true); // Start disabled
+
+    // Enable the "Leave Queue" button when a queue is joined
+    auto enableLeaveQueueButton = [this, leaveCurrentQueue]() {
+        registry.remove<DisabledComponent>(leaveQueueButton);
+        auto& button = registry.get<ButtonComponent>(leaveQueueButton);
+        button.isDisabled = false;
+        button.onClick = leaveCurrentQueue;
+
+        auto& render = registry.get<RenderComponent>(leaveQueueButton);
+        render.color = Color::white(); // Set to enabled color
+    };
+
+    // Create Hex Duel button
+    auto onHexDuelButton = [this, enableLeaveQueueButton]() {
+        try {
+            AT_INFO("Joining Hex Duel queue...");
+            ClientNetworkService::joinMatchmaking(ClientNetworkService::GameMode::HEX_DUEL);
+            disableButtons();
+            hexDuelpressed = true;
+
+            enableLeaveQueueButton(); // Enable Leave Queue button
+        } catch (const std::exception &e) {
+            AT_ERROR("Failed to join Hex Duel matchmaking: {}", e.what());
+            enableButtons();
         }
     };
+
+    // Create Hex Arena button
+    auto onHexArenaButton = [this, enableLeaveQueueButton]() {
+        try {
+            AT_INFO("Joining Hex Arena queue...");
+            ClientNetworkService::joinMatchmaking(ClientNetworkService::GameMode::HEX_ARENA);
+            disableButtons();
+            hexArenapressed = true;
+
+            enableLeaveQueueButton(); // Enable Leave Queue button
+        } catch (const std::exception &e) {
+            AT_ERROR("Failed to join Hex Arena matchmaking: {}", e.what());
+            enableButtons();
+        }
+    };
+
+    // Create Hex Duel button
+    hexDuelButton = Actors::createButton(
+        registry,
+        {glm::vec3(-1100.0f, 100.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},
+        {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
+        {"Hex Duel", "thaleah", Color::black(), Color::white(), Color::white(), Color::black(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), Color::gray(), false, onHexDuelButton, nullptr, nullptr}
+    );
+
+    // Create Hex Arena button
+    hexArenaButton = Actors::createButton(
+        registry,
+        {glm::vec3(-1100.0f, -300.0f, 0.0f), 0.0f, glm::vec2(900.0f, 200.0f)},
+        {"panel-transparent-border-010", RenderComponent::defaultTexCoords(), Color::white(), true, RENDERER_NINE_SLICE},
+        {"Hex Arena", "thaleah", Color::black(), Color::white(), Color::white(), Color::black(), false, false, Color::white(), Color(109, 52, 133), Color(54, 26, 66), Color::gray(), false, onHexArenaButton, nullptr, nullptr}
+    );
+
+    // Create Title and other elements
+    this->title = Actors::createStaticProp(this->registry,
+                                           {glm::vec3(-1135.0f, 320.0f, 0.0f), 0.0f, glm::vec2(15.0f, 30.0f)},
+                                           {"thaleah", "Select game mode", true, Color::white()});
 
     this->sideRect = Actors::createStaticProp(this->registry,
                                               {glm::vec3(-1100.0f, 0.0f, 1.0f), 0.0f, glm::vec2(1700.0f, 2400.0f)},
