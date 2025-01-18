@@ -176,7 +176,7 @@ void Lobby::update(float deltaTime) {
                     transform.position.y = originalPos.y;
                 }
 
-                transform.rotation = input.aimRotation;
+                transform.rotation = 0.0f; // do not remove this. it brakes the movement for some reason
                 network.dirtyFlag = true;
             }
         }

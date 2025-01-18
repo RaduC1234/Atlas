@@ -54,5 +54,9 @@ void main() {
             color = fColor;
         }
     }
+
+    if(color.a != 0.0f) {
+        color.a = 1.0f;
+    }
 }
 

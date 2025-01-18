@@ -78,7 +78,7 @@ private:
             angleRadians += glm::two_pi<float>();
         }
 
-        ImGui::Text("Pos: %f, %f, Angle: %f", playerPos.x, playerPos.y, glm::degrees(angleRadians));
+        ImGui::Text("Pos: %.2f, %.2f, Angle: %.2f", playerPos.x, playerPos.y, glm::degrees(angleRadians));
 
         input["playerId"] = this->playerId;
         input["input"] = {
