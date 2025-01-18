@@ -29,7 +29,6 @@ uint64_t Lobby::nextId() {
 }
 
 void Lobby::start() {
-
     DIRTY_COMPONENT(TransformComponent);
     DIRTY_COMPONENT(PawnComponent);
 
@@ -61,7 +60,6 @@ void Lobby::start() {
             if (tileNumber == 40 || tileNumber == 63) {
                 registry.emplace<RigidbodyComponent>(actor, RigidbodyComponent{true});
             }
-
         }
     }
 
@@ -83,12 +81,16 @@ void Lobby::update(float deltaTime) {
         latestInputs = std::move(inputQueue);
         inputQueue.clear();
     }
+
     // Process movement
     for (const auto entity : view) {
         auto &transform = view.get<TransformComponent>(entity);
         const auto &network = view.get<NetworkComponent>(entity);
 
         if (auto pawn = registry.try_get<PawnComponent>(entity)) {
+            // Store the original position before movement
+            glm::vec3 originalPos = transform.position;
+
             pawn->moveForward = false;
             pawn->moveBackwards = false;
             pawn->moveLeft = false;
@@ -104,19 +106,81 @@ void Lobby::update(float deltaTime) {
                 pawn->moveLeft = input.moveLeft;
                 pawn->moveRight = input.moveRight;
 
-                if (input.moveForward) transform.position.y += this->baseSpeed * deltaTime;
-                if (input.moveBackwards)
-                    transform.position.y -= this->baseSpeed * deltaTime;
+                // Apply horizontal movement
                 if (input.moveLeft) transform.position.x -= this->baseSpeed * deltaTime;
                 if (input.moveRight) transform.position.x += this->baseSpeed * deltaTime;
 
-                transform.rotation = input.aimRotation;
+                // Check horizontal collisions
+                bool xCollision = false;
+                auto view2 = registry.view<RigidbodyComponent, TransformComponent>();
 
+                for (auto wall : view2) {
+                    const auto& wallTransform = view2.get<TransformComponent>(wall);
+                    const auto& rigidbody = view2.get<RigidbodyComponent>(wall);
+
+                    if (!rigidbody.isSolid || entity == wall) {
+                        continue;
+                    }
+
+                    float playerLeft = transform.position.x - (transform.scale.x * 0.4f);
+                    float playerRight = transform.position.x + (transform.scale.x * 0.4f);
+                    float wallLeft = wallTransform.position.x - (wallTransform.scale.x * 0.5f);
+                    float wallRight = wallTransform.position.x + (wallTransform.scale.x * 0.5f);
+                    float playerTop = transform.position.y + (transform.scale.y * 0.4f);
+                    float playerBottom = transform.position.y - (transform.scale.y * 0.4f);
+                    float wallTop = wallTransform.position.y + (wallTransform.scale.y * 0.5f);
+                    float wallBottom = wallTransform.position.y - (wallTransform.scale.y * 0.5f);
+
+                    if (playerRight > wallLeft && playerLeft < wallRight &&
+                        playerTop > wallBottom && playerBottom < wallTop) {
+                        xCollision = true;
+                        break;
+                    }
+                }
+
+                if (xCollision) {
+                    transform.position.x = originalPos.x;
+                }
+
+                // Apply vertical movement
+                if (input.moveForward) transform.position.y += this->baseSpeed * deltaTime;
+                if (input.moveBackwards) transform.position.y -= this->baseSpeed * deltaTime;
+
+                // Check vertical collisions
+                bool yCollision = false;
+                for (auto wall : view2) {
+                    const auto& wallTransform = view2.get<TransformComponent>(wall);
+                    const auto& rigidbody = view2.get<RigidbodyComponent>(wall);
+
+                    if (!rigidbody.isSolid || entity == wall) {
+                        continue;
+                    }
+
+                    float playerLeft = transform.position.x - (transform.scale.x * 0.4f);
+                    float playerRight = transform.position.x + (transform.scale.x * 0.4f);
+                    float wallLeft = wallTransform.position.x - (wallTransform.scale.x * 0.5f);
+                    float wallRight = wallTransform.position.x + (wallTransform.scale.x * 0.5f);
+                    float playerTop = transform.position.y + (transform.scale.y * 0.4f);
+                    float playerBottom = transform.position.y - (transform.scale.y * 0.4f);
+                    float wallTop = wallTransform.position.y + (wallTransform.scale.y * 0.5f);
+                    float wallBottom = wallTransform.position.y - (wallTransform.scale.y * 0.5f);
+
+                    if (playerRight > wallLeft && playerLeft < wallRight &&
+                        playerTop > wallBottom && playerBottom < wallTop) {
+                        yCollision = true;
+                        break;
+                    }
+                }
+
+                if (yCollision) {
+                    transform.position.y = originalPos.y;
+                }
+
+                transform.rotation = input.aimRotation;
                 network.dirtyFlag = true;
             }
         }
     }
-
 
     nlohmann::json gameState;
     gameState["entities"] = nlohmann::json::array();
@@ -133,7 +197,6 @@ void Lobby::update(float deltaTime) {
             const auto &transform = registry.get<TransformComponent>(entity);
 
             nlohmann::json entityJson;
-
             entityJson["id"] = static_cast<int>(entity);
             entityJson["networkId"] = network.networkId;
             entityJson["tile-code"] = static_cast<int>(network.tileCode);
@@ -184,4 +247,3 @@ void Lobby::markDirty(entt::registry &registry, entt::entity entity) {
         network->dirtyFlag = true;
     }
 }
-
