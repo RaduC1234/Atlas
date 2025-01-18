@@ -218,6 +218,9 @@ struct ButtonComponent {
         if (onPressed) onPressed();
     }
 
+    void setNormalColor(glm::vec4 color) {
+        this->normalColor = color;
+    }
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(ButtonComponent, isHovered, isPressed, isDisabled);
 };
