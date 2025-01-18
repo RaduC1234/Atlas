@@ -1,5 +1,6 @@
 #pragma once
 
+#include <imgui.h>
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
 #include <boost/asio/connect.hpp>
@@ -7,6 +8,7 @@
 #include <entt/entt.hpp>
 #include "renderer/Color.hpp"
 #include "window/Keyboard.hpp"
+#include "window/Mouse.hpp"
 
 /**
  * @author Radu
@@ -46,29 +48,45 @@ public:
     }
 
     // local deltaTime - only for predictions
-    void update(float deltaTime, entt::registry &registry, uint64_t playerId, const Camera& camera) {
+    void update(float deltaTime, entt::registry &registry, const Camera &camera) {
         if (connected) {
-            sendInput(playerId, camera);
+            sendInput(camera);
             processUpdates(registry);
         } else {
             std::cerr << "WebSocket is not connected. Update skipped." << std::endl;
         }
     }
 
+    void setPlayerId(uint64_t playerId) {
+        this->playerId = playerId;
+    }
+
 private:
-    void sendInput(uint64_t playerId, const Camera& camera) {
+    void sendInput(const Camera &camera) {
         nlohmann::json input;
 
-        // process angle here
-        //glm::vec2 screenPos = camera.worldToScreen(// caracher pos)
+        auto playerScreenCoords = camera.worldToScreen(playerPos);
+        auto cursorPos = Mouse::getPosition();
 
-        input["playerId"] = playerId;
+        auto delta = glm::vec2(cursorPos.first - playerScreenCoords.x,
+                               cursorPos.second - playerScreenCoords.y);
+
+        float angleRadians = glm::atan(delta.y, delta.x);
+
+        // Normalize
+        if (angleRadians < 0) {
+            angleRadians += glm::two_pi<float>();
+        }
+
+        ImGui::Text("Pos: %f, %f, Angle: %f", playerPos.x, playerPos.y, glm::degrees(angleRadians));
+
+        input["playerId"] = this->playerId;
         input["input"] = {
             {"moveBackward", Keyboard::isKeyPressed(Keyboard::S)},
             {"moveForward", Keyboard::isKeyPressed(Keyboard::W)},
             {"moveRight", Keyboard::isKeyPressed(Keyboard::D)},
             {"moveLeft", Keyboard::isKeyPressed(Keyboard::A)},
-            {"aimRotation", 0},
+            {"aimRotation", angleRadians},
             {"isShooting", Keyboard::isKeyPressed(Keyboard::Space)}
         };
 
@@ -123,6 +141,7 @@ private:
         for (const auto &entityData: jsonResponse["entities"]) {
             uint64_t networkId = entityData["networkId"].get<uint64_t>();
             entt::entity entity;
+            bool isThePlayer = false;
 
             if (existingEntities.contains(networkId)) {
                 entity = existingEntities[networkId];
@@ -140,7 +159,8 @@ private:
             }
 
             if (entityData.contains("PawnComponent")) {
-                auto &pawnComp = registry.get_or_emplace<PawnComponent>(entity, entityData["PawnComponent"]["playerId"], false, false, false, false, 0.0f);
+                auto id = entityData["PawnComponent"]["playerId"];
+                auto &pawnComp = registry.get_or_emplace<PawnComponent>(entity, id, false, false, false, false, 0.0f);
                 pawnComp.moveForward = entityData["PawnComponent"]["moveForward"];
                 pawnComp.moveBackwards = entityData["PawnComponent"]["moveBackwards"];
                 pawnComp.moveLeft = entityData["PawnComponent"]["moveLeft"];
@@ -150,14 +170,26 @@ private:
                 if (!pawnComp.moveForward && !pawnComp.moveBackwards && !pawnComp.moveLeft && !pawnComp.moveRight) {
                     textureName = "front1";
                 }
+
+                if (id == this->playerId) {
+                    isThePlayer = true;
+                }
             }
 
             if (entityData.contains("TransformComponent")) {
+                auto pos = glm::vec3(
+                    entityData["TransformComponent"]["position"][0],
+                    entityData["TransformComponent"]["position"][1],
+                    entityData["TransformComponent"]["position"][2]
+                );
+
+                if (isThePlayer) {
+                    this->playerPos = pos;
+                }
+
                 registry.emplace_or_replace<TransformComponent>(
                     entity,
-                    glm::vec3(entityData["TransformComponent"]["position"][0],
-                              entityData["TransformComponent"]["position"][1],
-                              entityData["TransformComponent"]["position"][2]),
+                    pos,
                     entityData["TransformComponent"]["rotation"],
                     glm::vec2(entityData["TransformComponent"]["scale"][0],
                               entityData["TransformComponent"]["scale"][1])
@@ -172,6 +204,9 @@ private:
             }
         }
     }
+
+    uint64_t playerId{0};
+    glm::vec3 playerPos{0.0f, 0.0f, 0.0f};
 
     boost::asio::io_context ioContext;
     boost::asio::ip::tcp::resolver resolver;

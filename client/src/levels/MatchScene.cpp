@@ -33,6 +33,8 @@ void MatchScene::onStart() {
     if (response.status_code == 200) {
         this->playerId = std::stoull(response.text);
     }
+
+    this->networkSystem.setPlayerId(this->playerId);
 }
 
 void MatchScene::onUpdate(float deltaTime) {
@@ -63,7 +65,7 @@ void MatchScene::onUpdate(float deltaTime) {
     }
 
     if (syncWithServer)
-        networkSystem.update(deltaTime, registry, this->playerId, this->camera);
+        networkSystem.update(deltaTime, registry, this->camera);
 
     pawnSystem.update(deltaTime, registry, this->playerId, this->camera);
     cameraController.update(registry, this->playerId, deltaTime);
