@@ -15,56 +15,43 @@ void ClientNetworkService::init(const std::string &remoteHost) {
     AT_INFO("Server URL is: {0}", serverUrl);
 }
 
-std::string ClientNetworkService::httpRequest(
-    const std::string& target,
-    boost::beast::http::verb method,
-    const std::string& body,
-    const std::map<std::string, std::string>& headers
-) {
+std::string ClientNetworkService::httpRequest(const std::string &target, const std::string &port, boost::beast::http::verb method, const std::string &body, const std::map<std::string, std::string> &headers) {
     try {
-        // IO Context and Resolver
         boost::asio::io_context ioc;
         boost::asio::ip::tcp::resolver resolver(ioc);
 
         // Resolve the server URL and connect
-        auto const results = resolver.resolve(serverUrl, "80"); // Assuming HTTP on port 80
+        auto const results = resolver.resolve(serverUrl, port);
         boost::asio::ip::tcp::socket socket(ioc);
         boost::asio::connect(socket, results.begin(), results.end());
 
-        // Create HTTP request
         boost::beast::http::request<boost::beast::http::string_body> req{method, target, 11};
         req.set(boost::beast::http::field::host, serverUrl);
         req.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 
-        // Add headers
-        for (const auto& [key, value] : headers) {
+        for (const auto &[key, value]: headers) {
             req.set(key, value);
         }
 
-        // Add body for POST/PUT methods
         if (method == boost::beast::http::verb::post || method == boost::beast::http::verb::put) {
             req.body() = body;
             req.prepare_payload();
         }
 
-        // Send the request
         boost::beast::http::write(socket, req);
 
-        // Receive the response
         boost::beast::flat_buffer buffer;
         boost::beast::http::response<boost::beast::http::dynamic_body> res;
         boost::beast::http::read(socket, buffer, res);
 
-        // Gracefully close the socket
         boost::beast::error_code ec;
         socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
         if (ec && ec != boost::beast::errc::not_connected) {
             throw boost::beast::system_error{ec};
         }
 
-        // Return response as a string
         return boost::beast::buffers_to_string(res.body().data());
-    } catch (const std::exception& ex) {
+    } catch (const std::exception &ex) {
         AT_ERROR("HTTP Request failed: {}", ex.what());
         return "";
     }
@@ -80,14 +67,14 @@ MapState ClientNetworkService::getMapData() {
 
     try {
         auto mapDataJson = nlohmann::json::parse(response.text);
-        return mapDataJson.get<MapState>();  // Deserialize into MapState
+        return mapDataJson.get<MapState>(); // Deserialize into MapState
     } catch (const std::exception &e) {
         throw std::runtime_error("Error parsing map data: " + std::string(e.what()));
     }
 }
 
 bool ClientNetworkService::reg(const std::string &username, const std::string &password) {
-    JsonData requestBody = {
+    nlohmann::json requestBody = {
         {"username", username},
         {"password", password}
     };
@@ -99,8 +86,12 @@ bool ClientNetworkService::reg(const std::string &username, const std::string &p
     );
 
 
-    JsonData data;
-    TRY_CATCH(data = JsonData::parse(response.text);,return false;);
+    nlohmann::json data;
+    try {
+        data = nlohmann::json::parse(response.text);;
+    } catch (const std::exception &e) {
+        return false;;
+    };
 
     if (response.status_code == 200) {
         return data["requestStatus"].get<bool>();
@@ -110,22 +101,22 @@ bool ClientNetworkService::reg(const std::string &username, const std::string &p
 }
 
 bool ClientNetworkService::login(const std::string &username, const std::string &password) {
-    JsonData requestBody = {
+    nlohmann::json requestBody = {
         {"username", username},
         {"password", password}
     };
 
-    auto response = cpr::Get(  // Changed from Get to Post
-        cpr::Url{serverUrl + "/login"},  // Changed path to use serverUrl
-        cpr::Header{{"Content-Type", "application/json"}},  // Fixed content type
+    auto response = cpr::Get( // Changed from Get to Post
+        cpr::Url{serverUrl + "/login"}, // Changed path to use serverUrl
+        cpr::Header{{"Content-Type", "application/json"}}, // Fixed content type
         cpr::Body{requestBody.dump()}
     );
 
     try {
         if (response.status_code == 200) {
-            JsonData data = JsonData::parse(response.text);
+            nlohmann::json data = nlohmann::json::parse(response.text);
             loginToken = data["authToken"].get<uint64_t>();
-            AT_INFO("Login successful with token: {}", loginToken);  // Added logging
+            AT_INFO("Login successful with token: {}", loginToken); // Added logging
             return data["requestStatus"].get<bool>();
         }
     } catch (const std::exception &e) {
@@ -136,7 +127,7 @@ bool ClientNetworkService::login(const std::string &username, const std::string 
 }
 
 bool ClientNetworkService::joinMatchmaking(GameMode mode) {
-    JsonData requestBody = {
+    nlohmann::json requestBody = {
         {"playerId", loginToken},
         {"gameMode", mode == GameMode::HEX_DUEL ? "HEX_DUEL" : "HEX_ARENA"}
     };
@@ -157,7 +148,7 @@ bool ClientNetworkService::joinMatchmaking(GameMode mode) {
 }
 
 bool ClientNetworkService::leaveMatchmaking() {
-    JsonData requestBody = {
+    nlohmann::json requestBody = {
         {"playerId", loginToken}
     };
 
@@ -177,7 +168,7 @@ bool ClientNetworkService::leaveMatchmaking() {
 }
 
 bool ClientNetworkService::submitMatchResult(uint64_t matchId, uint64_t winnerId) {
-    JsonData requestBody = {
+    nlohmann::json requestBody = {
         {"matchId", matchId},
         {"winnerId", winnerId}
     };
@@ -199,9 +190,9 @@ bool ClientNetworkService::submitMatchResult(uint64_t matchId, uint64_t winnerId
 
 uint64_t ClientNetworkService::joinMatch() {
     auto response = cpr::Post(
-            cpr::Url{serverUrl + "/join_match"},
-            cpr::Header{{"Content-Type", "application/json"}}
-        );
+        cpr::Url{serverUrl + "/join_match"},
+        cpr::Header{{"Content-Type", "application/json"}}
+    );
 
     if (response.status_code != 200) {
         AT_ERROR("Failed to join match: {}", response.text);
@@ -210,10 +201,10 @@ uint64_t ClientNetworkService::joinMatch() {
 
     try {
         uint64_t playerId = std::stoull(response.text);
-        currentPlayerId = playerId;  // Store the player ID
+        currentPlayerId = playerId; // Store the player ID
         AT_INFO("Successfully joined match with player ID: {}", playerId);
         return playerId;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         AT_ERROR("Error parsing player ID from response: {}", e.what());
         throw std::runtime_error("Error parsing player ID from response: " + std::string(e.what()));
     }
@@ -242,7 +233,7 @@ bool ClientNetworkService::checkMatchStatus() {
         }
 
         try {
-            auto jsonResponse = JsonData::parse(response.text);
+            auto jsonResponse = nlohmann::json::parse(response.text);
             bool matchFound = jsonResponse["matchFound"].get<bool>();
 
             if (matchFound) {
@@ -252,11 +243,11 @@ bool ClientNetworkService::checkMatchStatus() {
             }
 
             return false;
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             AT_ERROR("Error parsing match status response: {}", e.what());
             return false;
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         AT_ERROR("Network error checking match status: {}", e.what());
         return false;
     }

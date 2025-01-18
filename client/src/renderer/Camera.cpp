@@ -20,6 +20,7 @@ void Camera::applyViewport(int windowWidth, int windowHeight, float desiredAspec
     int xOffset = (windowWidth - static_cast<int>(viewportWidth)) / 2;
     int yOffset = (windowHeight - static_cast<int>(viewportHeight)) / 2;
 
+    // TODO: crop inwards the screen framebuffer
     glViewport(xOffset, yOffset, static_cast<GLsizei>(viewportWidth), static_cast<GLsizei>(viewportHeight));
 
     float halfWidth = viewportWidth / this->zoomFactor * 0.5f;
@@ -30,6 +31,13 @@ void Camera::applyViewport(int windowWidth, int windowHeight, float desiredAspec
     float bottom = worldPosition.y - halfHeight;
     float top = worldPosition.y + halfHeight;
 
+    /*
+     *
+     * P = |  2/(right-left)       0               0              -(right+left)/(right-left)   |
+     *     |       0         2/(top-bottom)        0              -(top+bottom)/(top-bottom)   |
+     *     |       0              0          -2/(far-near)          -(far+near)/(far-near)     |
+     *     |       0              0                0                           1               |
+     */
     this->projectionMatrix = glm::ortho(left, right, bottom, top, 0.0f, 100.0f);
 
     this->windowSize = glm::vec2(windowWidth, windowHeight);

@@ -264,7 +264,7 @@ public:
 
                     // Initialize the client state
                     clientStates[&conn] = WebsocketClientState{0, nullptr};
-                    std::cout << "WebSocket connection opened." << std::endl;
+                    AT_INFO("WebSocket connection opened with remote host {}.", conn.get_remote_ip());
                 })
                 .onmessage([&](crow::websocket::connection &conn, const std::string &message, bool is_binary) {
                     std::lock_guard<std::mutex> lock(handlerMutex);
@@ -370,7 +370,7 @@ private:
     }
 
     void gameLoop() {
-        constexpr uint32_t ticksPerSec = 60;
+        constexpr uint32_t ticksPerSec = 30;
         constexpr float ticksPerMs = 1.0f / static_cast<float>(ticksPerSec);
         AT_INFO("Game loop started. Running at {} ticks per second.", ticksPerSec);
 

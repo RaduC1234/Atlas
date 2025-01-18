@@ -10,7 +10,7 @@ public:
     void changeScene(const std::string& sceneName);
     void shutdown();
 
-    Window* getWindow();
+    Window* getWindow() const;
 private:
     Scope<Window> window;
     Scope<Scene> currentScene;

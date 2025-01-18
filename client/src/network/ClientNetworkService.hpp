@@ -16,7 +16,7 @@ public:
     ~ClientNetworkService() = default;
     static void init(const std::string &remoteHost);
 
-    static std::string httpRequest(const std::string& target, boost::beast::http::verb method, const std::string& body = "", const std::map<std::string, std::string>& headers = {});
+    static std::string httpRequest(const std::string &target, const std::string &port, boost::beast::http::verb method, const std::string &body = "", const std::map<std::string, std::string> &headers = {});
 
     static MapState getMapData();
     static bool reg(const std::string &username, const std::string &password);

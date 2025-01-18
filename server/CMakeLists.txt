@@ -9,6 +9,10 @@ target_include_directories(server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_link_libraries(server PRIVATE engine)
 
+#SQL
+find_package(SqliteOrm REQUIRED)
+target_link_libraries(server PUBLIC sqlite_orm::sqlite_orm)
+
 # Crow
 find_package(Crow CONFIG REQUIRED)
 target_link_libraries(server PUBLIC Crow::Crow)

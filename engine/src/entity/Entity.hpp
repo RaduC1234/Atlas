@@ -22,7 +22,7 @@ public:
 
 };
 
-
+/*
 enum class RegistryOperation {
     CREATE_ENTITY,
     DESTROY_ENTITY,
@@ -36,3 +36,4 @@ struct RegistryModification {
     std::string componentType;
     std::vector<JsonData> data;
 };
+*/

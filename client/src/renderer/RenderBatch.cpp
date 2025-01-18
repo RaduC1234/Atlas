@@ -201,13 +201,12 @@ void RenderBatch::addShape(const glm::vec2 &position, const glm::vec2 &scale, fl
                 );
             }
 
-            // Add indices for the quad
             indices.insert(indices.end(), {
                                vertexIndex, vertexIndex + 1, vertexIndex + 2, // First triangle
                                vertexIndex, vertexIndex + 2, vertexIndex + 3 // Second triangle
                            });
 
-            vertexIndex += 4; // Move to the next set of vertices
+            vertexIndex += 4;
         }
     } else {
         const glm::vec2 verticesPos[4] = {
@@ -227,6 +226,17 @@ void RenderBatch::addShape(const glm::vec2 &position, const glm::vec2 &scale, fl
             );
         }
 
+        /**
+         * 3 ------- 2
+         * |       / |
+         * |     /   |
+         * |   /     |
+         * | /       |
+         * 0 ------- 1
+         *
+         * 4 verticies, 6 indicies per quad
+         * Indices: (0, 1, 2), (0, 2, 3) - counter clockwise order
+         */
         indices.insert(indices.end(), {
                            vertexIndex, vertexIndex + 1, vertexIndex + 2,
                            vertexIndex, vertexIndex + 2, vertexIndex + 3

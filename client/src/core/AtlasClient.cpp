@@ -19,12 +19,18 @@ void AtlasClient::run() {
     AT_INFO("Working directory is: {0}", ATLAS_WORKING_DIRECTORY);
 
     AT_TRACE("Attempting to read config file...");
-    TRY_CATCH(this->clientConfig = Config::build("client.config"), AT_FATAL("Error reading config file. Exiting..."););
+
+    try {
+        this->clientConfig = Config::build("client.config");
+    } catch (const std::exception &e) {
+        AT_ERROR("Error reading config file. Exiting...");
+    };
+
     AT_INFO("Config file read successfully");
 
     this->window = CreateScope<Window>(this->clientConfig["window_title"].toString());
     this->window->setCloseCallback([this]() {
-        this->shutdown(); // cleanup resources
+        this->isRunning = false;
     });
 
     const auto serverUrl = "http://" + this->clientConfig["server_host"].toString() + ":" + this->clientConfig["server_port"].toString();
@@ -95,9 +101,12 @@ void AtlasClient::internalChangeScene(const std::string &sceneName) {
     currentScene->onStart();
 }
 
-Window *AtlasClient::getWindow() {
+Window *AtlasClient::getWindow() const {
     return this->window.get();
 }
 
 void AtlasClient::shutdown() {
+    ResourceManager::clearAll();
+    ImGuiLayer::shutdown();
+    RenderManager::shutdown();
 }
