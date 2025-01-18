@@ -102,6 +102,19 @@ struct RigidbodyComponent {
     bool isSolid{false};
 };
 
+struct FireballComponent {
+    glm::vec3 position;
+    glm::vec3 direction;
+    float speed;
+    uint64_t ownerId; // ID of the player who created the fireball
+
+    FireballComponent(const glm::vec3 &pos, const glm::vec3 &dir, float spd, uint64_t owner)
+        : position(pos), direction(glm::normalize(dir)), speed(50.0f), ownerId(owner) {
+    }
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(FireballComponent, position, direction, speed, ownerId);
+};
+
 //=======================UI============================
 struct TextboxComponent {
     std::string text; // Reference to external string

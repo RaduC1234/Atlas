@@ -344,6 +344,7 @@ CROW_ROUTE(app, "/join_match")([this](const crow::request &req) {
                             input.moveLeft = requestBody["input"].value("moveLeft", false);
                             input.moveRight = requestBody["input"].value("moveRight", false);
                             input.aimRotation = requestBody["input"].value("aimRotation", 0.0f);
+                            input.isShooting = requestBody["input"].value("isShooting",false);
 
                             state.lobby->setPlayerInput(state.playerId, input);
                         }

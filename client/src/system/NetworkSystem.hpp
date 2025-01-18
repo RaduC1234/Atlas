@@ -87,7 +87,7 @@ private:
             {"moveRight", Keyboard::isKeyPressed(Keyboard::D)},
             {"moveLeft", Keyboard::isKeyPressed(Keyboard::A)},
             {"aimRotation", angleRadians},
-            {"isShooting", Keyboard::isKeyPressed(Keyboard::Space)}
+            {"isShooting",Mouse::isButtonPressed(Mouse::ButtonLeft) }
         };
 
         try {

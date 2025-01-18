@@ -9,6 +9,7 @@ struct PlayerInput {
     bool moveLeft = false;
     bool moveRight = false;
     float aimRotation = 0.0f;
+    bool isShooting = false;
 };
 
 class Lobby {

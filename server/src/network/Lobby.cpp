@@ -31,6 +31,7 @@ uint64_t Lobby::nextId() {
 void Lobby::start() {
     DIRTY_COMPONENT(TransformComponent);
     DIRTY_COMPONENT(PawnComponent);
+    DIRTY_COMPONENT(FireballComponent);
 
     constexpr glm::vec2 tileSize = {100.0f, 100.0f};
 
@@ -95,6 +96,8 @@ void Lobby::update(float deltaTime) {
             pawn->moveBackwards = false;
             pawn->moveLeft = false;
             pawn->moveRight = false;
+            pawn->aimRotation = 0.0f;
+            pawn->isShooting = false;
 
             // Find the latest input for this player
             auto it = latestInputs.find(pawn->playerId);
@@ -105,6 +108,18 @@ void Lobby::update(float deltaTime) {
                 pawn->moveBackwards = input.moveBackwards;
                 pawn->moveLeft = input.moveLeft;
                 pawn->moveRight = input.moveRight;
+                pawn->aimRotation = input.aimRotation;
+                pawn->isShooting = input.isShooting;
+
+                if (pawn->isShooting) {
+                    auto fireballEntity = registry.create();
+                    AT_INFO("Creating fireball for player {}", pawn->playerId);
+                    glm::vec3 fireballDirection = glm::vec3(glm::cos(input.aimRotation), glm::sin(input.aimRotation), 0.0f);
+                    registry.emplace<NetworkComponent>(fireballEntity,nextId(),TILE_CODE+48,transform.position,true);
+                    registry.emplace<FireballComponent>(fireballEntity, transform.position, fireballDirection, 300.0f, pawn->playerId);
+                    registry.emplace<TransformComponent>(fireballEntity, transform.position, 0.0f, glm::vec2(100.0f,100.0f));
+                }
+
 
                 // Apply horizontal movement
                 if (input.moveLeft) transform.position.x -= this->baseSpeed * deltaTime;
@@ -180,6 +195,48 @@ void Lobby::update(float deltaTime) {
                 network.dirtyFlag = true;
             }
         }
+        if(auto fireball = registry.try_get<FireballComponent>(entity)){
+            // Update fireball position based on its direction and speed
+            glm::vec3 newPosition = fireball->position + fireball->direction * fireball->speed * deltaTime;
+
+            // Check collision with rigid bodies
+            auto rigidbodyView = registry.view<RigidbodyComponent, TransformComponent>();
+            bool collisionDetected = false;
+
+            for (auto target : rigidbodyView) {
+                const auto &rigidbodyTransform = rigidbodyView.get<TransformComponent>(target);
+                const auto &rigidbody = rigidbodyView.get<RigidbodyComponent>(target);
+
+                if (!rigidbody.isSolid || entity == target) {
+                    continue;
+                }
+
+                // Collision detection
+                float fireballLeft = newPosition.x - 50.0f;
+                float fireballRight = newPosition.x + 50.0f;
+                float fireballTop = newPosition.y + 50.0f;
+                float fireballBottom = newPosition.y - 50.0f;
+                float wallLeft = rigidbodyTransform.position.x - (rigidbodyTransform.scale.x * 0.5f)-50.0f;
+                float wallRight = rigidbodyTransform.position.x + (rigidbodyTransform.scale.x * 0.5f)+50.0f;
+                float wallTop = rigidbodyTransform.position.y + (rigidbodyTransform.scale.y * 0.5f)+50.0f;
+                float wallBottom = rigidbodyTransform.position.y - (rigidbodyTransform.scale.y * 0.5f)-50.0f;
+
+                if (fireballRight > wallLeft && fireballLeft < wallRight &&
+                    fireballTop > wallBottom && fireballBottom < wallTop) {
+                    collisionDetected = true;
+                    break;
+                    }
+            }
+
+            if (collisionDetected) {
+                // Destroy fireball on collision
+                registry.destroy(entity);
+            } else {
+                // Update fireball position if no collision
+                fireball->position = newPosition;
+                transform.position = newPosition;
+            }
+        }
     }
 
     nlohmann::json gameState;
@@ -218,6 +275,7 @@ void Lobby::update(float deltaTime) {
                     {"isShooting", pawn->isShooting}
                 };
             }
+
 
             if (auto rigidbody = registry.try_get<RigidbodyComponent>(entity)) {
                 entityJson["RigidbodyComponent"] = {
