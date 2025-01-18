@@ -4,7 +4,7 @@
 
 using namespace std::chrono;
 
-// Do not split in cpp and hpp. It doesn't work, link error.
+// Do not split in cpp and hpp. It doesn't work, link error. The compiler needs the definitions.
 class Time {
 public:
 

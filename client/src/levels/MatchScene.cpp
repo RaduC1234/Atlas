@@ -63,7 +63,7 @@ void MatchScene::onUpdate(float deltaTime) {
     }
 
     if (syncWithServer)
-        networkSystem.update(deltaTime, registry, this->playerId);
+        networkSystem.update(deltaTime, registry, this->playerId, this->camera);
 
     pawnSystem.update(deltaTime, registry, this->playerId, this->camera);
     cameraController.update(registry, this->playerId, deltaTime);

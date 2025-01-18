@@ -2,7 +2,7 @@
 
 #include "ResourceCache.hpp"
 
-class ResourceManager {
+class ResourceManager { // Do not split in cpp and hpp. It doesn't work, link error. The compiler needs the definitions.
 public:
     template<typename T>
     static std::shared_ptr<T> load(const std::string &key, const std::string &path,

@@ -83,7 +83,6 @@ void Lobby::update(float deltaTime) {
         latestInputs = std::move(inputQueue);
         inputQueue.clear();
     }
-
     // Process movement
     for (const auto entity : view) {
         auto &transform = view.get<TransformComponent>(entity);
@@ -152,7 +151,8 @@ void Lobby::update(float deltaTime) {
                     {"moveBackwards", pawn->moveBackwards},
                     {"moveLeft", pawn->moveLeft},
                     {"moveRight", pawn->moveRight},
-                    {"aimRotation", pawn->aimRotation}
+                    {"aimRotation", pawn->aimRotation},
+                    {"isShooting", pawn->isShooting}
                 };
             }
 

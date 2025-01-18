@@ -93,8 +93,9 @@ struct PawnComponent {
     bool moveLeft{false};
     bool moveRight{false};
     float aimRotation{0};
+    bool isShooting{false};
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(PawnComponent, playerId);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(PawnComponent, playerId, isShooting);
 };
 
 struct RigidbodyComponent {

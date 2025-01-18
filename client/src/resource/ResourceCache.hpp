@@ -1,10 +1,9 @@
 #pragma once
 
-#include "core/Core.hpp"
-
+#include <Atlas.hpp>
 
 template<typename T>
-class ResourceCache {
+class ResourceCache { // Do not split in cpp and hpp. It doesn't work, link error. The compiler needs the definitions.
 public:
     using ResourceHandle = std::shared_ptr<T>;
     using Loader = std::function<ResourceHandle(const std::string &)>;

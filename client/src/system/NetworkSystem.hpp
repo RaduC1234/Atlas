@@ -46,9 +46,9 @@ public:
     }
 
     // local deltaTime - only for predictions
-    void update(float deltaTime, entt::registry &registry, uint64_t playerId) {
+    void update(float deltaTime, entt::registry &registry, uint64_t playerId, const Camera& camera) {
         if (connected) {
-            sendInput(playerId);
+            sendInput(playerId, camera);
             processUpdates(registry);
         } else {
             std::cerr << "WebSocket is not connected. Update skipped." << std::endl;
@@ -56,8 +56,11 @@ public:
     }
 
 private:
-    void sendInput(uint64_t playerId) {
+    void sendInput(uint64_t playerId, const Camera& camera) {
         nlohmann::json input;
+
+        // process angle here
+        //glm::vec2 screenPos = camera.worldToScreen(// caracher pos)
 
         input["playerId"] = playerId;
         input["input"] = {
@@ -65,7 +68,8 @@ private:
             {"moveForward", Keyboard::isKeyPressed(Keyboard::W)},
             {"moveRight", Keyboard::isKeyPressed(Keyboard::D)},
             {"moveLeft", Keyboard::isKeyPressed(Keyboard::A)},
-            {"aimRotation", 0}
+            {"aimRotation", 0},
+            {"isShooting", Keyboard::isKeyPressed(Keyboard::Space)}
         };
 
         try {
