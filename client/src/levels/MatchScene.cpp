@@ -3,6 +3,7 @@
 #include <imgui.h>
 #include <cpr/cpr.h>
 
+#include "core/GameManager.hpp"
 #include "renderer/Color.hpp"
 #include "renderer/Font.hpp"
 #include "renderer/Texture.hpp"
@@ -29,12 +30,19 @@ void MatchScene::onCreate() {
 }
 
 void MatchScene::onStart() {
-    auto response = cpr::Get(cpr::Url{"http://127.0.0.1:8080/join_match"});
-    if (response.status_code == 200) {
-        this->playerId = std::stoull(response.text);
-    }
+    this->playerId = ClientNetworkService::getCurrentPlayerId();
+    nlohmann::json data;
+    data["playerId"] = this->playerId;
 
-    this->networkSystem.setPlayerId(this->playerId);
+    auto response = cpr::Get(
+        cpr::Url{"http://127.0.0.1:8080/join_match"},
+        cpr::Header{{"Content-Type", "application/Json"}},
+         cpr::Body{data.dump()}
+         );
+
+    if (response.status_code == 200) {
+        this->networkSystem.setPlayerId(this->playerId);
+    }
 }
 
 void MatchScene::onUpdate(float deltaTime) {

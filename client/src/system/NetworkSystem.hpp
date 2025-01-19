@@ -130,41 +130,42 @@ private:
     }
 
     void overwriteRegistry(const nlohmann::json &jsonResponse, entt::registry &registry) {
-        std::unordered_map<uint64_t, entt::entity> existingEntities;
-        std::unordered_set<uint64_t> deletedEntitiesSet;
+        try {
+            std::unordered_map<uint64_t, entt::entity> existingEntities;
+            std::unordered_set<uint64_t> deletedEntitiesSet;
 
-        if (jsonResponse.contains("deletedEntities") && !jsonResponse["deletedEntities"].empty()) {
-            for (const auto &id : jsonResponse["deletedEntities"]) {
-                deletedEntitiesSet.insert(id.get<uint64_t>());
-            }
-        }
-
-        auto view = registry.view<NetworkComponent>();
-        for (auto entity : view) {
-            auto &netComp = view.get<NetworkComponent>(entity);
-
-            if (!deletedEntitiesSet.empty() && deletedEntitiesSet.contains(netComp.networkId)) {
-                registry.destroy(entity);
-                continue;
+            if (jsonResponse.contains("deletedEntities") && !jsonResponse["deletedEntities"].empty()) {
+                for (const auto &id: jsonResponse["deletedEntities"]) {
+                    deletedEntitiesSet.insert(id.get<uint64_t>());
+                }
             }
 
-            existingEntities[netComp.networkId] = entity;
-        }
+            auto view = registry.view<NetworkComponent>();
+            for (auto entity: view) {
+                auto &netComp = view.get<NetworkComponent>(entity);
 
-        for (const auto &entityData: jsonResponse["entities"]) {
-            uint64_t networkId = entityData["networkId"].get<uint64_t>();
-            entt::entity entity;
-            bool isThePlayer = false;
+                if (!deletedEntitiesSet.empty() && deletedEntitiesSet.contains(netComp.networkId)) {
+                    registry.destroy(entity);
+                    continue;
+                }
 
-            if (existingEntities.contains(networkId)) {
-                entity = existingEntities[networkId];
-            } else {
-                entity = registry.create();
-                registry.emplace<NetworkComponent>(entity, networkId);
+                existingEntities[netComp.networkId] = entity;
             }
 
-            auto tileCode = entityData["tile-code"].get<uint32_t>();
-            std::string textureName;
+            for (const auto &entityData: jsonResponse["entities"]) {
+                uint64_t networkId = entityData["networkId"].get<uint64_t>();
+                entt::entity entity;
+                bool isThePlayer = false;
+
+                if (existingEntities.contains(networkId)) {
+                    entity = existingEntities[networkId];
+                } else {
+                    entity = registry.create();
+                    registry.emplace<NetworkComponent>(entity, networkId);
+                }
+
+                auto tileCode = entityData["tile-code"].get<uint32_t>();
+                std::string textureName;
 
             if (tileCode == TILE_CODE + 110) {
                 textureName = "fireball01";
@@ -172,50 +173,53 @@ private:
                 textureName = std::format("tile_{:04}", tileCode % TILE_CODE);
             }
 
-            if (entityData.contains("PawnComponent")) {
-                auto id = entityData["PawnComponent"]["playerId"];
-                auto &pawnComp = registry.get_or_emplace<PawnComponent>(entity, id, false, false, false, false, 0.0f);
-                pawnComp.moveForward = entityData["PawnComponent"]["moveForward"];
-                pawnComp.moveBackwards = entityData["PawnComponent"]["moveBackwards"];
-                pawnComp.moveLeft = entityData["PawnComponent"]["moveLeft"];
-                pawnComp.moveRight = entityData["PawnComponent"]["moveRight"];
-                pawnComp.aimRotation = entityData["PawnComponent"]["aimRotation"];
+                if (entityData.contains("PawnComponent")) {
+                    auto id = entityData["PawnComponent"]["playerId"];
+                    auto &pawnComp = registry.get_or_emplace<PawnComponent>(entity, id, false, false, false, false, 0.0f);
+                    pawnComp.moveForward = entityData["PawnComponent"]["moveForward"];
+                    pawnComp.moveBackwards = entityData["PawnComponent"]["moveBackwards"];
+                    pawnComp.moveLeft = entityData["PawnComponent"]["moveLeft"];
+                    pawnComp.moveRight = entityData["PawnComponent"]["moveRight"];
+                    pawnComp.aimRotation = entityData["PawnComponent"]["aimRotation"];
 
-                if (!pawnComp.moveForward && !pawnComp.moveBackwards && !pawnComp.moveLeft && !pawnComp.moveRight) {
-                    textureName = "front1";
+                    if (!pawnComp.moveForward && !pawnComp.moveBackwards && !pawnComp.moveLeft && !pawnComp.moveRight) {
+                        textureName = "front1";
+                    }
+
+                    if (id == this->playerId) {
+                        isThePlayer = true;
+                    }
                 }
 
-                if (id == this->playerId) {
-                    isThePlayer = true;
+                if (entityData.contains("TransformComponent")) {
+                    auto pos = glm::vec3(
+                        entityData["TransformComponent"]["position"][0],
+                        entityData["TransformComponent"]["position"][1],
+                        entityData["TransformComponent"]["position"][2]
+                    );
+
+                    if (isThePlayer) {
+                        this->playerPos = pos;
+                    }
+
+                    registry.emplace_or_replace<TransformComponent>(
+                        entity,
+                        pos,
+                        entityData["TransformComponent"]["rotation"],
+                        glm::vec2(entityData["TransformComponent"]["scale"][0],
+                                  entityData["TransformComponent"]["scale"][1])
+                    );
+
+                    registry.emplace_or_replace<RenderComponent>(
+                        entity,
+                        textureName,
+                        RenderComponent::defaultTexCoords(),
+                        Color::white()
+                    );
                 }
             }
-
-            if (entityData.contains("TransformComponent")) {
-                auto pos = glm::vec3(
-                    entityData["TransformComponent"]["position"][0],
-                    entityData["TransformComponent"]["position"][1],
-                    entityData["TransformComponent"]["position"][2]
-                );
-
-                if (isThePlayer) {
-                    this->playerPos = pos;
-                }
-
-                registry.emplace_or_replace<TransformComponent>(
-                    entity,
-                    pos,
-                    entityData["TransformComponent"]["rotation"],
-                    glm::vec2(entityData["TransformComponent"]["scale"][0],
-                              entityData["TransformComponent"]["scale"][1])
-                );
-
-                registry.emplace_or_replace<RenderComponent>(
-                    entity,
-                    textureName,
-                    RenderComponent::defaultTexCoords(),
-                    Color::white()
-                );
-            }
+        } catch (std::exception &e) {
+            return;
         }
     }
 

@@ -117,6 +117,7 @@ bool ClientNetworkService::login(const std::string &username, const std::string 
             nlohmann::json data = nlohmann::json::parse(response.text);
             loginToken = data["authToken"].get<uint64_t>();
             AT_INFO("Login successful with token: {}", loginToken); // Added logging
+            currentPlayerId = loginToken;
             return data["requestStatus"].get<bool>();
         }
     } catch (const std::exception &e) {
