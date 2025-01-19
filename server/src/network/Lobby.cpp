@@ -114,10 +114,15 @@ void Lobby::update(float deltaTime) {
                 if (pawn->isShooting) {
                     auto fireballEntity = registry.create();
                     AT_INFO("Creating fireball for player {}", pawn->playerId);
-                    glm::vec3 fireballDirection = glm::vec3(glm::cos(input.aimRotation), glm::sin(input.aimRotation), 0.0f);
-                    registry.emplace<NetworkComponent>(fireballEntity,nextId(),TILE_CODE+48,transform.position,true);
-                    registry.emplace<FireballComponent>(fireballEntity, transform.position, fireballDirection, 300.0f, pawn->playerId);
-                    registry.emplace<TransformComponent>(fireballEntity, transform.position, 0.0f, glm::vec2(100.0f,100.0f));
+                    glm::vec3 fireballDirection = glm::vec3(glm::cos(input.aimRotation), glm::sin(input.aimRotation), 3.0f);
+                    fireballDirection = normalize(fireballDirection);
+                    glm::vec3 spawnOffset = glm::vec3(fireballDirection.x, fireballDirection.y, 3.0f) * 60.0f;
+                    glm::vec3 spawnPosition = transform.position;
+                    spawnPosition.x += spawnOffset.x;
+                    spawnPosition.y += spawnOffset.y;
+                    registry.emplace<NetworkComponent>(fireballEntity,nextId(),TILE_CODE+110,transform.position,true);
+                    registry.emplace<FireballComponent>(fireballEntity, spawnPosition, fireballDirection, 800.0f, pawn->playerId);
+                    registry.emplace<TransformComponent>(fireballEntity, spawnPosition, input.aimRotation, glm::vec2(100.0f,100.0f));
                 }
 
 
@@ -195,9 +200,19 @@ void Lobby::update(float deltaTime) {
                 network.dirtyFlag = true;
             }
         }
-        if(auto fireball = registry.try_get<FireballComponent>(entity)){
-            // Update fireball position based on its direction and speed
-            glm::vec3 newPosition = fireball->position + fireball->direction * fireball->speed * deltaTime;
+        if(auto fireball = registry.try_get<FireballComponent>(entity)) {
+            auto &transform = view.get<TransformComponent>(entity);
+            auto &network = view.get<NetworkComponent>(entity);
+
+            // Calculate new position while maintaining z=3.0f
+            glm::vec3 newPosition = fireball->position;
+            newPosition.x += fireball->direction.x * fireball->speed * deltaTime;
+            newPosition.y += fireball->direction.y * fireball->speed * deltaTime;
+            newPosition.z = 3.0f;  // Always maintain z=3.0f
+
+            fireball->position = newPosition;
+            transform.position = newPosition;  // Transform position also maintains z=3.0f
+            network.dirtyFlag = true;
 
             // Check collision with rigid bodies
             auto rigidbodyView = registry.view<RigidbodyComponent, TransformComponent>();
@@ -211,30 +226,26 @@ void Lobby::update(float deltaTime) {
                     continue;
                 }
 
-                // Collision detection
+                // Adjust collision detection for 100x100 scale
                 float fireballLeft = newPosition.x - 50.0f;
                 float fireballRight = newPosition.x + 50.0f;
                 float fireballTop = newPosition.y + 50.0f;
                 float fireballBottom = newPosition.y - 50.0f;
-                float wallLeft = rigidbodyTransform.position.x - (rigidbodyTransform.scale.x * 0.5f)-50.0f;
-                float wallRight = rigidbodyTransform.position.x + (rigidbodyTransform.scale.x * 0.5f)+50.0f;
-                float wallTop = rigidbodyTransform.position.y + (rigidbodyTransform.scale.y * 0.5f)+50.0f;
-                float wallBottom = rigidbodyTransform.position.y - (rigidbodyTransform.scale.y * 0.5f)-50.0f;
+
+                float wallLeft = rigidbodyTransform.position.x - (rigidbodyTransform.scale.x * 0.5f);
+                float wallRight = rigidbodyTransform.position.x + (rigidbodyTransform.scale.x * 0.5f);
+                float wallTop = rigidbodyTransform.position.y + (rigidbodyTransform.scale.y * 0.5f);
+                float wallBottom = rigidbodyTransform.position.y - (rigidbodyTransform.scale.y * 0.5f);
 
                 if (fireballRight > wallLeft && fireballLeft < wallRight &&
                     fireballTop > wallBottom && fireballBottom < wallTop) {
                     collisionDetected = true;
                     break;
-                    }
+                }
             }
 
             if (collisionDetected) {
-                // Destroy fireball on collision
                 registry.destroy(entity);
-            } else {
-                // Update fireball position if no collision
-                fireball->position = newPosition;
-                transform.position = newPosition;
             }
         }
     }

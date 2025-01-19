@@ -109,7 +109,7 @@ struct FireballComponent {
     uint64_t ownerId; // ID of the player who created the fireball
 
     FireballComponent(const glm::vec3 &pos, const glm::vec3 &dir, float spd, uint64_t owner)
-        : position(pos), direction(glm::normalize(dir)), speed(50.0f), ownerId(owner) {
+        : position(pos), direction(glm::normalize(dir)), speed(300.0f), ownerId(owner) {
     }
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(FireballComponent, position, direction, speed, ownerId);
