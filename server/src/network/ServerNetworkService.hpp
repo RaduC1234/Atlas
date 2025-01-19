@@ -151,7 +151,6 @@ public:
             }
         });
 
-        // Matchmaking (Create Lobbies) - test only
         CROW_ROUTE(app, "/join_match")([this](const crow::request &req) {
             return handleJoinMatch(req);
         });
