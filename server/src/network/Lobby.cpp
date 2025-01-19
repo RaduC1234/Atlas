@@ -84,7 +84,7 @@ void Lobby::start() {
             registry.emplace<NetworkComponent>(actor, nextId(), static_cast<uint32_t>(tileNumber + TILE_CODE));
             registry.emplace<TransformComponent>(actor, glm::vec3(posX, posY, 5.0f), 0.0f, tileSize);
 
-            if (tileNumber == 40 || tileNumber == 63) {
+            if (tileNumber == 40 || tileNumber == 63 || tileNumber == 64) {
                 registry.emplace<RigidbodyComponent>(actor, RigidbodyComponent{true});
             }
         }
@@ -274,8 +274,46 @@ void Lobby::update(float deltaTime) {
                         registry.emplace_or_replace<NetworkComponent>(wall, wallNetwork.networkId, TILE_CODE + 48, wallTransform.position, true);
                         registry.emplace_or_replace<TransformComponent>(wall, wallTransform.position, wallTransform.rotation, wallTransform.scale);
                         registry.emplace_or_replace<RigidbodyComponent>(wall, RigidbodyComponent{false});
-                        AT_INFO("Destructible wall destroyed and replaced with path tile.");
+                        AT_INFO("Destructible wall replaced with path tile.");
+                    } else if (wallNetwork.tileCode == TILE_CODE + 64) {
+                        // Bomb explosion logic
+                        float explosionRadius = 500.0f;
+                        auto blastView = registry.view<TransformComponent, NetworkComponent, RigidbodyComponent>();
+                        for (auto target : blastView) {
+                            const auto &targetTransform = blastView.get<TransformComponent>(target);
+                            auto &targetNetwork = blastView.get<NetworkComponent>(target);
+
+                            float distance = glm::distance(targetTransform.position, wallTransform.position);
+                            if (distance <= explosionRadius) {
+                                if (targetNetwork.tileCode == TILE_CODE + 63 || // Destructible wall
+                                    targetNetwork.tileCode == TILE_CODE + 64 || // Bomb
+                                    targetNetwork.tileCode == TILE_CODE + 40) { // Other wall types
+                                    registry.emplace_or_replace<NetworkComponent>(target, targetNetwork.networkId, TILE_CODE + 48, targetTransform.position, true);
+                                    registry.emplace_or_replace<TransformComponent>(target, targetTransform.position, targetTransform.rotation, targetTransform.scale);
+                                    registry.emplace_or_replace<RigidbodyComponent>(target, RigidbodyComponent{false});
+                                    AT_INFO("Object within blast radius replaced with path.");
+                                } else if (auto playerPawn = registry.try_get<PawnComponent>(target)) {
+                                    // Respawn player to original position
+                                    auto spawnPointIt = playerSpawnPoints.find(playerPawn->playerId);
+                                    if (spawnPointIt != playerSpawnPoints.end()) {
+                                        auto &playerTransform = registry.get<TransformComponent>(target);
+                                        playerTransform.position = spawnPointIt->second.position;
+                                        if (auto *playerNetwork = registry.try_get<NetworkComponent>(target)) {
+                                            playerNetwork->dirtyFlag = true;
+                                        }
+                                        AT_INFO("Player {} hit by bomb! Respawning at original position.", playerPawn->playerId);
+                                    }
+                                }
+                            }
+                        }
+
+                        // Replace the bomb itself with a path tile
+                        registry.emplace_or_replace<NetworkComponent>(wall, wallNetwork.networkId, TILE_CODE + 48, wallTransform.position, true);
+                        registry.emplace_or_replace<TransformComponent>(wall, wallTransform.position, wallTransform.rotation, wallTransform.scale);
+                        registry.emplace_or_replace<RigidbodyComponent>(wall, RigidbodyComponent{false});
+                        AT_INFO("Bomb exploded and replaced with path.");
                     }
+
                     collisionDetected = true;
                     entitiesToDestroy.push_back(entity);
                     break;
