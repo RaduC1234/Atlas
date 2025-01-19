@@ -87,7 +87,7 @@ private:
             {"moveRight", Keyboard::isKeyPressed(Keyboard::D)},
             {"moveLeft", Keyboard::isKeyPressed(Keyboard::A)},
             {"aimRotation", angleRadians},
-            {"isShooting",Mouse::isButtonPressed(Mouse::ButtonLeft) }
+            {"isShooting", Mouse::isButtonPressed(Mouse::ButtonLeft)}
         };
 
         try {
@@ -132,12 +132,21 @@ private:
     void overwriteRegistry(const nlohmann::json &jsonResponse, entt::registry &registry) {
         std::unordered_map<uint64_t, entt::entity> existingEntities;
 
+        // Create a mapping of network IDs to entities
         auto view = registry.view<NetworkComponent>();
         for (auto entity: view) {
             auto &netComp = view.get<NetworkComponent>(entity);
+
+            // if the deletedEntities contains the current id
+            if (std::find(jsonResponse["deletedEntities"].begin(), jsonResponse["deletedEntities"].end(), netComp.networkId) != jsonResponse["deletedEntities"].end()) {
+                registry.destroy(entity);
+                continue;
+            }
+
             existingEntities[netComp.networkId] = entity;
         }
 
+        // **Process Updated or New Entities**
         for (const auto &entityData: jsonResponse["entities"]) {
             uint64_t networkId = entityData["networkId"].get<uint64_t>();
             entt::entity entity;
@@ -150,7 +159,7 @@ private:
                 registry.emplace<NetworkComponent>(entity, networkId);
             }
 
-            // update
+            // Update tile code
             auto tileCode = entityData["tile-code"].get<uint32_t>();
             std::string textureName;
 
@@ -158,6 +167,7 @@ private:
                 textureName = std::format("tile_{:04}", tileCode % TILE_CODE);
             }
 
+            // Update or create PawnComponent
             if (entityData.contains("PawnComponent")) {
                 auto id = entityData["PawnComponent"]["playerId"];
                 auto &pawnComp = registry.get_or_emplace<PawnComponent>(entity, id, false, false, false, false, 0.0f);
@@ -176,6 +186,7 @@ private:
                 }
             }
 
+            // Update or create TransformComponent
             if (entityData.contains("TransformComponent")) {
                 auto pos = glm::vec3(
                     entityData["TransformComponent"]["position"][0],

@@ -1,6 +1,6 @@
 #pragma once
 
- #include <Atlas.hpp>
+#include <Atlas.hpp>
 #include <crow.h>
 
 #include "Lobby.hpp"
@@ -152,62 +152,64 @@ public:
         });
 
         // Matchmaking (Create Lobbies) - test only
-CROW_ROUTE(app, "/join_match")([this](const crow::request &req) {
-    std::lock_guard<std::mutex> lock(handlerMutex);
+        CROW_ROUTE(app, "/join_match")([this](const crow::request &req) {
+            std::lock_guard<std::mutex> lock(handlerMutex);
 
-    const uint64_t playerId = generateUniqueId();
-    if (lobbies.empty() || lobbies.back().getPlayersSize() >= 4) {
-        lobbies.emplace_back(); // New lobby
-    }
+            const uint64_t playerId = generateUniqueId();
+            if (lobbies.empty() || lobbies.back().getPlayersSize() >= 4) {
+                lobbies.emplace_back(); // New lobby
+            }
 
-    Lobby &lobby = lobbies.back();
-    Actor playerEntity = lobby.getRegistry().create();
+            Lobby &lobby = lobbies.back();
+            Actor playerEntity = lobby.getRegistry().create();
 
-    // Calculate spawn position based on player index
-    auto& playerList = lobby.getPlayerList();
-    size_t playerIndex = playerList.size(); // New player's index will be the current size
-    glm::vec3 position;
+            // Calculate spawn position based on player index
+            auto &playerList = lobby.getPlayerList();
+            size_t playerIndex = playerList.size(); // New player's index will be the current size
+            glm::vec3 position;
 
-    if (lobby.getPlayersSize() < 3) { // For 2 players - diagonal spawn
-        switch (playerIndex) {
-            case 0:
-                position = glm::vec3(-2400, 2400, 0);  // Top left
-                break;
-            case 1:
-                position = glm::vec3(2400, -2400, 0);  // Bottom right
-                break;
-            default:
-                position = glm::vec3(0, 0, 0);
-                break;
-        }
-    } else { // For 3-4 players - all corners
-        switch (playerIndex) {
-            case 0:
-                position = glm::vec3(-2400, -2400, 0);  // Bottom left
-                break;
-            case 1:
-                position = glm::vec3(2400, -2400, 0);   // Bottom right
-                break;
-            case 2:
-                position = glm::vec3(-2400, 2400, 0);   // Top left
-                break;
-            case 3:
-                position = glm::vec3(2400, 2400, 0);    // Top right
-                break;
-            default:
-                position = glm::vec3(0, 0, 0);
-                break;
-        }
-    }
+            if (lobby.getPlayersSize() < 3) {
+                // For 2 players - diagonal spawn
+                switch (playerIndex) {
+                    case 0:
+                        position = glm::vec3(-2400, 2400, 0); // Top left
+                        break;
+                    case 1:
+                        position = glm::vec3(2400, -2400, 0); // Bottom right
+                        break;
+                    default:
+                        position = glm::vec3(0, 0, 0);
+                        break;
+                }
+            } else {
+                // For 3-4 players - all corners
+                switch (playerIndex) {
+                    case 0:
+                        position = glm::vec3(-2400, -2400, 0); // Bottom left
+                        break;
+                    case 1:
+                        position = glm::vec3(2400, -2400, 0); // Bottom right
+                        break;
+                    case 2:
+                        position = glm::vec3(-2400, 2400, 0); // Top left
+                        break;
+                    case 3:
+                        position = glm::vec3(2400, 2400, 0); // Top right
+                        break;
+                    default:
+                        position = glm::vec3(0, 0, 0);
+                        break;
+                }
+            }
 
-    lobby.getRegistry().emplace<TransformComponent>(playerEntity, position, 0.0f, glm::vec2(100, 100));
-    lobby.getRegistry().emplace<PawnComponent>(playerEntity, static_cast<uint32_t>(playerId));
-    lobby.getRegistry().emplace<NetworkComponent>(playerEntity, lobby.nextId());
+            lobby.getRegistry().emplace<TransformComponent>(playerEntity, position, 0.0f, glm::vec2(100, 100));
+            lobby.getRegistry().emplace<PawnComponent>(playerEntity, static_cast<uint32_t>(playerId));
+            lobby.getRegistry().emplace<NetworkComponent>(playerEntity, lobby.nextId());
 
-    lobby.addPlayer(playerId);
+            lobby.addPlayer(playerId);
 
-    return crow::response(std::to_string(playerId));
-});
+            return crow::response(std::to_string(playerId));
+        });
 
         CROW_ROUTE(app, "/match_status").methods(crow::HTTPMethod::GET)([this](const crow::request &req) {
             try {
@@ -344,7 +346,7 @@ CROW_ROUTE(app, "/join_match")([this](const crow::request &req) {
                             input.moveLeft = requestBody["input"].value("moveLeft", false);
                             input.moveRight = requestBody["input"].value("moveRight", false);
                             input.aimRotation = requestBody["input"].value("aimRotation", 0.0f);
-                            input.isShooting = requestBody["input"].value("isShooting",false);
+                            input.isShooting = requestBody["input"].value("isShooting", false);
 
                             state.lobby->setPlayerInput(state.playerId, input);
                         }
@@ -418,7 +420,7 @@ private:
             while (nextLoop <= Time::now().toSeconds()) {
                 auto tickStart = Time::now().toSeconds();
 
-                for (auto &lobby : lobbies) {
+                for (auto &lobby: lobbies) {
                     if (!lobby.hasStarted() && lobby.getPlayerList().size() >= 2)
                         lobby.start();
 
@@ -430,7 +432,7 @@ private:
                 const float tickEnd = Time::now().toSeconds();
 
                 if (float tickDuration = tickEnd - tickStart; tickDuration > ticksPerMs) {
-                    AT_WARN("Server is running behind! Tick took {:.4f}s, which is {:.4f}s behind.", tickDuration, tickDuration - ticksPerMs);
+                   // AT_WARN("Server is running behind! Tick took {:.4f}s, which is {:.4f}s behind.", tickDuration, tickDuration - ticksPerMs);
                 }
 
                 nextLoop += ticksPerMs;
@@ -595,36 +597,37 @@ private:
                     glm::vec3 position;
 
                     // Position based on total expected players
-                    if (lobby.getPlayersSize() < 3) { // For 2 players - diagonal spawn
+                    if (lobby.getPlayersSize() < 3) {
+                        // For 2 players - diagonal spawn
                         switch (playerIndex) {
                             case 0:
-                                position = glm::vec3(-2400, 2400, 0);  // Top left
-                            break;
+                                position = glm::vec3(-2400, 2400, 0); // Top left
+                                break;
                             case 1:
-                                position = glm::vec3(2400, -2400, 0);  // Bottom right
-                            break;
+                                position = glm::vec3(2400, -2400, 0); // Bottom right
+                                break;
                             default:
                                 position = glm::vec3(0, 0, 0);
-                            break;
+                                break;
                         }
                     } else {
                         // For 3-4 players - all corners
                         switch (playerIndex) {
                             case 0:
-                                position = glm::vec3(-2400, -2400, 0);  // Bottom left
-                            break;
+                                position = glm::vec3(-2400, -2400, 0); // Bottom left
+                                break;
                             case 1:
-                                position = glm::vec3(2400, -2400, 0);   // Bottom right
-                            break;
+                                position = glm::vec3(2400, -2400, 0); // Bottom right
+                                break;
                             case 2:
-                                position = glm::vec3(-2400, 2400, 0);   // Top left
-                            break;
+                                position = glm::vec3(-2400, 2400, 0); // Top left
+                                break;
                             case 3:
-                                position = glm::vec3(2400, 2400, 0);    // Top right
-                            break;
+                                position = glm::vec3(2400, 2400, 0); // Top right
+                                break;
                             default:
                                 position = glm::vec3(0, 0, 0);
-                            break;
+                                break;
                         }
                     }
                     lobby.getRegistry().emplace<TransformComponent>(playerEntity, position, 0.0f, glm::vec2(100, 100));

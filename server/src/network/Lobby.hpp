@@ -24,7 +24,9 @@ public:
     uint64_t nextId();
     void start();
     void update(float deltaTime);
+
     void markDirty(entt::registry &registry, entt::entity entity);
+    void markDeleted(entt::registry &registry, entt::entity entity);
     void setPlayerInput(uint64_t playerId, const PlayerInput &input);
 
     entt::registry &getRegistry() { return registry; }
@@ -66,14 +68,18 @@ private:
     std::mutex registryMutex;
     std::vector<uint64_t> players;
     uint64_t entId = 0;
+
     bool started = false;
+
     std::unordered_map<uint64_t, PlayerInput> inputQueue;
     std::mutex inputMutex;
+
     std::unordered_map<uint64_t, crow::websocket::connection *> playerConnections;
     std::mutex playersMutex;
+
+    std::vector<uint64_t> deletedEntities;
 };
 
 #define DIRTY_COMPONENT(clazz) \
 registry.on_construct<clazz>().connect<&Lobby::markDirty>(*this); \
-registry.on_update<clazz>().connect<&Lobby::markDirty>(*this); \
-registry.on_destroy<clazz>().connect<&Lobby::markDirty>(*this);
+registry.on_update<clazz>().connect<&Lobby::markDirty>(*this);

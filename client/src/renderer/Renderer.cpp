@@ -98,7 +98,7 @@ void Renderer::flush(uint32_t screenWidth, uint32_t screenHeight, Camera &camera
                           return a.getZIndex() > b.getZIndex();
                       });
 
-    glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w); // clear the screen and apply the background color
+    glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w); // set the background color
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the color buffer and depth buffer
 
     for (auto &batch: batches) {

@@ -348,12 +348,16 @@ void Lobby::update(float deltaTime) {
     // Destroy entities after updating
     for (const auto destroyEntity : entitiesToDestroy) {
         if (registry.valid(destroyEntity)) {
+            markDeleted(registry, destroyEntity);
             registry.destroy(destroyEntity);
         }
     }
 
     nlohmann::json gameState;
     gameState["entities"] = nlohmann::json::array();
+
+    gameState["deletedEntities"] = this->deletedEntities;
+    this->deletedEntities.clear();
 
     try {
         for (auto entity : view) {
@@ -415,5 +419,11 @@ void Lobby::update(float deltaTime) {
 void Lobby::markDirty(entt::registry &registry, entt::entity entity) {
     if (auto network = registry.try_get<NetworkComponent>(entity)) {
         network->dirtyFlag = true;
+    }
+}
+
+void Lobby::markDeleted(entt::registry &registry, entt::entity entity) {
+    if (auto network = registry.try_get<NetworkComponent>(entity)) {
+        this->deletedEntities.push_back(network->networkId);
     }
 }
