@@ -1,4 +1,3 @@
-//generator pentru path, indestructible wall, destructible wall
 #pragma once
 
 #include <Atlas.hpp>
@@ -324,55 +323,69 @@ private:
         return false;
     }
 
-    void placeBreakableWalls() {
-        std::vector<std::vector<int>> labels = labelCorridors();
+    void placeBreakableWallsWithHiddenBombs() {
+    std::vector<std::vector<int>> labels = labelCorridors();
 
-        std::vector<std::vector<std::pair<int, int>>> corridors;
-        int maxLabel = 0;
-        for (const auto& row : labels) {
-            for (int label : row) {
-                if (label > maxLabel)
-                    maxLabel = label;
-            }
-        }
-
-        corridors.resize(maxLabel + 1);
-
-        for (int y = 0; y < rows; ++y) {
-            for (int x = 0; x < cols; ++x) {
-                if (labels[y][x] > 0) {
-                    corridors[labels[y][x]].emplace_back(x, y);
-                }
-            }
-        }
-
-        const double WALL_PROBABILITY_PER_CORRIDOR = 0.5;
-
-        for (size_t label = 1; label < corridors.size(); ++label) {
-            if (corridors[label].empty())
-                continue;
-
-            std::shuffle(corridors[label].begin(), corridors[label].end(), rng);
-
-            int wallsToPlace = static_cast<int>(corridors[label].size() * WALL_PROBABILITY_PER_CORRIDOR);
-            if (wallsToPlace < 1 && corridors[label].size() > 0)
-                wallsToPlace = 1;
-
-            int wallsPlaced = 0;
-
-            for (const auto& tile : corridors[label]) {
-                if (wallsPlaced >= wallsToPlace)
-                    break;
-
-                int x = tile.first;
-                int y = tile.second;
-
-                map[y][x] = 63; // Breakable box
-                wallsPlaced++;
-            }
-
+    std::vector<std::vector<std::pair<int, int>>> corridors;
+    int maxLabel = 0;
+    for (const auto& row : labels) {
+        for (int label : row) {
+            if (label > maxLabel)
+                maxLabel = label;
         }
     }
+
+    corridors.resize(maxLabel + 1);
+
+    for (int y = 0; y < rows; ++y) {
+        for (int x = 0; x < cols; ++x) {
+            if (labels[y][x] > 0) {
+                corridors[labels[y][x]].emplace_back(x, y);
+            }
+        }
+    }
+
+    const double WALL_PROBABILITY_PER_CORRIDOR = 0.5;
+
+    std::vector<std::pair<int, int>> destructibleWallPositions;
+
+    for (size_t label = 1; label < corridors.size(); ++label) {
+        if (corridors[label].empty())
+            continue;
+
+        std::shuffle(corridors[label].begin(), corridors[label].end(), rng);
+
+        int wallsToPlace = static_cast<int>(corridors[label].size() * WALL_PROBABILITY_PER_CORRIDOR);
+        if (wallsToPlace < 1 && corridors[label].size() > 0)
+            wallsToPlace = 1;
+
+        int wallsPlaced = 0;
+
+        for (const auto& tile : corridors[label]) {
+            if (wallsPlaced >= wallsToPlace)
+                break;
+
+            int x = tile.first;
+            int y = tile.second;
+
+            map[y][x] = 63; // Regular box
+            destructibleWallPositions.emplace_back(x, y);
+            wallsPlaced++;
+        }
+    }
+
+    int hiddenBombsToPlace = randomValue(1, 3);
+    AT_INFO("{} bombs were placed",hiddenBombsToPlace);
+
+    std::shuffle(destructibleWallPositions.begin(), destructibleWallPositions.end(), rng);
+
+    for (int i = 0; i < hiddenBombsToPlace && i < destructibleWallPositions.size(); ++i) {
+        int x = destructibleWallPositions[i].first;
+        int y = destructibleWallPositions[i].second;
+
+        map[y][x] = 64; // Hidden bomb
+    }
+}
 
 public:
     MapGenerator(int numRows, int numCols)
@@ -384,7 +397,7 @@ public:
         createConnections();
         addExtraConnections(30);
 
-        placeBreakableWalls();
+        placeBreakableWallsWithHiddenBombs();
         createCornerSpaces();
         connectCornerToNearestRoom();
     }
