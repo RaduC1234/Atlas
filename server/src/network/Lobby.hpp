@@ -39,12 +39,17 @@ public:
 
     void addConnection(uint64_t playerId, crow::websocket::connection *conn) {
         std::lock_guard<std::mutex> lock(playersMutex);
+        this->synced = false;
         playerConnections[playerId] = conn;
     }
 
     void removeConnection(uint64_t playerId) {
         std::lock_guard<std::mutex> lock(playersMutex);
         playerConnections.erase(playerId);
+    }
+
+    void markUnSynced() {
+        this->synced = false;
     }
 
 private:
@@ -78,6 +83,8 @@ private:
     std::mutex playersMutex;
 
     std::vector<uint64_t> deletedEntities;
+
+    bool synced{true};
 };
 
 #define DIRTY_COMPONENT(clazz) \

@@ -232,7 +232,7 @@ void Lobby::update(float deltaTime) {
         // IMPROVED FIREBALL COLLISION LOGIC
         if (auto fireball = registry.try_get<FireballComponent>(entity)) {
             // Skip if this entity is already marked for destruction
-            if (std::find(entitiesToDestroy.begin(), entitiesToDestroy.end(), entity) != entitiesToDestroy.end()) {
+            if (std::ranges::find(entitiesToDestroy, entity) != entitiesToDestroy.end()) {
                 continue;
             }
 
@@ -280,7 +280,7 @@ void Lobby::update(float deltaTime) {
                 for (auto otherEntity : fireballView) {
                     // Skip if this is the same entity or already marked for destruction
                     if (entity == otherEntity ||
-                        std::find(entitiesToDestroy.begin(), entitiesToDestroy.end(), otherEntity) != entitiesToDestroy.end()) {
+                        std::ranges::find(entitiesToDestroy, otherEntity) != entitiesToDestroy.end()) {
                         continue;
                     }
 
@@ -342,7 +342,7 @@ void Lobby::update(float deltaTime) {
     }
 
     // Remove duplicate entities from destruction list to prevent multiple destruction attempts
-    auto last = std::unique(entitiesToDestroy.begin(), entitiesToDestroy.end());
+    auto last = std::ranges::unique(entitiesToDestroy).begin();
     entitiesToDestroy.erase(last, entitiesToDestroy.end());
 
     // Destroy entities after updating
@@ -363,9 +363,10 @@ void Lobby::update(float deltaTime) {
         for (auto entity : view) {
             const auto &network = view.get<NetworkComponent>(entity);
 
-            if (!network.dirtyFlag) {
+            if (!network.dirtyFlag && this->synced) {
                 continue;
             }
+
             network.dirtyFlag = false;
 
             const auto &transform = registry.get<TransformComponent>(entity);
@@ -401,6 +402,8 @@ void Lobby::update(float deltaTime) {
 
             gameState["entities"].push_back(entityJson);
         }
+
+        this->synced = true;
 
         // broadcast the game state to all connected clients
         {

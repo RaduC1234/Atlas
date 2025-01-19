@@ -313,6 +313,7 @@ public:
                     try {
                         auto requestBody = nlohmann::json::parse(message);
 
+                        // for the first message
                         if (state.playerId == 0) {
                             if (!requestBody.contains("playerId") || !requestBody["playerId"].is_number_unsigned()) {
                                 conn.send_text(nlohmann::json({{"error", "Invalid or missing playerId"}}).dump());
@@ -325,6 +326,8 @@ public:
                             for (Lobby &lobby: lobbies) {
                                 if (lobby.containsPlayer(state.playerId)) {
                                     state.lobby = &lobby;
+
+
 
                                     std::lock_guard<std::mutex> lobbyLock(lobby.getRegistryMutex());
                                     lobby.addConnection(state.playerId, &conn);
