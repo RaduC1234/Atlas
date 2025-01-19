@@ -25,7 +25,7 @@ void MatchScene::onCreate() {
     constexpr float mapSize = 50.0f * 100.0f; // 5000 units total
     cameraController.setBounds({mapSize, mapSize}); // This is the total size, camera system will center it
     cameraController.setSmoothness(0.05f);   // Enable smooth following
-    cameraController.setZoom(0.4f);
+    cameraController.setZoom(0.5f);
 }
 
 void MatchScene::onStart() {

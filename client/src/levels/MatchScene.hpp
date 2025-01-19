@@ -2,7 +2,7 @@
 
 #include "Atlas.hpp"
 #include "renderer/Camera.hpp"
-#include "renderer/CameraController.hpp"
+#include "scene/CameraController.hpp"
 #include "scene/Scene.hpp"
 #include "system/NetworkSystem.hpp"
 #include "system/PawnSystem.hpp"

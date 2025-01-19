@@ -166,7 +166,9 @@ private:
             auto tileCode = entityData["tile-code"].get<uint32_t>();
             std::string textureName;
 
-            if (tileCode >= EntityCode::TILE_CODE && tileCode < EntityCode::TILE_CODE + EntityCode::NEXT) {
+            if (tileCode == TILE_CODE + 110) {
+                textureName = "fireball01";
+            } else if (tileCode >= EntityCode::TILE_CODE && tileCode < EntityCode::TILE_CODE + EntityCode::NEXT) {
                 textureName = std::format("tile_{:04}", tileCode % TILE_CODE);
             }
 
