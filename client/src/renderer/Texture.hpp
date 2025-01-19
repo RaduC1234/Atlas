@@ -4,9 +4,9 @@
 
 class Texture {
 public:
-    explicit Texture(const std::string& filePath);
+    Texture(const std::string& filePath);
 
-    Texture(uint32_t texID) : textureID(texID) {}
+    Texture(uint32_t texID) : textureID(texID) {} // to be used only in framebuffer
 
    /* ~Texture() {
         glDeleteTextures(1, &textureID);

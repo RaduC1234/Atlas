@@ -2,47 +2,37 @@
 
 #include <glad/glad.h>
 
-Framebuffer::Framebuffer(int width, int height, bool useDepth) : width(width), height(height) {
-
+Framebuffer::Framebuffer(int width, int height) : width(width), height(height) {
     glGenFramebuffers(1, &framebufferObject);
     glBindFramebuffer(GL_FRAMEBUFFER, framebufferObject);
 
+    // Create the texture attachment
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
 
-    if (useDepth) {
-        glGenRenderbuffers(1, &renderBufferObject);
-        glBindRenderbuffer(GL_RENDERBUFFER, renderBufferObject);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderBufferObject);
-    }
-
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        AT_ERROR("Cannot create framebuffer.");
+        std::cerr << "Error: Framebuffer is incomplete!" << std::endl;
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 Framebuffer::~Framebuffer() {
-    if (this->framebufferObject) {
+    if (framebufferObject) {
         glDeleteFramebuffers(1, &framebufferObject);
     }
     if (texture) {
         glDeleteTextures(1, &texture);
     }
-    if (renderBufferObject) {
-        glDeleteRenderbuffers(1, &renderBufferObject);
-    }
 }
 
 void Framebuffer::bind() const {
     glBindFramebuffer(GL_FRAMEBUFFER, framebufferObject);
-    glViewport(0, 0, width, height); // Set viewport to framebuffer size
+    glViewport(0, 0, width, height); // Adjust the viewport to match the framebuffer size. TODO: rewrite Camera
 }
 
 void Framebuffer::unbind() const {
@@ -50,19 +40,44 @@ void Framebuffer::unbind() const {
 }
 
 void Framebuffer::updateDimensions(uint32_t width, uint32_t height) {
+    if (width == 0 || height == 0) {
+        std::cerr << "Error: Framebuffer dimensions must be greater than zero!" << std::endl;
+        return;
+    }
+
+    if (this->width == width && this->height == height) {
+        // Dimensions unchanged, no need to update
+        return;
+    }
+
     this->width = width;
     this->height = height;
 
-    // Recreate the texture attachment
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    // Bind the framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, framebufferObject);
 
-    // Recreate the renderbuffer if it exists
-    if (renderBufferObject) {
-        glBindRenderbuffer(GL_RENDERBUFFER, renderBufferObject);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+    // Delete the old texture
+    if (texture) {
+        glDeleteTextures(1, &texture);
     }
 
-    // Unbind the framebuffer to avoid accidental rendering
+    // Create and attach a new texture with updated dimensions
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+
+    // Check if the framebuffer is still complete
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cerr << "Error: Framebuffer is incomplete after resizing!" << std::endl;
+    }
+
+    // Unbind the framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+uint32_t Framebuffer::getTextureID() const {
+    return texture;
 }

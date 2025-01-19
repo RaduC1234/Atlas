@@ -2,185 +2,413 @@
 
 #include <Atlas.hpp>
 
-using Matrix = std::vector<std::vector<int>>;
+#pragma once
+
 
 class MapGenerator {
 private:
+    struct Room {
+        int x, y;
+        int width, height;
+        std::vector<Room*> connections;
+
+        Room(int x, int y, int w, int h)
+            : x(x), y(y), width(w), height(h) {}
+
+        bool intersects(const Room& other, int padding = 2) const {
+            return !(x + width + padding < other.x ||
+                     other.x + other.width + padding < x ||
+                     y + height + padding < other.y ||
+                     other.y + other.height + padding < y);
+        }
+
+        int centerX() const { return x + width / 2; }
+        int centerY() const { return y + height / 2; }
+    };
+
     int rows, cols;
-    Matrix map;
+    std::vector<std::vector<int>> map;
+    std::vector<Room*> rooms;
     std::random_device rd;
     std::mt19937 rng;
-    std::uniform_int_distribution<int> dist;
+    std::vector<std::pair<int, int>> corridorTiles;
+
+    // Configuration constants
+    const int MIN_ROOM_SIZE = 8;
+    const int MAX_ROOM_SIZE = 15;
+    const int MIN_ROOMS = 8;
+    const int MAX_ROOMS = 12;
+    const int BORDER = 2;
+    const int MIN_CORRIDOR_WIDTH = 3;
+    const int MAX_CORRIDOR_WIDTH = 5;
 
     int randomValue(int min, int max) {
-        dist.param(std::uniform_int_distribution<int>::param_type(min, max));
-        return dist(rng);
+        return std::uniform_int_distribution<>(min, max)(rng);
     }
 
     void initializeMap() {
-        map = Matrix(rows, std::vector<int>(cols, 1));
+        map = std::vector<std::vector<int>>(rows, std::vector<int>(cols, 40)); // Indestructible walls
     }
 
-    void generateWalls() {
-        const int targetWallTiles = rows * cols * 45 / 100;
-        int wallTilesPlaced = 0;
+    void createCornerSpaces() {
+        std::vector<std::pair<int, int>> corners = {
+            {0, 0}, {0, rows - 2}, {cols - 2, 0}, {cols - 2, rows - 2}
+        };
 
-        while (wallTilesPlaced < targetWallTiles) {
-            placeWall(wallTilesPlaced, targetWallTiles);
-        }
-    }
+        for (const auto& corner : corners) {
+            int cornerX = corner.first;
+            int cornerY = corner.second;
 
-    void placeWall(int& wallTilesPlaced, int targetWallTiles) {
-        const int wallWidth = randomValue(3, 8);
-        const int wallHeight = randomValue(3, 8);
-        const int randValRow = randomValue(3, cols - wallWidth - 3);
-        const int randValCol = randomValue(3, rows - wallHeight - 3);
-
-        for (int row = randValCol; row < randValCol + wallHeight && wallTilesPlaced < targetWallTiles; ++row) {
-            for (int col = randValRow; col < randValRow + wallWidth && wallTilesPlaced < targetWallTiles; ++col) {
-                if (map[row][col] == 1) {
-                    map[row][col] = randomValue(0, 100) < 70 ? 3 : 4;
-                    ++wallTilesPlaced;
+            for (int y = cornerY; y < cornerY + 2; ++y) {
+                for (int x = cornerX; x < cornerX + 2; ++x) {
+                    if (y >= 0 && y < rows && x >= 0 && x < cols) {
+                        map[y][x] = 48; // Path
+                    }
                 }
             }
         }
     }
 
-    void generatePaths() {
-        for (int row = randomValue(2, 4); row < rows - 2; row += randomValue(3, 6)) {
-            for (int col = randomValue(2, 4); col < cols - 2; col += randomValue(3, 6)) {
-                const int length = randomValue(5, 9);
-                const bool horizontal = randomValue(0, 1) == 0;
-                clearPath(row, col, length, horizontal);
+    bool isValidRoomPlacement(const Room& room) {
+        if (room.x < BORDER || room.y < BORDER ||
+            room.x + room.width >= cols - BORDER ||
+            room.y + room.height >= rows - BORDER) {
+            return false;
+        }
+
+        for (const auto& existing : rooms) {
+            if (room.intersects(*existing)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    void generateRooms() {
+        const int MAX_ATTEMPTS = 200;
+        int attempts = 0;
+        int targetRooms = randomValue(MIN_ROOMS, MAX_ROOMS);
+
+        while (rooms.empty() && attempts < MAX_ATTEMPTS) {
+            int centerX = cols / 2 - MAX_ROOM_SIZE / 2;
+            int centerY = rows / 2 - MAX_ROOM_SIZE / 2;
+            int w = randomValue(MIN_ROOM_SIZE, MAX_ROOM_SIZE);
+            int h = randomValue(MIN_ROOM_SIZE, MAX_ROOM_SIZE);
+
+            Room* centralRoom = new Room(centerX, centerY, w, h);
+            if (isValidRoomPlacement(*centralRoom)) {
+                rooms.push_back(centralRoom);
+            } else {
+                delete centralRoom;
+            }
+            attempts++;
+        }
+
+        while (rooms.size() < targetRooms && attempts < MAX_ATTEMPTS) {
+            Room* parent = rooms[randomValue(0, rooms.size() - 1)];
+            int w = randomValue(MIN_ROOM_SIZE, MAX_ROOM_SIZE);
+            int h = randomValue(MIN_ROOM_SIZE, MAX_ROOM_SIZE);
+
+            std::vector<std::pair<int, int>> positions = {
+                {parent->x - w - MIN_CORRIDOR_WIDTH, parent->y},
+                {parent->x + parent->width + MIN_CORRIDOR_WIDTH, parent->y},
+                {parent->x, parent->y - h - MIN_CORRIDOR_WIDTH},
+                {parent->x, parent->y + parent->height + MIN_CORRIDOR_WIDTH}
+            };
+
+            std::shuffle(positions.begin(), positions.end(), rng);
+
+            bool placed = false;
+            for (const auto& pos : positions) {
+                Room* newRoom = new Room(pos.first, pos.second, w, h);
+                if (isValidRoomPlacement(*newRoom)) {
+                    rooms.push_back(newRoom);
+                    parent->connections.push_back(newRoom);
+                    newRoom->connections.push_back(parent);
+                    placed = true;
+                    break;
+                }
+                delete newRoom;
+            }
+            if (!placed) {
+                attempts++;
             }
         }
     }
 
-    void clearPath(int row, int col, int length, bool horizontal) {
-        for (int i = 0; i < length; ++i) {
-            if (horizontal && col + i < cols - 2) {
-                map[row][col + i] = 0;
-            }
-            if (!horizontal && row + i < rows - 2) {
-                map[row + i][col] = 0;
-            }
-        }
-    }
-    void clearWideEntrance(int row, int col, int dirRow, int dirCol) {
-        for (int offset = -1; offset <= 1; ++offset) {
-            int newRow = row + (dirCol == 0 ? offset : 0);
-            int newCol = col + (dirRow == 0 ? offset : 0);
-            if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
-                map[newRow][newCol] = 0;
+    void carveRooms() {
+        for (const auto& room : rooms) {
+            for (int y = room->y; y < room->y + room->height; ++y) {
+                for (int x = room->x; x < room->x + room->width; ++x) {
+                    if (y >= 0 && y < rows && x >= 0 && x < cols) {
+                        map[y][x] = 48; // Path
+                    }
+                }
             }
         }
     }
 
-    void addGrassMarginsToEntrance(int row, int col, int dirRow, int dirCol) {
-        for (int offset = -2; offset <= 2; ++offset) {
-            int newRow = row + (dirCol == 0 ? offset : 0);
-            int newCol = col + (dirRow == 0 ? offset : 0);
+    void connectRooms(Room* r1, Room* r2) {
+        int x1 = r1->centerX();
+        int y1 = r1->centerY();
+        int x2 = r2->centerX();
+        int y2 = r2->centerY();
 
-            if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && map[newRow][newCol] == 1) {
-                map[newRow][newCol] = randomValue(1, 2);
+        int corridorWidth = randomValue(MIN_CORRIDOR_WIDTH, MAX_CORRIDOR_WIDTH);
+        int halfWidth = corridorWidth / 2;
+
+        bool horizontalFirst = randomValue(0, 1) == 0;
+
+        if (horizontalFirst) {
+            for (int x = std::min(x1, x2); x <= std::max(x1, x2); ++x) {
+                for (int dy = -halfWidth; dy <= halfWidth; ++dy) {
+                    int y = y1 + dy;
+                    if (y >= 0 && y < rows && x >= 0 && x < cols) {
+                        map[y][x] = 48; // Path
+                    }
+                }
+            }
+            for (int y = std::min(y1, y2); y <= std::max(y1, y2); ++y) {
+                for (int dx = -halfWidth; dx <= halfWidth; ++dx) {
+                    int x = x2 + dx;
+                    if (y >= 0 && y < rows && x >= 0 && x < cols) {
+                        map[y][x] = 48; // Path
+                    }
+                }
+            }
+        } else {
+            for (int y = std::min(y1, y2); y <= std::max(y1, y2); ++y) {
+                for (int dx = -halfWidth; dx <= halfWidth; ++dx) {
+                    int x = x1 + dx;
+                    if (y >= 0 && y < rows && x >= 0 && x < cols) {
+                        map[y][x] = 48; // Path
+                    }
+                }
+            }
+            for (int x = std::min(x1, x2); x <= std::max(x1, x2); ++x) {
+                for (int dy = -halfWidth; dy <= halfWidth; ++dy) {
+                    int y = y2 + dy;
+                    if (y >= 0 && y < rows && x >= 0 && x < cols) {
+                        map[y][x] = 48; // Path
+                    }
+                }
             }
         }
     }
 
-    void clearEntrancePath(int row, int col, int dirRow, int dirCol) {
-        for (int i = 1; i <= 5; ++i) {
-            int newRow = row + dirRow * i;
-            int newCol = col + dirCol * i;
-            if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
-                map[newRow][newCol] = 0;
+    void createConnections() {
+        for (const auto& room : rooms) {
+            for (const auto& connected : room->connections) {
+                connectRooms(room, connected);
             }
-            else {
+        }
+    }
+
+    double distanceBetweenPoints(int x1, int y1, int x2, int y2) {
+        int dx = x2 - x1;
+        int dy = y2 - y1;
+        return std::sqrt(dx * dx + dy * dy);
+    }
+
+    void connectCornerToNearestRoom() {
+        std::vector<std::pair<int, int>> corners = {
+            {0, 0}, {0, rows - 2}, {cols - 2, 0}, {cols - 2, rows - 2}
+        };
+
+        for (const auto& corner : corners) {
+            int cornerCenterX = corner.first + 1;
+            int cornerCenterY = corner.second + 1;
+
+            double minDistance = std::numeric_limits<double>::max();
+            Room* nearestRoom = nullptr;
+
+            for (const auto& room : rooms) {
+                double dist = distanceBetweenPoints(cornerCenterX, cornerCenterY,
+                                                  room->centerX(), room->centerY());
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    nearestRoom = room;
+                }
+            }
+
+            if (nearestRoom) {
+                int roomX = nearestRoom->centerX();
+                int roomY = nearestRoom->centerY();
+
+                int x1 = std::min(cornerCenterX, roomX);
+                int x2 = std::max(cornerCenterX, roomX);
+                for (int x = x1; x <= x2; ++x) {
+                    for (int dy = -1; dy <= 1; ++dy) {
+                        int y = cornerCenterY + dy;
+                        if (y >= 0 && y < rows && x >= 0 && x < cols) {
+                            map[y][x] = 48; // Path
+                        }
+                    }
+                }
+
+                int y1 = std::min(cornerCenterY, roomY);
+                int y2 = std::max(cornerCenterY, roomY);
+                for (int y = y1; y <= y2; ++y) {
+                    for (int dx = -1; dx <= 1; ++dx) {
+                        int x = roomX + dx;
+                        if (x >= 0 && x < cols && y >= 0 && y < rows) {
+                            map[y][x] = 48; // Path
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void addExtraConnections(int connectionChance) {
+        for (size_t i = 0; i < rooms.size(); ++i) {
+            if (randomValue(0, 100) < connectionChance) {
+                Room* room1 = rooms[i];
+                Room* room2 = rooms[randomValue(0, rooms.size() - 1)];
+
+                if (room1 != room2 &&
+                    std::find(room1->connections.begin(), room1->connections.end(), room2) == room1->connections.end()) {
+                    room1->connections.push_back(room2);
+                    room2->connections.push_back(room1);
+                    connectRooms(room1, room2);
+                }
+            }
+        }
+    }
+
+    std::vector<std::vector<int>> labelCorridors() {
+        std::vector<std::vector<int>> labels(rows, std::vector<int>(cols, 0));
+        int currentLabel = 1;
+        std::queue<std::pair<int, int>> q;
+
+        for (int y = 0; y < rows; ++y) {
+            for (int x = 0; x < cols; ++x) {
+                if (map[y][x] == 48 && !isInRoom(x, y) && labels[y][x] == 0) {
+                    q.push({x, y});
+                    labels[y][x] = currentLabel;
+
+                    while (!q.empty()) {
+                        auto [cx, cy] = q.front();
+                        q.pop();
+
+                        for (int dy = -1; dy <= 1; ++dy) {
+                            for (int dx = -1; dx <= 1; ++dx) {
+                                if (dy == 0 && dx == 0)
+                                    continue;
+                                int nx = cx + dx;
+                                int ny = cy + dy;
+                                if (nx >= 0 && nx < cols && ny >= 0 && ny < rows &&
+                                    map[ny][nx] == 48 && !isInRoom(nx, ny) && labels[ny][nx] == 0) {
+                                    labels[ny][nx] = currentLabel;
+                                    q.push({nx, ny});
+                                }
+                            }
+                        }
+                    }
+                    currentLabel++;
+                }
+            }
+        }
+
+        return labels;
+    }
+
+    bool isInRoom(int x, int y) const {
+        for (const auto& room : rooms) {
+            if (x >= room->x && x < room->x + room->width &&
+                y >= room->y && y < room->y + room->height) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void placeBreakableWallsWithHiddenBombs() {
+    std::vector<std::vector<int>> labels = labelCorridors();
+
+    std::vector<std::vector<std::pair<int, int>>> corridors;
+    int maxLabel = 0;
+    for (const auto& row : labels) {
+        for (int label : row) {
+            if (label > maxLabel)
+                maxLabel = label;
+        }
+    }
+
+    corridors.resize(maxLabel + 1);
+
+    for (int y = 0; y < rows; ++y) {
+        for (int x = 0; x < cols; ++x) {
+            if (labels[y][x] > 0) {
+                corridors[labels[y][x]].emplace_back(x, y);
+            }
+        }
+    }
+
+    const double WALL_PROBABILITY_PER_CORRIDOR = 0.5;
+
+    std::vector<std::pair<int, int>> destructibleWallPositions;
+
+    for (size_t label = 1; label < corridors.size(); ++label) {
+        if (corridors[label].empty())
+            continue;
+
+        std::shuffle(corridors[label].begin(), corridors[label].end(), rng);
+
+        int wallsToPlace = static_cast<int>(corridors[label].size() * WALL_PROBABILITY_PER_CORRIDOR);
+        if (wallsToPlace < 1 && corridors[label].size() > 0)
+            wallsToPlace = 1;
+
+        int wallsPlaced = 0;
+
+        for (const auto& tile : corridors[label]) {
+            if (wallsPlaced >= wallsToPlace)
                 break;
-            }
+
+            int x = tile.first;
+            int y = tile.second;
+
+            map[y][x] = 63; // Regular box
+            destructibleWallPositions.emplace_back(x, y);
+            wallsPlaced++;
         }
     }
 
-    void createEntrance(int row, int col, int dirRow, int dirCol) {
-        clearWideEntrance(row, col, dirRow, dirCol);
-        addGrassMarginsToEntrance(row, col, dirRow, dirCol);
-        clearEntrancePath(row, col, dirRow, dirCol);
+    int hiddenBombsToPlace = randomValue(1, 3);
+    AT_INFO("{} bombs were placed",hiddenBombsToPlace);
+
+    std::shuffle(destructibleWallPositions.begin(), destructibleWallPositions.end(), rng);
+
+    for (int i = 0; i < hiddenBombsToPlace && i < destructibleWallPositions.size(); ++i) {
+        int x = destructibleWallPositions[i].first;
+        int y = destructibleWallPositions[i].second;
+
+        map[y][x] = 64; // Hidden bomb
     }
-
-    void breakEdgeWalls() {
-        const int entrancesPerSide = randomValue(4, 7);
-
-        for (int i = 0; i < entrancesPerSide; ++i) {
-            createEntrance(0, randomValue(1, cols - 3), 1, 0);
-            createEntrance(rows - 1, randomValue(1, cols - 3), -1, 0);
-            createEntrance(randomValue(1, rows - 3), 0, 0, 1);
-            createEntrance(randomValue(1, rows - 3), cols - 1, 0, -1);
-        }
-    }
-
-    void retouchBorder(int row, int col) {
-        if (map[row][col] == 1 && randomValue(0, 100) < 60) {
-            map[row][col] = randomValue(1, 2);
-        }
-    }
-
-    void retouchBorders() {
-        for (int row = 0; row < rows; ++row) {
-            retouchBorder(row, 0);
-            retouchBorder(row, cols - 1);
-        }
-        for (int col = 0; col < cols; ++col) {
-            retouchBorder(0, col);
-            retouchBorder(rows - 1, col);
-        }
-    }
-
-    void addGrassOrBush(int row, int col) {
-        if (map[row - 1][col] == 1 && randomValue(0, 100) < 40) map[row - 1][col] = randomValue(1, 2);
-        if (map[row + 1][col] == 1 && randomValue(0, 100) < 40) map[row + 1][col] = randomValue(1, 2);
-        if (map[row][col - 1] == 1 && randomValue(0, 100) < 40) map[row][col - 1] = randomValue(1, 2);
-        if (map[row][col + 1] == 1 && randomValue(0, 100) < 40) map[row][col + 1] = randomValue(1, 2);
-    }
-
-    void addPathMargins() {
-        for (int row = 1; row < rows - 1; ++row) {
-            for (int col = 1; col < cols - 1; ++col) {
-                if (map[row][col] == 0) {
-                    addGrassOrBush(row, col);
-                }
-            }
-        }
-    }
-
-    void addFeature(int type, int count, std::function<bool(int, int)> condition) {
-        while (count > 0) {
-            int row = randomValue(0, rows - 1);
-            int col = randomValue(0, cols - 1);
-            if (condition(row, col)) {
-                map[row][col] = type;
-                --count;
-            }
-        }
-    }
-
-    void addSpecialFeatures() {
-        addFeature(5, randomValue(3, 6), [&](int row, int col) { return map[row][col] == 0; });
-        addFeature(6, randomValue(2, 4), [&](int row, int col) { return map[row][col] == 0; });
-        addFeature(7, randomValue(2, 4), [&](int row, int col) { return map[row][col] == 3; });
-    }
-
+}
 
 public:
-    MapGenerator(int rows, int cols) : rows(rows), cols(cols), rng(rd()) {
+    MapGenerator(int numRows, int numCols)
+        : rows(numRows), cols(numCols), rng(rd()) {
         initializeMap();
-        generateWalls();
-        generatePaths();
-        breakEdgeWalls();
-        retouchBorders();
-        addPathMargins();
-        addSpecialFeatures();
+
+        generateRooms();
+        carveRooms();
+        createConnections();
+        addExtraConnections(30);
+
+        placeBreakableWallsWithHiddenBombs();
+        createCornerSpaces();
+        connectCornerToNearestRoom();
     }
 
-    const Matrix& getMap() const {
+    ~MapGenerator() {
+        for (auto room : rooms) {
+            delete room;
+        }
+    }
+
+    const std::vector<std::vector<int>>& getMap() const {
         return map;
     }
 

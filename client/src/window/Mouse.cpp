@@ -6,6 +6,7 @@ double Mouse::yPos = 0.0;
 double Mouse::scrollXOffset = 0.0;
 double Mouse::scrollYOffset = 0.0;
 bool Mouse::dragging = false;
+Cursor Mouse::currentCursor = 0;
 
 bool Mouse::isButtonPressed(MouseCode button) {
     if (button < buttonPressed.size()) {
@@ -32,4 +33,8 @@ std::pair<double, double> Mouse::getScrollOffset() {
 
 bool Mouse::isDragging() {
     return dragging;
+}
+
+void Mouse::setCursor(Cursor cursor) {
+    currentCursor = cursor;
 }

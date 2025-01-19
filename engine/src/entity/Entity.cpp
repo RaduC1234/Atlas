@@ -2,7 +2,11 @@
 
 #include <imgui.h>
 
-Actor Actors::createStaticProp(Registry &registry, TransformComponent transform, RenderComponent render) {
+uint32_t Actors::getActorId(Actor actor) {
+    return entt::to_integral(actor);
+}
+
+Actor Actors::createStaticProp(entt::registry &registry, TransformComponent transform, RenderComponent render) {
     auto actor = registry.create();
     registry.emplace<TransformComponent>(actor, transform);
     registry.emplace<RenderComponent>(actor, render);
@@ -10,14 +14,28 @@ Actor Actors::createStaticProp(Registry &registry, TransformComponent transform,
     return actor;
 }
 
-Actor Actors::createPawn(Registry &registry, TransformComponent transform, RenderComponent render, PawnComponent pawn) {
+Actor Actors::createPawn(entt::registry &registry, TransformComponent transform, RenderComponent render, PawnComponent pawn) {
     auto actor = createStaticProp(registry, transform, render);
     registry.emplace<PawnComponent>(actor, pawn);
 
     return actor;
 }
 
-void Actors::mapToStaticProps(Registry &registry, const std::vector<std::vector<int>> &map){
+Actor Actors::createTextbox(entt::registry &registry, TransformComponent transform, RenderComponent render, TextboxComponent textBox) {
+    auto actor = createStaticProp(registry, transform, render);
+    registry.emplace<TextboxComponent>(actor, textBox);
+
+    return actor;
+}
+
+Actor Actors::createButton(entt::registry &registry, TransformComponent transform, RenderComponent render, ButtonComponent button) {
+    auto actor = createStaticProp(registry, transform, render);
+    registry.emplace<ButtonComponent>(actor, button);
+
+    return actor;
+}
+
+void Actors::mapToStaticProps(entt::registry &registry, const std::vector<std::vector<int>> &map){
     constexpr glm::vec2 tileSize = {100.0f, 100.0f};
 
     int width = map[0].size();

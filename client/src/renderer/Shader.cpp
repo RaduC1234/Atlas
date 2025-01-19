@@ -34,7 +34,6 @@ Shader::Shader(const std::string &filepath) : filePath(filepath) {
 
     } catch (const std::exception &e) {
         AT_ERROR(e.what());
-        throw;
     }
 }
 

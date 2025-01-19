@@ -16,4 +16,5 @@ public:
 
     virtual void onDestroy() = 0;
 
+    entt::registry registry;
 };

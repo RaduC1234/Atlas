@@ -13,6 +13,7 @@
 #include <mutex>
 #include <queue>
 #include <random>
+#include <regex>
 #include <set>
 #include <sstream>
 #include <string>
@@ -27,7 +28,6 @@
 #include "Log.hpp"
 
 #include <nlohmann/json.hpp>
-using JsonData = nlohmann::json;
 
 #include <glm/glm.hpp>
 
@@ -56,15 +56,6 @@ using JsonData = nlohmann::json;
 #else
 #define AT_ASSERT(X, ...)
 #endif
-
-#define TRY_CATCH(TRY_CODE, CATCH_CODE) \
-    try {                               \
-        TRY_CODE;                       \
-    } catch (const std::exception& e) {  \
-        CATCH_CODE;                      \
-    }
-
-#define SYNCHRONIZED(mutex) if (std::unique_lock<std::mutex> lockGuard{mutex}; true)
 
 #define BIT(x) (1 << x)
 

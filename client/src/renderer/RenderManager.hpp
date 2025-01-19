@@ -1,32 +1,36 @@
-
 #pragma once
 
 #include "Renderer.hpp"
 
+
 class RenderManager {
 public:
-    static void init(uint32_t maxBatchSize = 1000);
+    static void init(uint32_t maxBatchSize = 2000);
 
     static void shutdown();
 
 
     /**
     * Draws a quad on the screen.
-    * @param position x and y represent the position of the quad on the screen, z is the z-index of the quad
+    * @param position x and y represent the origin of the quad on the screen, z is the z-index of the quad
     * @param size size of the quad
     * @param rotation rotation of the quad in degrees
     * @param color color of the quad
     * @param sprite leave default for opaque quad
+    * @param centered Specifies whether the rendering origin is at the center of the shape (true) or at its bottom-left corner (false).
+    * @param specialProperties instructs the renderer to draw using special techniques @link RenderBatch
     */
-    static void drawRotatedQuad(const glm::vec3 &position, const glm::vec2 &size, float rotation, const glm::vec4 &color, const Sprite& sprite = Sprite(), bool centered = false);
+    static void drawRotatedQuad(const glm::vec3 &position, const glm::vec2 &size, float rotation, const glm::vec4 &color, const Sprite &sprite = Sprite(), bool centered = false, int32_t specialProperties = 0x00);
 
     /**
     * Draws a quad on the screen.
-    * @param position x and y represent the position of the quad on the screen, z is the z-index of the quad
+    * @param position x and y represent the origin of the quad on the screen, z is the z-index of the quad
     * @param color color of the quad
     * @param sprite leave default for opaque quad
+    * @param centered Specifies whether the rendering origin is at the center of the shape (true) or at its bottom-left corner (false).
+    * @param specialProperties instructs the renderer to draw using special techniques @link RenderBatch
     */
-    static void drawQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, const Sprite& sprite = Sprite(), bool centered = false);
+    static void drawQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, const Sprite &sprite = Sprite(), bool centered = false, int32_t specialProperties = 0x00);
 
     /**
     * Draws a text on the screen.
@@ -52,4 +56,3 @@ public:
 private:
     static Renderer renderer;
 };
-

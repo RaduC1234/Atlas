@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <cstdint>
+#include <queue>
 
 using KeyCode = uint16_t;
 
@@ -148,6 +149,8 @@ public:
         Menu                = 348
     };
 
+    static bool nativeInput;
+    static std::queue<uint32_t> keyTyped;
 private:
     static std::vector<bool> keyPressed;
 
