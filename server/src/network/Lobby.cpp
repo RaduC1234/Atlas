@@ -249,10 +249,11 @@ void Lobby::update(float deltaTime) {
             bool collisionDetected = false;
 
             // Check collision with walls
-            auto wallView = registry.view<RigidbodyComponent, TransformComponent>();
+            auto wallView = registry.view<RigidbodyComponent, TransformComponent, NetworkComponent>();
             for (auto wall : wallView) {
                 const auto &wallTransform = wallView.get<TransformComponent>(wall);
                 const auto &rigidbody = wallView.get<RigidbodyComponent>(wall);
+                const auto &wallNetwork = wallView.get<NetworkComponent>(wall);
 
                 if (!rigidbody.isSolid || entity == wall) continue;
 
@@ -268,7 +269,15 @@ void Lobby::update(float deltaTime) {
 
                 if (fireballRight > wallLeft && fireballLeft < wallRight &&
                     fireballTop > wallBottom && fireballBottom < wallTop) {
+                    if (wallNetwork.tileCode == TILE_CODE + 63) {
+                        // Replace destructible wall with a path tile
+                        registry.emplace_or_replace<NetworkComponent>(wall, wallNetwork.networkId, TILE_CODE + 48, wallTransform.position, true);
+                        registry.emplace_or_replace<TransformComponent>(wall, wallTransform.position, wallTransform.rotation, wallTransform.scale);
+                        registry.emplace_or_replace<RigidbodyComponent>(wall, RigidbodyComponent{false});
+                        AT_INFO("Destructible wall destroyed and replaced with path tile.");
+                    }
                     collisionDetected = true;
+                    entitiesToDestroy.push_back(entity);
                     break;
                 }
             }
