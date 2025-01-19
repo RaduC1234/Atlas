@@ -28,6 +28,30 @@ uint64_t Lobby::nextId() {
     return entId++;
 }
 
+bool Lobby::isPositionInsideFireball(const glm::vec3& spawnPosition) {
+    auto fireballView = registry.view<FireballComponent, TransformComponent>();
+
+    for (auto otherEntity : fireballView) {
+        const auto &otherTransform = fireballView.get<TransformComponent>(otherEntity);
+
+        float spawnLeft = spawnPosition.x - 50.0f;
+        float spawnRight = spawnPosition.x + 50.0f;
+        float spawnTop = spawnPosition.y + 50.0f;
+        float spawnBottom = spawnPosition.y - 50.0f;
+
+        float otherLeft = otherTransform.position.x - 50.0f;
+        float otherRight = otherTransform.position.x + 50.0f;
+        float otherTop = otherTransform.position.y + 50.0f;
+        float otherBottom = otherTransform.position.y - 50.0f;
+
+        if (spawnRight > otherLeft && spawnLeft < otherRight &&
+            spawnTop > otherBottom && spawnBottom < otherTop) {
+            return true;  // Collision detected
+        }
+    }
+    return false;  // No collision
+}
+
 void Lobby::start() {
     DIRTY_COMPONENT(TransformComponent);
     DIRTY_COMPONENT(PawnComponent);
@@ -75,7 +99,6 @@ void Lobby::setPlayerInput(uint64_t playerId, const PlayerInput &input) {
 void Lobby::update(float deltaTime) {
     auto view = registry.view<TransformComponent, NetworkComponent>();
 
-    // Extract the latest player inputs
     std::unordered_map<uint64_t, PlayerInput> latestInputs;
     {
         std::lock_guard<std::mutex> lock(inputMutex);
@@ -83,13 +106,14 @@ void Lobby::update(float deltaTime) {
         inputQueue.clear();
     }
 
-    // Process movement
+    // Collect entities to destroy outside the main loop
+    std::vector<entt::entity> entitiesToDestroy;
+
     for (const auto entity : view) {
         auto &transform = view.get<TransformComponent>(entity);
         const auto &network = view.get<NetworkComponent>(entity);
 
         if (auto pawn = registry.try_get<PawnComponent>(entity)) {
-            // Store the original position before movement
             glm::vec3 originalPos = transform.position;
 
             pawn->moveForward = false;
@@ -99,7 +123,6 @@ void Lobby::update(float deltaTime) {
             pawn->aimRotation = 0.0f;
             pawn->isShooting = false;
 
-            // Find the latest input for this player
             auto it = latestInputs.find(pawn->playerId);
             if (it != latestInputs.end()) {
                 const auto &input = it->second;
@@ -111,26 +134,33 @@ void Lobby::update(float deltaTime) {
                 pawn->aimRotation = input.aimRotation;
                 pawn->isShooting = input.isShooting;
 
-                if (pawn->isShooting) {
-                    auto fireballEntity = registry.create();
-                    AT_INFO("Creating fireball for player {}", pawn->playerId);
+                float currentTime = Time::now().toSeconds();
+                if (pawn->isShooting && canPlayerShoot(pawn->playerId, currentTime)) {
+                    updatePlayerLastShotTime(pawn->playerId, currentTime);
+
                     glm::vec3 fireballDirection = glm::vec3(glm::cos(input.aimRotation), -glm::sin(input.aimRotation), 3.0f);
                     fireballDirection = normalize(fireballDirection);
-                    glm::vec3 spawnOffset = glm::vec3(fireballDirection.x, fireballDirection.y, 3.0f) * 60.0f;
+                    glm::vec3 spawnOffset = glm::vec3(fireballDirection.x, fireballDirection.y, 3.0f) * 400.0f;
                     glm::vec3 spawnPosition = transform.position;
                     spawnPosition.x += spawnOffset.x;
                     spawnPosition.y += spawnOffset.y;
-                    registry.emplace<NetworkComponent>(fireballEntity,nextId(),TILE_CODE+110,transform.position,true);
-                    registry.emplace<FireballComponent>(fireballEntity, spawnPosition, fireballDirection, 800.0f, pawn->playerId);
-                    registry.emplace<TransformComponent>(fireballEntity, spawnPosition, input.aimRotation, glm::vec2(100.0f,100.0f));
+
+                    // Check if spawn position is inside another fireball
+                    if (!isPositionInsideFireball(spawnPosition)) {
+                        auto fireballEntity = registry.create();
+                        AT_INFO("Creating fireball for player {}", pawn->playerId);
+
+                        registry.emplace<NetworkComponent>(fireballEntity, nextId(), TILE_CODE+110, transform.position, true);
+                        registry.emplace<FireballComponent>(fireballEntity, spawnPosition, fireballDirection, 800.0f, pawn->playerId);
+                        registry.emplace<TransformComponent>(fireballEntity, spawnPosition, input.aimRotation, glm::vec2(100.0f,100.0f));
+                    } else {
+                        AT_INFO("Fireball spawn blocked: Position inside another fireball");
+                    }
                 }
 
-
-                // Apply horizontal movement
                 if (input.moveLeft) transform.position.x -= this->baseSpeed * deltaTime;
                 if (input.moveRight) transform.position.x += this->baseSpeed * deltaTime;
 
-                // Check horizontal collisions
                 bool xCollision = false;
                 auto view2 = registry.view<RigidbodyComponent, TransformComponent>();
 
@@ -162,11 +192,9 @@ void Lobby::update(float deltaTime) {
                     transform.position.x = originalPos.x;
                 }
 
-                // Apply vertical movement
                 if (input.moveForward) transform.position.y += this->baseSpeed * deltaTime;
                 if (input.moveBackwards) transform.position.y -= this->baseSpeed * deltaTime;
 
-                // Check vertical collisions
                 bool yCollision = false;
                 for (auto wall : view2) {
                     const auto& wallTransform = view2.get<TransformComponent>(wall);
@@ -196,46 +224,48 @@ void Lobby::update(float deltaTime) {
                     transform.position.y = originalPos.y;
                 }
 
-                transform.rotation = 0.0f; // do not remove this. it brakes the movement for some reason
+                transform.rotation = 0.0f;
                 network.dirtyFlag = true;
             }
         }
-        if(auto fireball = registry.try_get<FireballComponent>(entity)) {
-            auto &transform = view.get<TransformComponent>(entity);
-            auto &network = view.get<NetworkComponent>(entity);
 
-            // Calculate new position while maintaining z=3.0f
+        // IMPROVED FIREBALL COLLISION LOGIC
+        if (auto fireball = registry.try_get<FireballComponent>(entity)) {
+            // Skip if this entity is already marked for destruction
+            if (std::find(entitiesToDestroy.begin(), entitiesToDestroy.end(), entity) != entitiesToDestroy.end()) {
+                continue;
+            }
+
             glm::vec3 newPosition = fireball->position;
             newPosition.x += fireball->direction.x * fireball->speed * deltaTime;
             newPosition.y += fireball->direction.y * fireball->speed * deltaTime;
-            newPosition.z = 3.0f;  // Always maintain z=3.0f
+            newPosition.z = 3.0f;
 
             fireball->position = newPosition;
-            transform.position = newPosition;  // Transform position also maintains z=3.0f
+            auto &transform = view.get<TransformComponent>(entity);
+            transform.position = newPosition;
+            auto &network = view.get<NetworkComponent>(entity);
             network.dirtyFlag = true;
 
-            // Check collision with rigid bodies
-            auto rigidbodyView = registry.view<RigidbodyComponent, TransformComponent>();
             bool collisionDetected = false;
 
-            for (auto target : rigidbodyView) {
-                const auto &rigidbodyTransform = rigidbodyView.get<TransformComponent>(target);
-                const auto &rigidbody = rigidbodyView.get<RigidbodyComponent>(target);
+            // Check collision with walls
+            auto wallView = registry.view<RigidbodyComponent, TransformComponent>();
+            for (auto wall : wallView) {
+                const auto &wallTransform = wallView.get<TransformComponent>(wall);
+                const auto &rigidbody = wallView.get<RigidbodyComponent>(wall);
 
-                if (!rigidbody.isSolid || entity == target) {
-                    continue;
-                }
+                if (!rigidbody.isSolid || entity == wall) continue;
 
-                // Adjust collision detection for 100x100 scale
                 float fireballLeft = newPosition.x - 50.0f;
                 float fireballRight = newPosition.x + 50.0f;
                 float fireballTop = newPosition.y + 50.0f;
                 float fireballBottom = newPosition.y - 50.0f;
 
-                float wallLeft = rigidbodyTransform.position.x - (rigidbodyTransform.scale.x * 0.5f);
-                float wallRight = rigidbodyTransform.position.x + (rigidbodyTransform.scale.x * 0.5f);
-                float wallTop = rigidbodyTransform.position.y + (rigidbodyTransform.scale.y * 0.5f);
-                float wallBottom = rigidbodyTransform.position.y - (rigidbodyTransform.scale.y * 0.5f);
+                float wallLeft = wallTransform.position.x - (wallTransform.scale.x * 0.5f);
+                float wallRight = wallTransform.position.x + (wallTransform.scale.x * 0.5f);
+                float wallTop = wallTransform.position.y + (wallTransform.scale.y * 0.5f);
+                float wallBottom = wallTransform.position.y - (wallTransform.scale.y * 0.5f);
 
                 if (fireballRight > wallLeft && fireballLeft < wallRight &&
                     fireballTop > wallBottom && fireballBottom < wallTop) {
@@ -244,9 +274,81 @@ void Lobby::update(float deltaTime) {
                 }
             }
 
-            if (collisionDetected) {
-                registry.destroy(entity);
+            // Check collision with other fireballs
+            if (!collisionDetected) {
+                auto fireballView = registry.view<FireballComponent, TransformComponent>();
+                for (auto otherEntity : fireballView) {
+                    // Skip if this is the same entity or already marked for destruction
+                    if (entity == otherEntity ||
+                        std::find(entitiesToDestroy.begin(), entitiesToDestroy.end(), otherEntity) != entitiesToDestroy.end()) {
+                        continue;
+                    }
+
+                    const auto &otherTransform = fireballView.get<TransformComponent>(otherEntity);
+
+                    float fireballLeft = newPosition.x - 50.0f;
+                    float fireballRight = newPosition.x + 50.0f;
+                    float fireballTop = newPosition.y + 50.0f;
+                    float fireballBottom = newPosition.y - 50.0f;
+
+                    float otherLeft = otherTransform.position.x - 50.0f;
+                    float otherRight = otherTransform.position.x + 50.0f;
+                    float otherTop = otherTransform.position.y + 50.0f;
+                    float otherBottom = otherTransform.position.y - 50.0f;
+
+                    if (fireballRight > otherLeft && fireballLeft < otherRight &&
+                        fireballTop > otherBottom && fireballBottom < otherTop) {
+                        collisionDetected = true;
+                        // Mark both entities for destruction
+                        entitiesToDestroy.push_back(entity);
+                        entitiesToDestroy.push_back(otherEntity);
+                        break;
+                    }
+                }
             }
+
+            // Check collision with players
+            if (!collisionDetected) {
+                auto playerView = registry.view<PawnComponent, TransformComponent>();
+                for (auto playerEntity : playerView) {
+                    const auto &playerTransform = playerView.get<TransformComponent>(playerEntity);
+
+                    float fireballLeft = newPosition.x - 50.0f;
+                    float fireballRight = newPosition.x + 50.0f;
+                    float fireballTop = newPosition.y + 50.0f;
+                    float fireballBottom = newPosition.y - 50.0f;
+
+                    float playerLeft = playerTransform.position.x - (playerTransform.scale.x * 0.4f);
+                                        float playerRight = playerTransform.position.x + (playerTransform.scale.x * 0.4f);
+                    float playerTop = playerTransform.position.y + (playerTransform.scale.y * 0.4f);
+                    float playerBottom = playerTransform.position.y - (playerTransform.scale.y * 0.4f);
+
+                    if (fireballRight > playerLeft && fireballLeft < playerRight &&
+                        fireballTop > playerBottom && fireballBottom < playerTop) {
+                        collisionDetected = true;
+                        AT_INFO("Player hit by fireball!");
+                        entitiesToDestroy.push_back(entity);
+                        break;
+                    }
+                }
+            }
+
+            // If collision is detected and not already marked for destruction, mark it
+            if (collisionDetected &&
+                std::find(entitiesToDestroy.begin(), entitiesToDestroy.end(), entity) == entitiesToDestroy.end()) {
+                entitiesToDestroy.push_back(entity);
+            }
+        }
+    }
+
+    // Remove duplicate entities from destruction list to prevent multiple destruction attempts
+    auto last = std::unique(entitiesToDestroy.begin(), entitiesToDestroy.end());
+    entitiesToDestroy.erase(last, entitiesToDestroy.end());
+
+    // Destroy entities after updating
+    for (const auto destroyEntity : entitiesToDestroy) {
+        if (registry.valid(destroyEntity)) {
+            registry.destroy(destroyEntity);
         }
     }
 
@@ -286,7 +388,6 @@ void Lobby::update(float deltaTime) {
                     {"isShooting", pawn->isShooting}
                 };
             }
-
 
             if (auto rigidbody = registry.try_get<RigidbodyComponent>(entity)) {
                 entityJson["RigidbodyComponent"] = {
