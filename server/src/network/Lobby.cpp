@@ -114,7 +114,7 @@ void Lobby::update(float deltaTime) {
                 if (pawn->isShooting) {
                     auto fireballEntity = registry.create();
                     AT_INFO("Creating fireball for player {}", pawn->playerId);
-                    glm::vec3 fireballDirection = glm::vec3(glm::cos(input.aimRotation), glm::sin(input.aimRotation), 3.0f);
+                    glm::vec3 fireballDirection = glm::vec3(glm::cos(input.aimRotation), -glm::sin(input.aimRotation), 3.0f);
                     fireballDirection = normalize(fireballDirection);
                     glm::vec3 spawnOffset = glm::vec3(fireballDirection.x, fireballDirection.y, 3.0f) * 60.0f;
                     glm::vec3 spawnPosition = transform.position;
