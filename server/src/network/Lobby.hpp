@@ -41,6 +41,10 @@ public:
     void addPlayer(uint64_t playerId) {
         players.push_back(playerId);
 
+        if (playerLives.find(playerId) == playerLives.end()) {
+            playerLives[playerId] = 3;
+            AT_INFO("Initialized player {} with 3 lives.", playerId);
+        }
         // Assign spawn point based on player index
         size_t playerIndex = players.size() - 1;
         glm::vec3 spawnPosition;
@@ -126,6 +130,7 @@ private:
     const float shootCooldown = 0.5f;  // 500ms cooldown between shots
     std::unordered_map<uint64_t, float> lastShotTimes;
     std::unordered_map<uint64_t, PlayerSpawnPoint> playerSpawnPoints;
+    std::unordered_map<uint64_t, int> playerLives;
     bool isPositionInsideFireball(const glm::vec3& spawnPosition);
 
     bool canPlayerShoot(uint64_t playerId, float currentTime) {

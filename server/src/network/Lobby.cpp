@@ -101,6 +101,21 @@ void Lobby::setPlayerInput(uint64_t playerId, const PlayerInput &input) {
 void Lobby::update(float deltaTime) {
     auto view = registry.view<TransformComponent, NetworkComponent>();
 
+    for (const auto entity : view) {
+        if (auto pawn = registry.try_get<PawnComponent>(entity)) {
+            uint64_t playerId = pawn->playerId;
+
+            // Ensure the player has lives initialized
+            if (playerLives.find(playerId) == playerLives.end()) {
+                playerLives[playerId] = 3; // Set initial lives
+
+            }
+
+            // Log the current lives for debugging
+
+        }
+    }
+
     std::unordered_map<uint64_t, PlayerInput> latestInputs;
     {
         std::lock_guard<std::mutex> lock(inputMutex);
@@ -116,6 +131,12 @@ void Lobby::update(float deltaTime) {
         const auto &network = view.get<NetworkComponent>(entity);
 
         if (auto pawn = registry.try_get<PawnComponent>(entity)) {
+            uint64_t playerId = pawn->playerId;
+            if (playerLives[playerId] < 1) {
+                // Log the player status for debugging
+
+                continue; // Skip input processing and movement for this player
+            }
             glm::vec3 originalPos = transform.position;
 
             pawn->moveForward = false;
@@ -364,7 +385,7 @@ void Lobby::update(float deltaTime) {
                     float fireballBottom = newPosition.y - 50.0f;
 
                     float playerLeft = playerTransform.position.x - (playerTransform.scale.x * 0.4f);
-float playerRight = playerTransform.position.x + (playerTransform.scale.x * 0.4f);
+                    float playerRight = playerTransform.position.x + (playerTransform.scale.x * 0.4f);
                     float playerTop = playerTransform.position.y + (playerTransform.scale.y * 0.4f);
                     float playerBottom = playerTransform.position.y - (playerTransform.scale.y * 0.4f);
 
@@ -378,7 +399,14 @@ float playerRight = playerTransform.position.x + (playerTransform.scale.x * 0.4f
                             if (auto* network = registry.try_get<NetworkComponent>(playerEntity)) {
                                 network->dirtyFlag = true;
                             }
-                            AT_INFO("Player {} hit by fireball! Respawning at original position.", pawn.playerId);
+
+                            if (playerLives.find(pawn.playerId) != playerLives.end()) {
+                                if ( playerLives[pawn.playerId]>0)
+                                playerLives[pawn.playerId]--;
+
+
+                            }
+                            AT_INFO("Player {} hit by fireball! Respawning at original position.", pawn.playerId, playerLives[pawn.playerId]);
                         }
 
                         collisionDetected = true;
