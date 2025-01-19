@@ -7,6 +7,7 @@ Lobby::Lobby() {
 Lobby::Lobby(Lobby &&other) noexcept
     : registry(std::move(other.registry)),
       players(std::move(other.players)),
+      playerSpawnPoints(std::move(other.playerSpawnPoints)),
       entId(other.entId) {
 }
 
@@ -15,6 +16,7 @@ Lobby &Lobby::operator=(Lobby &&other) noexcept {
         std::lock_guard<std::mutex> lock(other.registryMutex);
         registry = std::move(other.registry);
         players = std::move(other.players);
+        playerSpawnPoints = std::move(other.playerSpawnPoints);
         entId = other.entId;
     }
     return *this;
@@ -145,7 +147,6 @@ void Lobby::update(float deltaTime) {
                     spawnPosition.x += spawnOffset.x;
                     spawnPosition.y += spawnOffset.y;
 
-                    // Check if spawn position is inside another fireball
                     if (!isPositionInsideFireball(spawnPosition)) {
                         auto fireballEntity = registry.create();
                         AT_INFO("Creating fireball for player {}", pawn->playerId);
@@ -229,9 +230,8 @@ void Lobby::update(float deltaTime) {
             }
         }
 
-        // IMPROVED FIREBALL COLLISION LOGIC
+        // Handle fireball updates and collisions
         if (auto fireball = registry.try_get<FireballComponent>(entity)) {
-            // Skip if this entity is already marked for destruction
             if (std::ranges::find(entitiesToDestroy, entity) != entitiesToDestroy.end()) {
                 continue;
             }
@@ -242,7 +242,6 @@ void Lobby::update(float deltaTime) {
             newPosition.z = 3.0f;
 
             fireball->position = newPosition;
-            auto &transform = view.get<TransformComponent>(entity);
             transform.position = newPosition;
             auto &network = view.get<NetworkComponent>(entity);
             network.dirtyFlag = true;
@@ -278,7 +277,6 @@ void Lobby::update(float deltaTime) {
             if (!collisionDetected) {
                 auto fireballView = registry.view<FireballComponent, TransformComponent>();
                 for (auto otherEntity : fireballView) {
-                    // Skip if this is the same entity or already marked for destruction
                     if (entity == otherEntity ||
                         std::ranges::find(entitiesToDestroy, otherEntity) != entitiesToDestroy.end()) {
                         continue;
@@ -299,7 +297,6 @@ void Lobby::update(float deltaTime) {
                     if (fireballRight > otherLeft && fireballLeft < otherRight &&
                         fireballTop > otherBottom && fireballBottom < otherTop) {
                         collisionDetected = true;
-                        // Mark both entities for destruction
                         entitiesToDestroy.push_back(entity);
                         entitiesToDestroy.push_back(otherEntity);
                         break;
@@ -311,7 +308,8 @@ void Lobby::update(float deltaTime) {
             if (!collisionDetected) {
                 auto playerView = registry.view<PawnComponent, TransformComponent>();
                 for (auto playerEntity : playerView) {
-                    const auto &playerTransform = playerView.get<TransformComponent>(playerEntity);
+                    auto &playerTransform = registry.get<TransformComponent>(playerEntity);
+                    auto &pawn = registry.get<PawnComponent>(playerEntity);
 
                     float fireballLeft = newPosition.x - 50.0f;
                     float fireballRight = newPosition.x + 50.0f;
@@ -319,29 +317,38 @@ void Lobby::update(float deltaTime) {
                     float fireballBottom = newPosition.y - 50.0f;
 
                     float playerLeft = playerTransform.position.x - (playerTransform.scale.x * 0.4f);
-                                        float playerRight = playerTransform.position.x + (playerTransform.scale.x * 0.4f);
+float playerRight = playerTransform.position.x + (playerTransform.scale.x * 0.4f);
                     float playerTop = playerTransform.position.y + (playerTransform.scale.y * 0.4f);
                     float playerBottom = playerTransform.position.y - (playerTransform.scale.y * 0.4f);
 
                     if (fireballRight > playerLeft && fireballLeft < playerRight &&
                         fireballTop > playerBottom && fireballBottom < playerTop) {
+                        // Find the spawn point for this player
+                        auto spawnPointIt = playerSpawnPoints.find(pawn.playerId);
+                        if (spawnPointIt != playerSpawnPoints.end()) {
+                            // Set player position back to spawn point
+                            playerTransform.position = spawnPointIt->second.position;
+                            if (auto* network = registry.try_get<NetworkComponent>(playerEntity)) {
+                                network->dirtyFlag = true;
+                            }
+                            AT_INFO("Player {} hit by fireball! Respawning at original position.", pawn.playerId);
+                        }
+
                         collisionDetected = true;
-                        AT_INFO("Player hit by fireball!");
-                        entitiesToDestroy.push_back(entity);
+                        entitiesToDestroy.push_back(entity); // Destroy the fireball
                         break;
                     }
                 }
             }
 
-            // If collision is detected and not already marked for destruction, mark it
             if (collisionDetected &&
-                std::find(entitiesToDestroy.begin(), entitiesToDestroy.end(), entity) == entitiesToDestroy.end()) {
+                std::ranges::find(entitiesToDestroy, entity) == entitiesToDestroy.end()) {
                 entitiesToDestroy.push_back(entity);
             }
         }
     }
 
-    // Remove duplicate entities from destruction list to prevent multiple destruction attempts
+    // Remove duplicate entities from destruction list
     auto last = std::ranges::unique(entitiesToDestroy).begin();
     entitiesToDestroy.erase(last, entitiesToDestroy.end());
 
