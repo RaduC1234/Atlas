@@ -19,6 +19,26 @@ void LoginScene::onCreate() {
     ResourceManager::loadFromDirectory<Texture>("assets/textures", nullptr, ".png", ".jpg");
 }
 
+void LoginScene::showErrorMessage(const std::string& message) {
+    // Remove existing error message if it exists
+    if (registry.valid(errorMessage)) {
+        registry.destroy(errorMessage);
+    }
+
+    // Create new error message
+    this->errorMessage = Actors::createStaticProp(this->registry,
+        {glm::vec3(-1090.0f, -350.0f, 2.0f), // Position between password box and login button
+         3.0f,
+         glm::vec2(5.0f, 15.0f)},
+        {"thaleah",
+         message,
+         true,
+         Color(255, 77, 77, 255)}  // Red color for error
+    );
+
+    errorMessageTimer = ERROR_MESSAGE_DURATION;
+}
+
 void LoginScene::onStart() {
     auto windowRef = GameManager::getWindowRef();
 
@@ -38,14 +58,22 @@ void LoginScene::onStart() {
             const std::string& username = registry.get<TextboxComponent>(this->usernameTextBox).text;
             const std::string& password = registry.get<TextboxComponent>(this->passwordTextBox).text;
 
+            // Validate input fields
+            if (username.empty() || password.empty()) {
+                showErrorMessage("Username and password cannot be empty");
+                return;
+            }
+
             try {
                 if (ClientNetworkService::login(username, password)) {
                     AT_INFO("Login successfully");
                     GameManager::changeScene("MenuScene");
+                } else {
+                    // Handle failed login
+                    showErrorMessage("Invalid username or password");
                 }
-            } catch (std::runtime_error error) {
-                // print msj on ui
-                AT_ERROR("Login failed: {0}", error.what());
+            } catch (const std::exception& e) {
+                showErrorMessage(e.what());
             }
         }
     };
@@ -120,6 +148,18 @@ void LoginScene::onUpdate(float deltaTime) {
     }
     ImGui::End();
 
+    if (registry.valid(errorMessage)) {
+        errorMessageTimer -= deltaTime;
+        if (errorMessageTimer <= 0) {
+            registry.destroy(errorMessage);
+        } else {
+            // Fade out the error message
+            auto& renderComp = registry.get<RenderComponent>(errorMessage);
+            float alpha = std::min(1.0f, errorMessageTimer / ERROR_MESSAGE_DURATION);
+            renderComp.color.a = static_cast<unsigned char>(alpha * 255);
+        }
+    }
+    RenderManager::drawQuad(glm::vec3(-1100.0f, 750.0f, 0.0f), glm::vec2(400.0f, 400.0f), Color::white(), ResourceManager::get<Texture>("iconAndLogo"), true);
     uiSystem.update(deltaTime, registry, camera);
     renderSystem.update(registry);
 }

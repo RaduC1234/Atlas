@@ -18,6 +18,26 @@ void RegisterScene::onCreate() {
     ResourceManager::loadFromDirectory<Texture>("assets/textures", nullptr, ".png", ".jpg");
 }
 
+void RegisterScene::showErrorMessage(const std::string& message) {
+    // Remove existing error message if it exists
+    if (registry.valid(errorMessage)) {
+        registry.destroy(errorMessage);
+    }
+
+    // Create new error message
+    this->errorMessage = Actors::createStaticProp(this->registry,
+        {glm::vec3(-1090.0f, -350.0f, 0.0f),
+         3.0f,
+         glm::vec2(5.0f, 15.0f)},
+        {"thaleah",
+         message,
+         true,
+         Color(255, 77, 77, 255)}  // Red color for error
+    );
+
+    errorMessageTimer = ERROR_MESSAGE_DURATION;
+}
+
 void RegisterScene::onStart() {
     const auto &windowRef = GameManager::getWindowRef();
 
@@ -37,14 +57,21 @@ void RegisterScene::onStart() {
             const std::string& username = registry.get<TextboxComponent>(this->usernameTextBox).text;
             const std::string& password = registry.get<TextboxComponent>(this->passwordTextBox).text;
 
+            // Validate input fields
+            if (username.empty() || password.empty()) {
+                showErrorMessage("Username and password cannot be empty");
+                return;
+            }
 
             try {
                 if (ClientNetworkService::reg(username, password)) {
-                    AT_INFO("Register successfully");
+                    AT_INFO("Registered successfully");
+                    GameManager::changeScene("LoginScene"); // Redirect to login after successful registration
+                } else {
+                    showErrorMessage("Registration failed. Please try again.");
                 }
-            } catch (std::runtime_error error) {
-                // print msj on ui
-                AT_ERROR("Register failed: {0}", error.what());
+            } catch (const std::exception& e) {
+                showErrorMessage(e.what());
             }
         }
     };
@@ -117,6 +144,19 @@ void RegisterScene::onUpdate(float deltaTime) {
     }
     ImGui::End();
 
+    if (registry.valid(errorMessage)) {
+        errorMessageTimer -= deltaTime;
+        if (errorMessageTimer <= 0) {
+            registry.destroy(errorMessage);
+        } else {
+            // Fade out the error message
+            auto& renderComp = registry.get<RenderComponent>(errorMessage);
+            float alpha = std::min(1.0f, errorMessageTimer / ERROR_MESSAGE_DURATION);
+            renderComp.color.a = static_cast<unsigned char>(alpha * 255);
+        }
+    }
+
+    RenderManager::drawQuad(glm::vec3(-1100.0f, 750.0f, 0.0f), glm::vec2(400.0f, 400.0f), Color::white(), ResourceManager::get<Texture>("iconAndLogo"), true);
     uiSystem.update(deltaTime, registry, camera);
     renderSystem.update(registry);
 }
