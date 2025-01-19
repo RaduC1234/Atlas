@@ -581,6 +581,8 @@ private:
                     lobby.getRegistry().emplace<PawnComponent>(playerEntity, playerId);
                     lobby.getRegistry().emplace<NetworkComponent>(playerEntity, lobby.nextId());
 
+                    lobby.getRegistry().emplace<RigidbodyComponent>(playerEntity, RigidbodyComponent{true});
+
                     return crow::response(200, std::to_string(playerId));
                 }
             }
