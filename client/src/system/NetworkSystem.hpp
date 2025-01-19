@@ -134,17 +134,23 @@ private:
             std::unordered_map<uint64_t, entt::entity> existingEntities;
             std::unordered_set<uint64_t> deletedEntitiesSet;
 
-            if (jsonResponse.contains("deletedEntities") && !jsonResponse["deletedEntities"].empty()) {
-                for (const auto &id: jsonResponse["deletedEntities"]) {
+            if (jsonResponse.contains("deletedEntities") &&
+                !jsonResponse["deletedEntities"].empty())
+            {
+                for (const auto &id : jsonResponse["deletedEntities"]) {
                     deletedEntitiesSet.insert(id.get<uint64_t>());
                 }
             }
 
+            // Track existing entities
             auto view = registry.view<NetworkComponent>();
-            for (auto entity: view) {
+            for (auto entity : view) {
                 auto &netComp = view.get<NetworkComponent>(entity);
 
-                if (!deletedEntitiesSet.empty() && deletedEntitiesSet.contains(netComp.networkId)) {
+                // Destroy if server says "deleted"
+                if (!deletedEntitiesSet.empty() &&
+                    deletedEntitiesSet.contains(netComp.networkId))
+                {
                     registry.destroy(entity);
                     continue;
                 }
@@ -152,11 +158,13 @@ private:
                 existingEntities[netComp.networkId] = entity;
             }
 
-            for (const auto &entityData: jsonResponse["entities"]) {
+            // Process new/updated entities
+            for (const auto &entityData : jsonResponse["entities"]) {
                 uint64_t networkId = entityData["networkId"].get<uint64_t>();
                 entt::entity entity;
                 bool isThePlayer = false;
 
+                // Reuse or create
                 if (existingEntities.contains(networkId)) {
                     entity = existingEntities[networkId];
                 } else {
@@ -164,33 +172,49 @@ private:
                     registry.emplace<NetworkComponent>(entity, networkId);
                 }
 
+                // Check tile code
                 auto tileCode = entityData["tile-code"].get<uint32_t>();
                 std::string textureName;
 
-            if (tileCode == TILE_CODE + 110) {
-                textureName = "fireball01";
-            } else if (tileCode >= EntityCode::TILE_CODE && tileCode < EntityCode::TILE_CODE + EntityCode::NEXT) {
-                textureName = std::format("tile_{:04}", tileCode % TILE_CODE);
-            }
+                // Fireball?
+                if (tileCode == TILE_CODE + 110) {
+                    textureName = "fireball01";
+                }
+                // Normal tile (just an example check)
+                else if (tileCode >= EntityCode::TILE_CODE &&
+                         tileCode < EntityCode::TILE_CODE + EntityCode::NEXT)
+                {
+                    textureName =
+                        std::format("tile_{:04}", tileCode % TILE_CODE);
+                }
 
+                // If we have Pawn data
                 if (entityData.contains("PawnComponent")) {
                     auto id = entityData["PawnComponent"]["playerId"];
-                    auto &pawnComp = registry.get_or_emplace<PawnComponent>(entity, id, false, false, false, false, 0.0f);
-                    pawnComp.moveForward = entityData["PawnComponent"]["moveForward"];
-                    pawnComp.moveBackwards = entityData["PawnComponent"]["moveBackwards"];
-                    pawnComp.moveLeft = entityData["PawnComponent"]["moveLeft"];
-                    pawnComp.moveRight = entityData["PawnComponent"]["moveRight"];
-                    pawnComp.aimRotation = entityData["PawnComponent"]["aimRotation"];
+                    auto &pawnComp = registry.get_or_emplace<PawnComponent>(
+                        entity, id, false, false, false, false, 0.0f
+                    );
 
-                    if (!pawnComp.moveForward && !pawnComp.moveBackwards && !pawnComp.moveLeft && !pawnComp.moveRight) {
+                    pawnComp.moveForward   = entityData["PawnComponent"]["moveForward"];
+                    pawnComp.moveBackwards = entityData["PawnComponent"]["moveBackwards"];
+                    pawnComp.moveLeft      = entityData["PawnComponent"]["moveLeft"];
+                    pawnComp.moveRight     = entityData["PawnComponent"]["moveRight"];
+                    pawnComp.aimRotation   = entityData["PawnComponent"]["aimRotation"];
+
+                    // If player is completely idle, use some default sprite
+                    if (!pawnComp.moveForward && !pawnComp.moveBackwards &&
+                        !pawnComp.moveLeft    && !pawnComp.moveRight)
+                    {
                         textureName = "front1";
                     }
 
+                    // Track if it's our local player
                     if (id == this->playerId) {
                         isThePlayer = true;
                     }
                 }
 
+                // If there's a TransformComponent from server
                 if (entityData.contains("TransformComponent")) {
                     auto pos = glm::vec3(
                         entityData["TransformComponent"]["position"][0],
@@ -202,27 +226,52 @@ private:
                         this->playerPos = pos;
                     }
 
+                    // Scale
+                    glm::vec2 scale(
+                        entityData["TransformComponent"]["scale"][0],
+                        entityData["TransformComponent"]["scale"][1]
+                    );
+
+                    // Read server rotation (radians)
+                    float serverRotationRadians =
+                        entityData["TransformComponent"]["rotation"].get<float>();
+                    float angleDegrees = glm::degrees(serverRotationRadians);
+
+                    // For fireballs, use the aim rotation directly
+                    if (tileCode == TILE_CODE + 110) {
+                        // For fireballs, we want them to point in the direction they're moving
+                        // The angle from sendInput() is already in the correct orientation
+                        if (entityData.contains("FireballComponent")) {
+                            angleDegrees = glm::degrees(entityData["FireballComponent"]["direction"].get<float>());
+                        }
+                    }
+
+                    // Update the Transform
                     registry.emplace_or_replace<TransformComponent>(
                         entity,
                         pos,
-                        entityData["TransformComponent"]["rotation"],
-                        glm::vec2(entityData["TransformComponent"]["scale"][0],
-                                  entityData["TransformComponent"]["scale"][1])
+                        angleDegrees,
+                        scale
                     );
 
+                    // Center sprite if it's a fireball
+                    bool centerSprite = (tileCode == TILE_CODE + 110);
                     registry.emplace_or_replace<RenderComponent>(
                         entity,
                         textureName,
                         RenderComponent::defaultTexCoords(),
-                        Color::white()
+                        Color::white(),
+                        centerSprite  // "isCentered" = true for fireballs
                     );
                 }
             }
         } catch (std::exception &e) {
+            // If an exception occurs, just return
             return;
         }
     }
 
+private:
     uint64_t playerId{0};
     glm::vec3 playerPos{0.0f, 0.0f, 0.0f};
 
