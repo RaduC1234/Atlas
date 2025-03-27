@@ -1,5 +1,12 @@
 # Project Atlas
 
+Modern recreation of [Battle City](https://www.youtube.com/watch?v=MPsA5PtfdL0) video game from 1985 written in pure C++ complete with multiplayer, a matchmaking system, custom renderer and gameplay.
+
+## 📷 ScreenShoots
+![Image](https://github.com/user-attachments/assets/c03b79cb-4de6-4113-b6b7-bbd5e11c2e1d)
+
+![Image](https://github.com/user-attachments/assets/cbd80973-61a5-482b-b3a7-0eafd8e24f3e)
+
 ## 📌 Cloning
 
 To properly clone this repository along with its submodules, follow one of the methods below:
@@ -58,18 +65,18 @@ Jocul [Battle city](https://docs.google.com/document/d/1ZUAht8qgf-_eWXlgzBdUDsHm
 - Într-un spațiu minat sunt plasate cel mult 4 personaje (câte unul pentru fiecare jucător) în unul din colțurile tabelei de joc. Fiecare personaj se va putea deplasa cu câte o unitate în una din cele 4 direcții (sus, jos, stânga sau dreapta) dacă este liberă, cu scopul de a-i împușca pe inamici.
 - Spațiul de joc este reprezentat sub formă dreptunghiulară (n\*m metri, valori alese random la începutul fiecărui joc), iar distanța dintre oricare două căsuțe vecine este de 1 metru. Un personaj poate ocupa o singură căsuță la un moment dat.
 - Tabela de joc conține 3 tipuri:
-    - spații libere pe care se pot deplasa personajele
-    - ziduri pe care jucătorii le pot sparge
-    - ziduri care nu pot fi sparte
+  - spații libere pe care se pot deplasa personajele
+  - ziduri pe care jucătorii le pot sparge
+  - ziduri care nu pot fi sparte
 - Configurația inițială a hărții va fi generată random la începutul fiecărui joc.
 - Fiecare personaj deține o armă care poate fi folosită pentru a lansa un glonț într-una dintre direcții. Dacă glonțul ajunge la unul dintre adversari, acesta “moare” și este resetat la poziția inițială. Dacă acest lucru se repetă de 3 ori, un personaj este eliminat din joc. Câștigător va fi jucătorul care reușește să-și elimine toți adversarii și să rămână singur pe tabela de joc.
 - La finalul fiecărui joc, jucătorii au asociat un număr de puncte direct proporțional cu numărul de inamici împușcați. Pentru fiecare inamic împușcat aceștia vor primi 100 de puncte. Jucătorul care va câștiga un joc primește extra 200 puncte.
 - Când un cont nou este creat, jucătorul va primi un pistol care poate lansa un glonț la cel puțin 4 secunde, acesta deplasându-se cu o viteză de 0,25 metri pe secundă.
 - Dacă 2 gloanțe se întâlnesc acestea se vor anula și nu vor avea efecte asupra jucătorilor. Dacă un zid este spart, acesta poate declanșa o bombă care va omorî tot ce se află pe o rază de 10 m pătrați (jucători și ziduri). Fiecare hartă poate conține cel mult 3 astfel de bombe ascunse.
 - În portofoliul fiecărui jucător se află:
-    - Un număr de puncte obținute în urma meciurilor jucate. Aceste puncte pot fi folosite pentru a crește puterea armei. Cu un număr de 500 de puncte se poate înjumătăți timpul de așteptare dintre gloanțe de cel mult 4 ori.
-    - Un scor obținut pe baza câștigurilor avute. La finalul fiecărui meci cel care a câștigat meciul primește 2 puncte de scor, iar cel de pe locul 2 primește un punct. Când un utilizator strânge 10 puncte de scor poate (o singură dată când este atins acest prag) duplica viteza de deplasare a gloanțelor.
-    - Poate exista și un joc amical în care 2 jucători pot forma o echipă pentru a lupta împotriva altor echipe formate din același număr de persoane. Fiecare jucător va fi eliminat din joc după contactul cu un singur glonț, iar acest tip de joc nu va fi recompensat cu puncte.
+  - Un număr de puncte obținute în urma meciurilor jucate. Aceste puncte pot fi folosite pentru a crește puterea armei. Cu un număr de 500 de puncte se poate înjumătăți timpul de așteptare dintre gloanțe de cel mult 4 ori.
+  - Un scor obținut pe baza câștigurilor avute. La finalul fiecărui meci cel care a câștigat meciul primește 2 puncte de scor, iar cel de pe locul 2 primește un punct. Când un utilizator strânge 10 puncte de scor poate (o singură dată când este atins acest prag) duplica viteza de deplasare a gloanțelor.
+  - Poate exista și un joc amical în care 2 jucători pot forma o echipă pentru a lupta împotriva altor echipe formate din același număr de persoane. Fiecare jucător va fi eliminat din joc după contactul cu un singur glonț, iar acest tip de joc nu va fi recompensat cu puncte.
 
 ### Cerințe de bază
 
